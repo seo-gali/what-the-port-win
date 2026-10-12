@@ -2,7 +2,7 @@
 
 - 구성: 의존성 없는 정적 HTML / CSS / JavaScript
 - 공개 루트: `docs/`; `docs/.nojekyll`로 Jekyll 생략
-- 준비: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-site.ps1`
+- 준비: 정식 배포는 `scripts/prepare-site.ps1`에서 신뢰된 서명·타임스탬프 확인. 미서명 시험 배포만 `-AllowUnsigned` 명시
 - 로컬 미리보기: `node scripts/serve-site.mjs` → `http://127.0.0.1:4173`
 - 다운로드: `docs/downloads/WhatThePort-Windows-x64.zip` — 실제 다운로드를 위해 Git 추적 대상 포함
 - 내용: 홈, 기능·화면 소개, 이미지 사용 가이드, 라이선스, 404, 고정 헤더·모바일 메뉴, ZIP·체크섬
@@ -25,7 +25,7 @@ GitHub 저장소의 `blob/main/docs/index.html` 링크는 소스 보기 주소�
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-site.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-site.ps1 -AllowUnsigned
 node scripts/serve-site.mjs
 # 다른 터미널
 node scripts/check-site.mjs
@@ -42,3 +42,5 @@ node scripts/check-site.mjs
 
 앱 패키지에는 Markdown 사용 문서·이미지만 포함. 사이트 다운로드 ZIP의 자기 포함·반복 빌드 시 용량 증가 방지.
 로컬 서버의 보안 응답 헤더는 GitHub Pages에 자동 이전되지 않음.
+
+Chrome 다운로드 경고, 공인 코드 서명, ZIP 내용 유지와 Google 검토 절차: [다운로드 보안 절차](download-security.md). 웹사이트 수정만으로 공개 ZIP을 재생성하지 않는다. 기본 사이트 준비는 미서명 배포물을 거부하며, 시험 배포에서만 위의 AllowUnsigned 옵션을 명시한다.

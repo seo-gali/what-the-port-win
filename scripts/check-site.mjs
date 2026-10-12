@@ -117,6 +117,13 @@ const {createHash}=await import('node:crypto');
 const archive=Buffer.from(await(await fetch(base+'/downloads/WhatThePort-Windows-x64.zip')).arrayBuffer());
 const checksum=await(await fetch(base+'/downloads/SHA256SUMS.txt')).text();
 check('download matches published SHA-256',checksum.startsWith(createHash('sha256').update(archive).digest('hex')));
+const packageInfo=await(await fetch(base+'/downloads/PACKAGE-INFO.json')).json();
+check('published package information matches ZIP',packageInfo.archive.sha256===createHash('sha256').update(archive).digest('hex')&&packageInfo.archive.bytes===archive.length);
+check('package information uses JSON content type',(await fetch(base+'/downloads/PACKAGE-INFO.json',{method:'HEAD'})).headers.get('content-type')?.includes('application/json'));
+for(const file of (await fs.readdir(path.join(project,'docs'))).filter(file=>/^google[0-9a-f]+\.html$/.test(file))){
+ const verification=await fetch(base+'/'+file);
+ check('Google ownership file remains exact '+file,verification.ok&&(await verification.text()).trim()==='google-site-verification: '+file);
+}
 check('Pages .nojekyll marker exists',(await fetch(base+'/.nojekyll')).ok);
 check('local root remains previewable',(await fetch('http://127.0.0.1:4173/')).ok);
 await fs.writeFile(path.join(project,'artifacts/site-checks.json'),JSON.stringify({passed,results},null,2));

@@ -1,0 +1,167 @@
+{
+    "checkedAtUtc":  "2026-10-12T14:41:08.9256666Z",
+    "archive":  {
+                    "name":  "WhatThePort-Windows-x64.zip",
+                    "bytes":  1064509,
+                    "sha256":  "fab84f07d8e1a05617b22b52215fd3b4004db2b5c4f4f2ee82bd4efde4f139f0",
+                    "entryCount":  26
+                },
+    "trustedTimestampedSignatures":  false,
+    "malwareScan":  "Not performed by this verification; this is an integrity and signature check.",
+    "browserReputation":  "Not verified; Chrome Safe Browsing makes an independent decision.",
+    "binaries":  [
+                     {
+                         "name":  "WhatThePort.exe",
+                         "sha256":  "e9ce4147a489a3b29071e130fbf1580d4187bd8be3fae8bf77b9cb4719723ea6",
+                         "signature":  "NotSigned",
+                         "publisher":  null,
+                         "timestamped":  false
+                     },
+                     {
+                         "name":  "WhatThePort.Core.dll",
+                         "sha256":  "d70d8e7d13afa441fa48a8b479a4f869f8c33b0c55ea4f09230f469a8fa3c65f",
+                         "signature":  "NotSigned",
+                         "publisher":  null,
+                         "timestamped":  false
+                     },
+                     {
+                         "name":  "wtp.exe",
+                         "sha256":  "e7f43f79b2e030f6ad2a1500c3eeac5d73521b6ae8db639804f69cc2acff701e",
+                         "signature":  "NotSigned",
+                         "publisher":  null,
+                         "timestamped":  false
+                     }
+                 ],
+    "files":  [
+                  {
+                      "name":  "fonts/Geist-Medium.ttf",
+                      "bytes":  127660,
+                      "sha256":  "0090e004725f6f64b841715b4167920580f883fcf9b67fc6d744089103fec101"
+                  },
+                  {
+                      "name":  "fonts/Geist-Regular.ttf",
+                      "bytes":  126048,
+                      "sha256":  "5c8968eafb98a4c4f47033daf29e38e284a6f2a82eb017d171ab040fe7c4b615"
+                  },
+                  {
+                      "name":  "fonts/GeistMono-Medium.ttf",
+                      "bytes":  149328,
+                      "sha256":  "90b15711dc3779b2e64e8aff5228154dd019a90bce4947549c4a8a8a43f2ac25"
+                  },
+                  {
+                      "name":  "fonts/GeistMono-Regular.ttf",
+                      "bytes":  148516,
+                      "sha256":  "42d8ad2e610238e64e8abfcde3037c63f7850a73928742b7ab7229d897bcb155"
+                  },
+                  {
+                      "name":  "fonts/OFL.txt",
+                      "bytes":  4368,
+                      "sha256":  "930853ee1daa68554d9e35c8a9175affb74f699fad9a5da6ee5ebe76379d9137"
+                  },
+                  {
+                      "name":  "docs/accessibility-audit.md",
+                      "bytes":  4668,
+                      "sha256":  "30cfe275dcfb54f3407966eaa6b5f0a50e00346a9b0776763d5084f7628ab2e3"
+                  },
+                  {
+                      "name":  "docs/checklist.md",
+                      "bytes":  4488,
+                      "sha256":  "7da04e11c18339e5b9d025c24dad554581754fe4ca2653d0d4acab7df4125ae4"
+                  },
+                  {
+                      "name":  "docs/publishing.md",
+                      "bytes":  3874,
+                      "sha256":  "6db18aca7c6eaa48dbb530e29652671645632a1e18caa4c948f0caf8f427b6d6"
+                  },
+                  {
+                      "name":  "docs/resource-usage.md",
+                      "bytes":  7015,
+                      "sha256":  "6c8bb697c06974912592e20acf2e2467fb7608a5858d75276013349a58417e9d"
+                  },
+                  {
+                      "name":  "docs/security-audit.md",
+                      "bytes":  13099,
+                      "sha256":  "6d146439c338023d3c5b8c53906ef244b7ab042b1f99be031585b20b1441bdd3"
+                  },
+                  {
+                      "name":  "docs/usage.md",
+                      "bytes":  13270,
+                      "sha256":  "6e8f9b441e84bbbd4dbdb6e7dce7a6e8a5df966574aba7a664f08d1ee8a7687d"
+                  },
+                  {
+                      "name":  "docs/images/cleanup.png",
+                      "bytes":  107683,
+                      "sha256":  "f2b59a4103c6f6c9198bc260ee3e727bb565bc8404c8193ae50f79ba9b00191c"
+                  },
+                  {
+                      "name":  "docs/images/cover.jpg",
+                      "bytes":  135176,
+                      "sha256":  "d1cf5e81e6ad3bd96a3ab7112732d5eab3d4bb74aa307de5098f04453e8747ef"
+                  },
+                  {
+                      "name":  "docs/images/detail.png",
+                      "bytes":  92906,
+                      "sha256":  "605822e4b3e5a962dd13bf1882b4d585e54437aa13f4ca9ac8fdf47f9f3697ab"
+                  },
+                  {
+                      "name":  "docs/images/empty.png",
+                      "bytes":  76241,
+                      "sha256":  "6a13c94a9bd67e9af7bcaceca5acf3eeafd2350e28b58f2ab33701723640e8d7"
+                  },
+                  {
+                      "name":  "docs/images/links.png",
+                      "bytes":  84601,
+                      "sha256":  "c751c588f2bcba4252a568a01b9da55f100563b36209f1986b4eab31e678d25d"
+                  },
+                  {
+                      "name":  "docs/images/list.png",
+                      "bytes":  103766,
+                      "sha256":  "48a10d4d30d7833c7039d2cdcb6ea981bca6a473b4389950eb910cb095360b17"
+                  },
+                  {
+                      "name":  "docs/images/protection-tooltip.png",
+                      "bytes":  9579,
+                      "sha256":  "6747eb47afb63fb5cf9a6e164141acb5b422df7b0a0bfea760745513cb6da387"
+                  },
+                  {
+                      "name":  "docs/images/settings-en.png",
+                      "bytes":  107746,
+                      "sha256":  "0ab448bc29d8b6a65adea9b730eb60a8e7efe34f9a8dad9be5e5885b27f9ecfe"
+                  },
+                  {
+                      "name":  "docs/images/settings.png",
+                      "bytes":  85738,
+                      "sha256":  "75fa3ddc8f66c792fb73c0a4a0b887af1dc0557333abd8ec1348394ac4dfa60b"
+                  },
+                  {
+                      "name":  "WhatThePort.exe",
+                      "bytes":  114176,
+                      "sha256":  "e9ce4147a489a3b29071e130fbf1580d4187bd8be3fae8bf77b9cb4719723ea6"
+                  },
+                  {
+                      "name":  "WhatThePort.exe.config",
+                      "bytes":  411,
+                      "sha256":  "73dd322a99b7c471f292f64d91d13cd883d9e2689a2d3f9477c04897c2b7e948"
+                  },
+                  {
+                      "name":  "WhatThePort.Core.dll",
+                      "bytes":  34304,
+                      "sha256":  "d70d8e7d13afa441fa48a8b479a4f869f8c33b0c55ea4f09230f469a8fa3c65f"
+                  },
+                  {
+                      "name":  "wtp.exe",
+                      "bytes":  8192,
+                      "sha256":  "e7f43f79b2e030f6ad2a1500c3eeac5d73521b6ae8db639804f69cc2acff701e"
+                  },
+                  {
+                      "name":  "LICENSE",
+                      "bytes":  1075,
+                      "sha256":  "a4b7f04a19dd4563299c7a1924fbb60e1d85a5f5f1e7998a181f9cbaded767a0"
+                  },
+                  {
+                      "name":  "README.md",
+                      "bytes":  3314,
+                      "sha256":  "732946b853f4d87f95639b41f5699f349ab55eb86f1fba647bedef088f6d69bf"
+                  }
+              ]
+}
