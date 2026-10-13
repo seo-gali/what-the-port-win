@@ -4,8 +4,8 @@
 - 공개 루트: `docs/`; `docs/.nojekyll`로 Jekyll 생략
 - 준비: 정식 배포는 `scripts/prepare-site.ps1`에서 신뢰된 서명·타임스탬프 확인. 미서명 시험 배포만 `-AllowUnsigned` 명시
 - 로컬 미리보기: `node scripts/serve-site.mjs` → `http://127.0.0.1:4173`
-- 다운로드: `docs/downloads/WhatThePort-Windows-x64.zip` — 실제 다운로드를 위해 Git 추적 대상 포함
-- 내용: 홈, 기능·화면 소개, 이미지 사용 가이드, 라이선스, 404, 고정 헤더·모바일 메뉴, ZIP·체크섬
+- 다운로드: 기본 `docs/downloads/WhatThePort.exe`, 선택 CLI `docs/downloads/WhatThePort-Windows-x64.zip` — 실제 다운로드를 위해 Git 추적 대상 포함
+- 내용: 홈, 기능·화면 소개, 이미지 사용 가이드, 라이선스, 404, 고정 헤더·모바일 메뉴, 단일 EXE·선택 ZIP·체크섬
 - 배포: GitHub Pages의 main / docs. 프로젝트 AGENTS.md에 따라 외부 쓰기·퍼블리싱 전 사전 승인 필요
 
 실제 호스팅 적용 시 HTTPS, CSP, nosniff, Referrer-Policy 및 실제 HTTP 404 매핑 확인 필요. 로컬 서버의 헤더 설정은 `scripts/serve-site.mjs` 기준. 생산용 웹 서버로 사용하지 않음.
@@ -24,6 +24,8 @@ GitHub 저장소의 `blob/main/docs/index.html` 링크는 소스 보기 주소�
 ## 준비·검증
 
 ```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-single-file.ps1
+# Run package.ps1 only when the optional CLI ZIP needs an update.
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-site.ps1 -AllowUnsigned
 node scripts/serve-site.mjs
@@ -32,7 +34,7 @@ node scripts/check-site.mjs
 ```
 
 프로젝트 경로 미리보기: `http://127.0.0.1:4173/what-the-port-win/`.
-검증 범위: 320·360·390·430·768·1024·1440px의 홈·가이드·라이선스·404, 가로 넘침, 스크롤 시 헤더 고정, 키보드 메뉴·탭, 목차 이동 위치, 이미지 확대·Esc 복귀, 대체 텍스트, 라이선스 원문 일치, 로컬 링크, 중첩 주소 404, ZIP·SHA-256. 휴대폰 구간은 Chrome의 모바일·터치 에뮬레이션으로 확인한다. 실제 iOS Safari·Android 기기 검증은 별도다.
+검증 범위: 320·360·390·430·768·1024·1440px의 홈·가이드·라이선스·404, 가로 넘침, 스크롤 시 헤더 고정, 키보드 메뉴·탭, 목차 이동 위치, 이미지 확대·Esc 복귀, 대체 텍스트, 라이선스 원문 일치, 로컬 링크, 중첩 주소 404, EXE·ZIP·SHA-256. 휴대폰 구간은 Chrome의 모바일·터치 에뮬레이션으로 확인한다. 실제 iOS Safari·Android 기기 검증은 별도다.
 
 사이트 이미지는 최신 앱의 데모 캡처를 `docs/images/`에 두고 준비 스크립트로 `docs/assets/images/`에 복사한다. 한국어 6개 화면, 영어 설정 화면, 보호 사유 도움말을 사용한다. README 소개 이미지 `docs/images/cover.jpg`는 실제 앱 캡처와 구분한 생성 일러스트다.
 

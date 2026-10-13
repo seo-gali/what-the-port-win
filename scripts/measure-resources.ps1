@@ -2,13 +2,19 @@ param(
     [ValidateRange(15,300)][int]$SecondsPerState = 30,
     [ValidateRange(0,20)][int]$FixtureServers = 0,
     [ValidatePattern('^[a-zA-Z0-9_-]+\.json$')][string]$ReportName = 'resource-usage.json',
-    [string]$RuntimeDirectory
+    [string]$RuntimeDirectory,
+    [switch]$SingleFile
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($RuntimeDirectory)) {
-    & (Join-Path $PSScriptRoot 'build.ps1')
-    $RuntimeDirectory = Join-Path $projectRoot 'dist'
+    if ($SingleFile) {
+        & (Join-Path $PSScriptRoot 'build-single-file.ps1')
+        $RuntimeDirectory = Join-Path $projectRoot 'artifacts\single-file'
+    } else {
+        & (Join-Path $PSScriptRoot 'build.ps1')
+        $RuntimeDirectory = Join-Path $projectRoot 'dist'
+    }
 }
 $RuntimeDirectory = [IO.Path]::GetFullPath($RuntimeDirectory)
 $framework = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319'
@@ -20,11 +26,13 @@ $reportPath = Join-Path $artifactRoot $ReportName
 $process = $null
 $serverProcesses = New-Object 'Collections.Generic.List[Diagnostics.Process]'
 try {
-    foreach ($file in @('WhatThePort.exe','WhatThePort.Core.dll','fonts')) {
+    $runtimeFiles = if ($SingleFile) { @('WhatThePort.exe') } else { @('WhatThePort.exe','WhatThePort.Core.dll','fonts') }
+    foreach ($file in $runtimeFiles) {
         Copy-Item -LiteralPath (Join-Path $RuntimeDirectory $file) -Destination $fixtureRoot -Recurse -Force
     }
     $probePath = Join-Path $fixtureRoot 'wtp-resource-probe.exe'
-    & (Join-Path $framework 'csc.exe') /nologo /target:exe /platform:x64 /optimize+ /warnaserror+ "/out:$probePath" "/r:$fixtureRoot\WhatThePort.Core.dll" "/r:$fixtureRoot\WhatThePort.exe" "/r:$framework\WPF\PresentationFramework.dll" "/r:$framework\WPF\PresentationCore.dll" "/r:$framework\WPF\WindowsBase.dll" /r:System.Xaml.dll /r:System.Runtime.Serialization.dll (Join-Path $projectRoot 'tests\ResourceProbe.cs')
+    $coreReference = if ($SingleFile) { @() } else { @("/r:$fixtureRoot\WhatThePort.Core.dll") }
+    & (Join-Path $framework 'csc.exe') /nologo /target:exe /platform:x64 /optimize+ /warnaserror+ "/out:$probePath" $coreReference "/r:$fixtureRoot\WhatThePort.exe" "/r:$framework\WPF\PresentationFramework.dll" "/r:$framework\WPF\PresentationCore.dll" "/r:$framework\WPF\WindowsBase.dll" /r:System.Xaml.dll /r:System.Runtime.Serialization.dll (Join-Path $projectRoot 'tests\ResourceProbe.cs')
     if ($LASTEXITCODE -ne 0) { throw 'Resource probe compilation failed.' }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'src\App.config') -Destination ($probePath + '.config') -Force
     if ($FixtureServers -gt 0) {

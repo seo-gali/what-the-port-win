@@ -7,19 +7,29 @@ if (-not (Test-Path -LiteralPath $package)) { throw 'Run scripts/package.ps1 bef
 # Validate before changing any public site files.
 $report = Join-Path $projectRoot 'artifacts\package-verification.json'
 & (Join-Path $PSScriptRoot 'verify-package.ps1') -PackagePath $package -ReportPath $report -RequireSignature:(-not $AllowUnsigned)
+& (Join-Path $PSScriptRoot 'build-single-file.ps1')
+$standalone = Join-Path $projectRoot 'artifacts\single-file\WhatThePort.exe'
+$standaloneReport = Join-Path $projectRoot 'artifacts\single-file-verification.json'
+& (Join-Path $PSScriptRoot 'verify-single-file.ps1') -ExecutablePath $standalone -ReportPath $standaloneReport -RequireSignature:(-not $AllowUnsigned)
 foreach ($folder in @('assets\images','assets\fonts','downloads')) { New-Item -ItemType Directory -Force -Path (Join-Path $siteRoot $folder) | Out-Null }
 Copy-Item -Path (Join-Path $projectRoot 'docs\images\*.png') -Destination (Join-Path $siteRoot 'assets\images') -Force
 foreach ($font in @('Geist-Regular.ttf','Geist-Medium.ttf','OFL.txt')) { Copy-Item -LiteralPath (Join-Path $projectRoot ('assets\fonts\' + $font)) -Destination (Join-Path $siteRoot 'assets\fonts') -Force }
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $siteRoot 'LICENSE.txt') -Force
 Copy-Item -LiteralPath $package -Destination (Join-Path $siteRoot 'downloads') -Force
 Copy-Item -LiteralPath $report -Destination (Join-Path $siteRoot 'downloads\PACKAGE-INFO.json') -Force
+Copy-Item -LiteralPath $standalone -Destination (Join-Path $siteRoot 'downloads\WhatThePort.exe') -Force
+Copy-Item -LiteralPath $standaloneReport -Destination (Join-Path $siteRoot 'downloads\EXE-INFO.json') -Force
+$exeHash = (Get-FileHash -LiteralPath $standalone -Algorithm SHA256).Hash.ToLowerInvariant()
 $hash = (Get-FileHash -LiteralPath $package -Algorithm SHA256).Hash.ToLowerInvariant()
-[IO.File]::WriteAllText((Join-Path $siteRoot 'downloads\SHA256SUMS.txt'), ($hash + '  WhatThePort-Windows-x64.zip' + [Environment]::NewLine), [Text.Encoding]::ASCII)
+[IO.File]::WriteAllText((Join-Path $siteRoot 'downloads\SHA256SUMS.txt'), ($hash + '  WhatThePort-Windows-x64.zip' + [Environment]::NewLine + $exeHash + '  WhatThePort.exe' + [Environment]::NewLine), [Text.Encoding]::ASCII)
 $index = Join-Path $siteRoot 'index.html'
 $html = [IO.File]::ReadAllText($index)
 $size = ((Get-Item -LiteralPath $package).Length / 1MB).ToString('0.0', [Globalization.CultureInfo]::InvariantCulture) + ' MB'
 $html = [regex]::Replace($html, '<span data-package-size>.*?</span>', ('<span data-package-size>' + $size + '</span>'))
+$exeSize = ((Get-Item -LiteralPath $standalone).Length / 1KB).ToString('0', [Globalization.CultureInfo]::InvariantCulture) + ' KB'
+$html = [regex]::Replace($html, '<span data-exe-size>.*?</span>', ('<span data-exe-size>' + $exeSize + '</span>'))
 [IO.File]::WriteAllText($index, $html, (New-Object Text.UTF8Encoding($false)))
 if ($AllowUnsigned) { Write-Warning 'Unsigned test distribution: Chrome reputation warnings may remain. This does not disable browser protection.' }
 Write-Output "Prepared static site: $siteRoot"
-Write-Output "Download: $size; SHA-256 $hash"
+Write-Output "Optional ZIP: $size; SHA-256 $hash"
+Write-Output "Standalone EXE: $exeSize; SHA-256 $exeHash"

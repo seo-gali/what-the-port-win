@@ -1,5 +1,17 @@
 # 앱 자체의 CPU·메모리 사용량
 
+## 단일 EXE 배포 비교 · 2026-10-13
+
+Core·WPF 마크업·폰트를 EXE에 포함한 빌드를 기존 분리형 배포와 비교했다. Windows 데스크톱, 논리 코어 16개, 조회 3초, 상태별 15초 조건이다. 자체 루프백 테스트 서버 5개를 만들었고 자동 정리·알림은 껐다. RAM은 평균 working set(MiB), CPU는 전체 논리 코어 대비 평균이다.
+
+| 상태 | 기존 ZIP 앱 RAM | 단일 EXE RAM | 기존 CPU | 단일 EXE CPU |
+|---|---:|---:|---:|---:|
+| 처음부터 트레이에 숨김 | 55.6 | 55.4 | 0.045% | 0.065% |
+| 창 표시 | 76.6 | 78.8 | 0.341% | 0.207% |
+| 표시 후 다시 숨김 | 75.8 | 78.2 | 0.026% | 0.045% |
+
+다른 개발 서버도 감지되어 상태별 서버 수는 기존 **7 / 7 / 5개**, 단일 EXE **5 / 5 / 7개**였다. 같은 서버 수로 고정한 비교나 실제 8GB 노트북 측정은 아니다. 단일 EXE의 창 표시 RAM은 이번 측정에서 약 2MiB 높았으며, 포장 방식 변경으로 RAM을 더 줄였다고 주장하지 않는다. 기존 경량화 동작과 창 해제 후 감시는 유지했다. 기록은 `artifacts/zip-baseline-resources.json`과 `artifacts/single-file-resources.json`에 있다.
+
 ## 추가 경량화 결과 · 2026-10-07
 
 8GB 노트북 사용을 고려해 트레이·계측·화면 생성을 줄였다. 같은 PC의 실제 Windows 데스크톱에서 이전 소프트웨어 렌더링 배포본과 이번 빌드를 측정했다.
@@ -38,6 +50,7 @@ Windows 작업 표시줄이 있는 데스크톱에서 실행한다.
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/measure-resources.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/measure-resources.ps1 -FixtureServers 5 -ReportName resources-five-servers.json
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/measure-resources.ps1 -SingleFile -FixtureServers 5 -ReportName single-file-resources.json
 ```
 
 결과는 `artifacts/resource-usage.json` 또는 지정한 보고서에 기록한다. 숨김·표시·다시 숨김을 기본 각각 30초 측정하며, 마지막 상태 전에는 창 해제를 기다린다. `-SecondsPerState 15`로 짧게 측정하거나, `-RuntimeDirectory`로 이전 배포본을 풀어 놓은 폴더를 지정해 비교할 수 있다.

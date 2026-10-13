@@ -7,6 +7,11 @@ using System.Windows;
 namespace WhatThePort.App {
     public static class Program {
         [STAThread] public static int Main(string[] args){
+            // Set WPF accessibility behavior before constructing any UI, including without an exe.config.
+            for(int version=1;version<=4;version++)AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures"+(version==1?"":"."+version),false);
+#if SINGLE_FILE
+            if(args.Contains("--licenses"))return LicenseViewer.Show();
+#endif
             bool snapshot=args.Contains("--snapshot"),smoke=args.Contains("--smoke-test"),demo=snapshot||args.Contains("--demo");
             int smokeExit=0;
             string instance="Local\\WhatThePort.Windows"+(smoke?".Smoke."+Guid.NewGuid().ToString("N"):demo?".Demo":"");

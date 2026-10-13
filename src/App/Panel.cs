@@ -78,7 +78,11 @@ namespace WhatThePort.App {
             Window=(Window)Application.LoadComponent(new Uri("/WhatThePort;component/Shell.xaml",UriKind.Relative));
             Application.Current.MainWindow=Window;
             body=Find<StackPanel>("Body"); footer=Find<StackPanel>("Footer"); title=Find<TextBlock>("Title"); status=Find<TextBlock>("Status"); message=Find<TextBlock>("Message"); messageBox=Find<Border>("MessageBox"); back=Find<Button>("Back"); pin=Find<Button>("Pin");
+#if SINGLE_FILE
+            var fonts=new Uri("pack://application:,,,/WhatThePort;component/fonts/",UriKind.Absolute);
+#else
             var fonts=new Uri(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"fonts")+Path.DirectorySeparatorChar);
+#endif
             Window.FontFamily=new FontFamily(fonts,"./#Geist"); mono=new FontFamily(fonts,"./#Geist Mono");
             // Automatic tooltips outlive list items replaced by Refresh. Keep their
             // resources at application scope so detached popups never fall back to the OS theme.

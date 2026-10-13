@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory=$true)][string]$CertificateThumbprint,
-    [Parameter(Mandatory=$true)][string]$TimestampServer
+    [Parameter(Mandatory=$true)][string]$TimestampServer,
+    [switch]$SingleFile
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -19,8 +20,10 @@ try {
     $chain.ChainPolicy.ApplicationPolicy.Add((New-Object Security.Cryptography.Oid('1.3.6.1.5.5.7.3.3')))
     if (-not $chain.Build($certificate)) { throw 'A publicly trusted code-signing certificate is required; self-signed certificates do not establish publisher trust.' }
 } finally { $chain.Dispose() }
-foreach ($name in @('WhatThePort.exe','WhatThePort.Core.dll','wtp.exe')) {
-    $file = Join-Path $projectRoot ('dist\' + $name)
+$runtimeRoot = if ($SingleFile) { Join-Path $projectRoot 'artifacts\single-file' } else { Join-Path $projectRoot 'dist' }
+$runtimeNames = if ($SingleFile) { @('WhatThePort.exe') } else { @('WhatThePort.exe','WhatThePort.Core.dll','wtp.exe') }
+foreach ($name in $runtimeNames) {
+    $file = Join-Path $runtimeRoot $name
     $existing = Get-AuthenticodeSignature -LiteralPath $file
     if ($existing.Status -eq 'Valid' -and $existing.SignerCertificate.Thumbprint -eq $thumbprint -and $existing.TimeStamperCertificate) {
         Write-Output ('Already signed; unchanged: ' + $name)
@@ -32,9 +35,10 @@ foreach ($name in @('WhatThePort.exe','WhatThePort.Core.dll','wtp.exe')) {
     Write-Output ('Signed and timestamped: ' + $name)
 }
 # Update the local build cache so packaging does not undo a valid signature.
-$cachePath = Join-Path $projectRoot 'artifacts\package-cache.json'
+$cachePath = if ($SingleFile) { Join-Path $runtimeRoot 'build-cache.json' } else { Join-Path $projectRoot 'artifacts\package-cache.json' }
 if (Test-Path -LiteralPath $cachePath) {
     $cache = [IO.File]::ReadAllText($cachePath) | ConvertFrom-Json
-    foreach ($item in $cache.runtime) { $item.sha256 = (Get-FileHash -LiteralPath (Join-Path $projectRoot ('dist\' + $item.name)) -Algorithm SHA256).Hash.ToLowerInvariant() }
+    if ($SingleFile) { $cache.sha256 = (Get-FileHash -LiteralPath (Join-Path $runtimeRoot 'WhatThePort.exe') -Algorithm SHA256).Hash.ToLowerInvariant() }
+    else { foreach ($item in $cache.runtime) { $item.sha256 = (Get-FileHash -LiteralPath (Join-Path $runtimeRoot $item.name) -Algorithm SHA256).Hash.ToLowerInvariant() } }
     [IO.File]::WriteAllText($cachePath, ($cache | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding($false)))
 }

@@ -1,5 +1,8 @@
+param([string]$RuntimeDirectory, [switch]$SingleFile)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
+if (-not $RuntimeDirectory) { $RuntimeDirectory = Join-Path $projectRoot 'dist' }
+$RuntimeDirectory = [IO.Path]::GetFullPath($RuntimeDirectory)
 $artifactRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot 'artifacts'))
 $testId = [Guid]::NewGuid().ToString('N')
 $fixtureRoot = [IO.Path]::GetFullPath((Join-Path $artifactRoot ('startup-' + $testId)))
@@ -27,7 +30,9 @@ try {
     foreach ($folder in @('first', 'downloaded-copy')) {
         $target = Join-Path $fixtureRoot $folder
         New-Item -ItemType Directory -Path $target -Force | Out-Null
-        foreach ($file in @('WhatThePort.exe','WhatThePort.exe.config','WhatThePort.Core.dll','fonts')) { Copy-Item -LiteralPath (Join-Path $projectRoot ('dist\' + $file)) -Destination $target -Recurse -Force }
+        $runtimeFiles = if ($SingleFile) { @('WhatThePort.exe') } else { @('WhatThePort.exe','WhatThePort.exe.config','WhatThePort.Core.dll','fonts') }
+        foreach ($file in $runtimeFiles) { Copy-Item -LiteralPath (Join-Path $RuntimeDirectory $file) -Destination $target -Recurse -Force }
+        if ($SingleFile -and @(Get-ChildItem -LiteralPath $target).Count -ne 1) { throw 'Standalone startup must use only the downloaded EXE.' }
     }
     $direct = Start-Fixture 'downloaded-copy' -InstanceId ([Guid]::NewGuid().ToString('N'))
     if (-not $direct.WaitForInputIdle(5000)) { throw 'Direct GUI executable did not initialize.' }
@@ -67,7 +72,7 @@ try {
         $stdout = Join-Path $fixtureRoot ('real-' + $mode + '.out')
         $stderr = Join-Path $fixtureRoot ('real-' + $mode + '.err')
         $preferences = Join-Path $fixtureRoot ('preferences-' + $mode)
-        $probe = Start-Process -FilePath (Join-Path $projectRoot 'dist\wtp-startup-tests.exe') -ArgumentList $mode, ('"' + $preferences + '"') -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+        $probe = Start-Process -FilePath (Join-Path $RuntimeDirectory 'wtp-startup-tests.exe') -ArgumentList $mode, ('"' + $preferences + '"') -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
         $ownedProcesses.Add($probe)
         # Retain the process handle so Windows PowerShell can read its exit code
         # after a redirected child exits; then drain redirected output completely.

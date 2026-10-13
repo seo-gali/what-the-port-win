@@ -14,7 +14,8 @@
 - **기존 앱 실행 중:** 다른 폴더의 EXE도 실행 중인 앱의 창 열기로 연결. 새 버전으로 교체할 때는 기존 트레이 → 앱 종료 / Quit 후 새 EXE 실행.
 - **저장된 위치:** 재실행 시 저장한 모니터·위치에서 표시. `Ctrl+Alt+P` 또는 트레이 아이콘으로 표시·숨김. 설정 → 창 위치 초기화로 주 모니터 복귀.
 - **실행 직후 표시:** EXE 직접 실행·재실행 시 첫 마우스·키보드 조작 전까지 자동 숨김 보류. 이후 기존 자동 숨김 적용. ×·Esc로 즉시 숨김 가능.
-- **포터블 구성:** ZIP의 모두 압축 풀기 후 EXE·Core DLL·설정 파일·fonts 폴더를 함께 유지.
+- **단일 EXE:** 홈페이지의 기본 다운로드는 Core·폰트를 내장한 `WhatThePort.exe` 한 개. 압축 해제·설치 불필요. Windows의 .NET Framework 4.8 필요. `--licenses`로 MIT·폰트 라이선스 열람.
+- **선택 ZIP:** `wtp.exe` CLI가 필요할 때 다운로드. 모두 압축 풀기 후 EXE·Core DLL·설정 파일·fonts 폴더를 함께 유지.
 - **여러 파일이 있는 이유:** DLL·설정·fonts는 앱의 구성 요소이고, README·docs·LICENSE는 안내·라이선스. 각 파일이 별도 앱으로 상주하는 것은 아님. ZIP의 README에 파일별 용도 안내.
 - **SmartScreen:** 다운로드 파일의 평판 확인에 따른 실행 전 경고. 앱 창 표시 문제와 별개이며 멀웨어 확정 판정이나 안전 보증을 의미하지 않음. 보호 기능 해제 없이 출처·검사 결과 확인 필요. [Microsoft 안내](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation).
 
@@ -47,7 +48,7 @@
 
 ### CLI 링크 등록
 
-서버 조회에는 링크 등록이 필요하지 않다. 압축을 푼 앱 폴더에서 아래 명령을 하나씩 실행한다. PowerShell과 명령 프롬프트(CMD) 모두 지원한다. 소스에서 빌드했다면 `dist` 폴더에서 실행한다.
+서버 조회에는 링크 등록이 필요하지 않다. CLI는 홈페이지의 선택 ZIP에 포함된다. 압축을 푼 앱 폴더에서 아래 명령을 하나씩 실행한다. PowerShell과 명령 프롬프트(CMD) 모두 지원한다. 소스에서 빌드했다면 `dist` 폴더에서 실행한다.
 
 ```powershell
 .\wtp.exe list

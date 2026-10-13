@@ -1,0 +1,16 @@
+{
+    "checkedAtUtc":  "2026-10-13T10:20:59.8625178Z",
+    "executable":  {
+                       "name":  "WhatThePort.exe",
+                       "bytes":  696320,
+                       "sha256":  "71ce423cf90fa58fcd125668efaf40106ee21d5c9b76749746fd240fac19793f",
+                       "signature":  "NotSigned",
+                       "publisher":  null,
+                       "timestamped":  false
+                   },
+    "trustedTimestampedSignature":  false,
+    "runtime":  "Windows 10/11 x64; .NET Framework 4.8",
+    "distribution":  "Standalone GUI executable with embedded Core, WPF resources, fonts and licenses; CLI remains in the optional ZIP.",
+    "malwareScan":  "Not performed by this verification; this is an integrity, metadata and signature check.",
+    "browserReputation":  "Not verified; Chrome Safe Browsing makes an independent decision."
+}

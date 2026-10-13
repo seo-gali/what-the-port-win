@@ -53,6 +53,15 @@ try {
     & (Join-Path $testRoot 'scripts\prepare-site.ps1') -AllowUnsigned
     Check 'explicit test distribution publishes verified ZIP' ((Hash $publicZip) -eq (Hash $zipPath))
     Check 'test distribution publishes integrity report' (Test-Path -LiteralPath (Join-Path $testRoot 'docs\downloads\PACKAGE-INFO.json'))
+    $singleVerify = Join-Path $testRoot 'scripts\verify-single-file.ps1'
+    $singleExecutable = Join-Path $testRoot 'artifacts\single-file\WhatThePort.exe'
+    $publicExecutable = Join-Path $testRoot 'docs\downloads\WhatThePort.exe'
+    Check 'test distribution publishes standalone EXE' ((Hash $singleExecutable) -eq (Hash $publicExecutable))
+    $singleInfo = [IO.File]::ReadAllText((Join-Path $testRoot 'docs\downloads\EXE-INFO.json')) | ConvertFrom-Json
+    Check 'standalone report matches published bytes and unsigned status' ($singleInfo.executable.sha256 -eq (Hash $publicExecutable).ToLowerInvariant() -and $singleInfo.executable.bytes -eq (Get-Item -LiteralPath $publicExecutable).Length -and $singleInfo.executable.signature -eq 'NotSigned')
+    Reject 'standalone wrong checksum is rejected' { & $singleVerify -ExecutablePath $singleExecutable -ExpectedHash ('0' * 64) }
+    Reject 'unsigned standalone fails signature requirement' { & $singleVerify -ExecutablePath $singleExecutable -RequireSignature }
+    Reject 'separate Core DLL app cannot be published as standalone' { & $singleVerify -ExecutablePath $binaryPaths[0] }
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     foreach ($entryName in @('../escape.txt','hidden/run.cmd','WHATTHEPORT.EXE')) {
         $invalidZip = Join-Path $testRoot 'artifacts\invalid.zip'
