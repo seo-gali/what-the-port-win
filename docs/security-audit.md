@@ -125,3 +125,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/security-audit.ps1
 ```
 
 결과: evidence 6개(S1 2개, S2–S5 각 1개). `FINDING`은 취약점 발견 표시이며 보안 인증 통과가 아님. 기록: `artifacts/security-audit.txt`. 네트워크 인증·사용자 프로세스 종료·시크릿 접근 없음.
+
+## Google 다운로드 가이드라인 재점검 · 2026-10-13
+
+현재 단일 EXE의 SHA-256 일치 후 `scripts/security-audit.ps1 -SingleFile`로 기존 프로브를 실행했다. S1~S5가 다시 확인됐으며, S1의 경로 조합 관측을 포함해 6개 증거 관측이다. 프로브의 종료 코드 0은 문제 재현 성공을 뜻하며 보안 통과 판정이 아니다. 정책 항목·서명·백신·제거 안내 점검은 [다운로드 점검 보고서](google-download-audit.md)에 기록했다. 앱 소스나 공개 EXE는 이 점검에서 변경하지 않았다.

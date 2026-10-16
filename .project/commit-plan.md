@@ -1,6 +1,6 @@
 # 기능별 커밋·푸시
 
-- 원격: `https://github.com/seoheejung/what-the-port-win.git`
+- 원격: `https://github.com/seo-gali/what-the-port-win.git`
 - 브랜치: `main`; 기존 구현 커밋 완료 상태 확인 (`c6bc94a`까지)
 - 이전 차단: `git add`의 `.git/index.lock` 생성 권한 거부
 - 재실행: 사용자 권한 허용에 따라 아래 두 그룹의 커밋·푸시 진행. 로컬 수정·빌드·검증 완료. GitHub Pages는 사용자가 게시 완료; 원격 ZIP은 Pages 배포 후 갱신

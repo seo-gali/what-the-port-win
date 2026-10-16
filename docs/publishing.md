@@ -14,7 +14,7 @@
 
 저장소 **Settings → Pages → Build and deployment → Deploy from a branch → main → /docs → Save**.
 
-공개 주소: `https://seoheejung.github.io/what-the-port-win/`.
+공개 주소: `https://seo-gali.github.io/what-the-port-win/`.
 GitHub 저장소의 `blob/main/docs/index.html` 링크는 소스 보기 주소이며 웹사이트 주소와 별개.
 
 현재 404의 복귀·스타일 경로는 `/what-the-port-win/` 기준. 저장소 이름 변경이나 사용자 지정 도메인 적용 시 `404.html`과 미리보기·검증 스크립트의 prefix 변경 필요.

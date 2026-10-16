@@ -56,7 +56,7 @@ Windows PowerShell의 타임스탬프 공급자는 `http://` URL을 요구한다
 
 ## Google 소유권 확인과 검토
 
-[Google Search Console](https://search.google.com/search-console/)에서 **URL 접두어** 속성 `https://seoheejung.github.io/what-the-port-win/`를 추가한다. `github.io` 도메인 전체의 DNS 소유권을 요구하는 속성은 선택하지 않는다.
+[Google Search Console](https://search.google.com/search-console/)에서 **URL 접두어** 속성 `https://seo-gali.github.io/what-the-port-win/`를 추가한다. `github.io` 도메인 전체의 DNS 소유권을 요구하는 속성은 선택하지 않는다.
 
 소유권 확인에 Google이 발급한 HTML 파일 방식 또는 HTML 메타 태그 방식을 사용한다. HTML 파일은 `docs/`에 Google이 지정한 이름·내용 그대로 두고 배포한 후 확인한다. 메타 태그는 Google이 지정한 값을 홈페이지 head에 넣는다. 확인용 값은 게시에 필요한 공개 값이며 Google 계정 암호를 제공할 필요는 없다. 소유권 확인 후에도 확인 파일·태그는 유지한다.
 
@@ -68,10 +68,10 @@ Windows PowerShell의 타임스탬프 공급자는 `http://` URL을 요구한다
 
 ### 검토 요청에 넣을 확인 정보
 
-- 배포 페이지: `https://seoheejung.github.io/what-the-port-win/`
-- 기본 EXE 주소: `https://seoheejung.github.io/what-the-port-win/downloads/WhatThePort.exe`
-- 선택 ZIP 주소: `https://seoheejung.github.io/what-the-port-win/downloads/WhatThePort-Windows-x64.zip`
-- 공개 소스: `https://github.com/seoheejung/what-the-port-win`
+- 배포 페이지: `https://seo-gali.github.io/what-the-port-win/`
+- 기본 EXE 주소: `https://seo-gali.github.io/what-the-port-win/downloads/WhatThePort.exe`
+- 선택 ZIP 주소: `https://seo-gali.github.io/what-the-port-win/downloads/WhatThePort-Windows-x64.zip`
+- 공개 소스: `https://github.com/seo-gali/what-the-port-win`
 - 실제 SHA-256: `docs/downloads/SHA256SUMS.txt`
 - 서명·파일 정보: `docs/downloads/EXE-INFO.json`, `docs/downloads/PACKAGE-INFO.json`
 - 실제 백신 검사 결과와 검사 날짜: 검사한 후에만 기재

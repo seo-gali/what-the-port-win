@@ -4,7 +4,7 @@
 
 프로젝트, 포트, Git 브랜치, 실행 시간, 메모리·CPU 확인부터 잊고 있던 서버 정리까지.
 
-[소개·다운로드 페이지](https://seoheejung.github.io/what-the-port-win/) · [시작하기](#시작하기) · [사용법](docs/usage.md) · [직접 확인할 항목](docs/checklist.md) · [접근성 검수](docs/accessibility-audit.md) · [보안 검수](docs/security-audit.md) · [소스 빌드](#빌드)
+[소개·다운로드 페이지](https://seo-gali.github.io/what-the-port-win/) · [시작하기](#시작하기) · [사용법](docs/usage.md) · [직접 확인할 항목](docs/checklist.md) · [접근성 검수](docs/accessibility-audit.md) · [보안 검수](docs/security-audit.md) · [소스 빌드](#빌드)
 
 무료 · 오픈 소스 · Windows 10/11 x64 · .NET Framework 4.8 · 계정 불필요
 
