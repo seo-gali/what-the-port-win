@@ -303,8 +303,15 @@ namespace WhatThePort.App {
             Rule();
             var processes=new Expander{Header=F("Processes   ·   {0}   ·   {1}",s.Processes.Count,Format.Bytes(s.Memory)),Foreground=B("#B7BAC4"),FontSize=12,Margin=new Thickness(3,0,3,8),IsExpanded=processesExpanded};
             processes.Tag="processes";AutomationProperties.SetName(processes,(string)processes.Header);
-            processes.Expanded+=delegate{processesExpanded=true;};processes.Collapsed+=delegate{processesExpanded=false;};
-            var nodes=new StackPanel();foreach(var p in s.Processes){var item=Text(new string(' ',p.Depth*2)+p.Name+"   #"+p.Pid+"   "+Format.Bytes(p.Memory),11,"#A4A6AF");item.Margin=new Thickness(12,6,0,2);nodes.Children.Add(item);}processes.Content=nodes;body.Children.Add(processes);
+            var nodes=new StackPanel();
+            Action loadProcesses=delegate{
+                if(nodes.Children.Count>0)return;
+                foreach(var p in s.Processes){var item=Text(new string(' ',p.Depth*2)+p.Name+"   #"+p.Pid+"   "+Format.Bytes(p.Memory),11,"#A4A6AF");item.Margin=new Thickness(12,6,0,2);nodes.Children.Add(item);}
+            };
+            processes.Expanded+=delegate{processesExpanded=true;loadProcesses();};
+            processes.Collapsed+=delegate{processesExpanded=false;nodes.Children.Clear();};
+            if(processesExpanded)loadProcesses();
+            processes.Content=nodes;body.Children.Add(processes);
             var actions=Columns(-1,40,40,40);var open=Button(F("Open localhost:{0}",s.Port),delegate{RunAction("open");},"Open local server (O)");open.Background=B("#F5F5F7");open.Foreground=B("#111318");open.Margin=new Thickness(0,0,6,0);Cell(actions,open,0);
             string[] keys={"terminal","session","preview"},labels={">_","A","↗"},tips={"Open project in terminal (T)","Resume linked agent session (A)","Open Vercel preview (V)"};
             for(int i=0;i<3;i++){string action=keys[i];var b=Button(labels[i],delegate{RunAction(action);},tips[i]);b.Padding=new Thickness(0);b.Margin=new Thickness(2,0,0,0);Cell(actions,b,i+1);}footer.Children.Add(actions);

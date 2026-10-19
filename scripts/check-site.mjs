@@ -25,6 +25,11 @@ let passed=0;const results=[];
 function check(name,ok){results.push({name,passed:!!ok});if(!ok)throw new Error('FAIL '+name);passed++;console.log('PASS '+name);}
 try{
 await call('Page.enable');await call('Runtime.enable');await call('Accessibility.enable');
+await navigate('/',390,1000);
+const hero=await evaluate('(()=>{const i=document.querySelector(".server-art");return {src:i.currentSrc,width:i.naturalWidth,height:i.naturalHeight,loading:i.loading,priority:i.fetchPriority};})()');
+const heroResponse=await fetch(hero.src);const heroBytes=(await heroResponse.arrayBuffer()).byteLength;
+check('hero image stays within 1 MiB with an image MIME',heroResponse.ok&&heroResponse.headers.get('content-type')?.startsWith('image/')&&heroBytes<=1024*1024);
+check('hero keeps its dimensions and loads with first-screen priority',hero.width===1448&&hero.height===1086&&hero.loading!=='lazy'&&hero.priority==='high');
 await call('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
 for(const width of [1440,1024,768,430,390,360,320])for(const route of ['/','/guide.html','/license.html','/missing/deep/page']){
   await navigate(route,width,1000);

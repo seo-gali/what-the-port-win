@@ -37,6 +37,7 @@ public static class UiTests {
             Click(Rows().First());Check("row opens server detail",Title()=="menubar port monitor");
             CheckPlacement("detail grows upward with visible footer",bottom);
             Check("detail has memory and CPU charts",All(Body()).OfType<Chart>().Count()==2);
+            ProcessDetailsLoadingTests();
             CheckNames("detail controls have screen reader names");
             Check("window title identifies current screen",window.Title.Contains(Title()));
             Click(ByName("Open local server (O)"));Check("demo blocks external URL",Message().Contains("simulated"));
@@ -81,6 +82,25 @@ public static class UiTests {
     [DllImport("user32.dll")] static extern bool PostMessage(IntPtr owner,int message,IntPtr wparam,IntPtr lparam);
     [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern int RegisterWindowMessage(string name);
     [DllImport("user32.dll")] static extern bool IsWindow(IntPtr handle);
+    static void ProcessDetailsLoadingTests(){
+        var server=((WhatThePort.Snapshot)Field("current")).Servers[0];var original=server.Processes;
+        try{
+            server.Processes=Enumerable.Range(0,500).Select(i=>new WhatThePort.ProcessNode{Pid=100000+i,Name="worker-"+i,Started=server.Started,Memory=WhatThePort.Format.MB,Depth=1}).ToList();
+            typeof(WhatThePort.App.Panel).GetField("processesExpanded",PrivateInstance).SetValue(panel,false);Rerender();
+            var processes=All(Body()).OfType<Expander>().Single();
+            Check("collapsed process details defer row creation",((StackPanel)processes.Content).Children.Count==0);
+            var watch=System.Diagnostics.Stopwatch.StartNew();for(int i=0;i<10;i++)Rerender();watch.Stop();
+            processes=All(Body()).OfType<Expander>().Single();
+            Console.WriteLine("PERF collapsed detail: 500 processes; 10 refreshes; "+watch.ElapsedMilliseconds+" ms; child rows="+((StackPanel)processes.Content).Children.Count);
+            processes.IsExpanded=true;Layout();
+            Check("expanding process details loads every current row",((StackPanel)processes.Content).Children.Count==500&&All(processes).OfType<TextBlock>().Any(t=>t.Text.Contains("worker-499")));
+            server.Processes=new List<WhatThePort.ProcessNode>{new WhatThePort.ProcessNode{Pid=199999,Name="replacement-worker",Started=server.Started}};Rerender();
+            processes=All(Body()).OfType<Expander>().Single();
+            Check("expanded process refresh preserves expansion and current data",processes.IsExpanded&&((StackPanel)processes.Content).Children.Count==1&&All(processes).OfType<TextBlock>().Any(t=>t.Text.Contains("replacement-worker")));
+            processes.IsExpanded=false;Rerender();processes=All(Body()).OfType<Expander>().Single();
+            Check("collapsed process refresh stops constructing child rows",!processes.IsExpanded&&((StackPanel)processes.Content).Children.Count==0);
+        }finally{server.Processes=original;typeof(WhatThePort.App.Panel).GetField("processesExpanded",PrivateInstance).SetValue(panel,false);Rerender();}
+    }
     static object Field(string name){return typeof(WhatThePort.App.Panel).GetField(name,PrivateInstance).GetValue(panel);}
     static void Invoke(string name,params object[] args){typeof(WhatThePort.App.Panel).GetMethod(name,PrivateInstance).Invoke(panel,args);}
     static void TrayEvent(IntPtr owner,int code){SendMessage(owner,0x8002,IntPtr.Zero,new IntPtr((1<<16)|code));Pump();}

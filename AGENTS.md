@@ -8,4 +8,5 @@
 |---|---|
 | 앱·CLI 구현 | [코딩 기준](CODING_STANDARDS.md)의 구조·프로세스 안전·개인정보와 실행 경계 |
 | 앱 화면·상호작용 | [디자인](DESIGN.md) |
+| API·검색·성능 | [작업별 기준](CODING_STANDARDS.md#api와-성능) |
 | 정적 사이트·다운로드·게시 | [게시 안내](docs/publishing.md) |

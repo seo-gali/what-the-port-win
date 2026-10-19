@@ -40,7 +40,9 @@ node scripts/check-site.mjs
 
 사이트 이미지는 최신 앱의 데모 캡처를 `docs/images/`에 두고 준비 스크립트로 `docs/assets/images/`에 복사한다. 한국어 6개 화면, 영어 설정 화면, 보호 사유 도움말을 사용한다. README 소개 이미지 `docs/images/cover.jpg`는 실제 앱 캡처와 구분한 생성 일러스트다.
 
-홈페이지는 원래 README 일러스트의 어두운 네이비 배경과 청록·보라·분홍 네온 서버를 디자인 기준으로 삼는다. 홈페이지 전용 레이아웃은 `assets/home.css`, 공통 페이지 색상과 탐색은 `assets/site.css`에서 관리한다. 홈페이지의 `assets/images/hero-servers.png`는 원래 README 그림을 참조해 내장 imagegen으로 제작한 투명 배경 일러스트이며 앱 패키지에는 포함하지 않는다. 제목·버튼·설명은 이미지에 넣지 않고 반응형 HTML로 표시한다. README의 원본 표지는 별도로 유지한다.
+홈페이지는 원래 README 일러스트의 어두운 네이비 배경과 청록·보라·분홍 네온 서버를 디자인 기준으로 삼는다. 홈페이지 전용 레이아웃은 `assets/home.css`, 공통 페이지 색상과 탐색은 `assets/site.css`에서 관리한다. 홈페이지의 `assets/images/hero-servers.webp`는 원래 README 그림을 참조해 제작한 투명 배경 일러스트의 무손실 WebP이며 앱 패키지에는 포함하지 않는다. 첫 화면의 이미지이므로 지연 로딩하지 않는다. 제목·버튼·설명은 이미지에 넣지 않고 반응형 HTML로 표시한다. README의 원본 표지는 별도로 유지한다.
+
+첫 화면 서버 이미지의 전송 예산은 1MiB다. 사이트 검사는 이 예산과 이미지 MIME·원본 크기·초기 로딩을 확인한다.
 
 가이드의 이미지 링크는 JavaScript를 사용하면 원본 크기의 확대 창을 열고, 스크립트가 꺼져 있으면 이미지 파일로 이동한다. 라이선스 전문은 `license.html`에 표시하며 `LICENSE.txt` 다운로드도 제공한다.
 
