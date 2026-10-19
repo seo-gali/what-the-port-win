@@ -1,7 +1,11 @@
 # What the Port · Windows design
 
 ## 원본과 방향
-기준은 제공된 네 장의 스크린샷과 원본 `Theme.swift`, `ServersView.swift`, `ServerDetailView.swift`이다. [원본 프로젝트](https://github.com/tomjohndesign/what-the-port)의 작은 트레이 패널, 정보 밀도, 포트 식별 색, 차트, 정리 흐름을 Windows에 적용한다. 마케팅 대시보드 대신 실제 트레이 유틸리티를 만든다.
+Windows UI의 기준은 이 문서다. [원본 프로젝트](https://github.com/tomjohndesign/what-the-port)의 작은 트레이 패널, 정보 밀도, 포트 식별 색, 차트와 정리 흐름을 Windows에 적용한다. 마케팅 대시보드 대신 실제 트레이 유틸리티를 만든다.
+
+로컬에 `what-the-port-main.zip`이 있으면 내부 `what-the-port-main/WhatThePort/Sources/WhatThePort/UI/`의 `Theme.swift`, `ServersView.swift`, `ServerDetailView.swift`를 보조 자료로 참고한다. ZIP은 Git 추적 대상이 아니며 작업의 필수 조건이 아니다.
+
+오류·빈 상태·키보드 탐색도 구현한다. 버튼이나 단축키의 실제 실행 동작을 바꾸면 [코딩 기준](CODING_STANDARDS.md)의 프로세스 안전·개인정보와 실행 경계를 함께 확인한다.
 
 ## 레이아웃
 - 기본 440 DIP 너비, 최대 720 DIP 높이. 현재 모니터의 작업 영역 안쪽 12 DIP 여백에 배치한다.
@@ -30,7 +34,7 @@
 포트의 색은 정렬·필터링과 무관하게 포트 번호로 결정한다. 경고색과 포트색을 혼용하지 않는다. 보호·idle·경고는 텍스트로도 표시한다.
 
 ## 서체와 상호작용
-- 원본 ZIP의 Geist / Geist Mono를 사용한다. 미지원 환경은 Segoe UI / Consolas로 대체한다.
+- 저장소의 `assets/fonts/`에 있는 Geist / Geist Mono를 사용한다. 미지원 환경은 Segoe UI / Consolas로 대체한다.
 - 표시 숫자 28–30px, 본문 13px, 캡션 11px. 일반/Medium의 두께만 사용한다.
 - 아이콘은 WPF 벡터/Windows 글리프. 이모지로 운영 상태를 표현하지 않는다.
 - Hover는 #FFFFFF 6% 면, 키보드 포커스는 포트 계열 테두리. 클릭 가능 영역 최소 30px.
