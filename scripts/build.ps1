@@ -36,11 +36,12 @@ if ($packageDocs -ne [IO.Path]::GetFullPath((Join-Path $projectRoot 'dist\docs')
 if (Test-Path -LiteralPath $packageDocs) { Remove-Item -LiteralPath $packageDocs -Recurse -Force }
 New-Item -ItemType Directory -Path $packageDocs -Force | Out-Null
 Copy-Item -Path (Join-Path $projectRoot 'docs\*.md') -Destination $packageDocs -Force
+Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination $packageDocs -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\images') -Destination $packageDocs -Recurse -Force
 if ($Tests) {
     & $compiler /nologo /target:exe /platform:x64 /optimize+ /warnaserror+ "/out:$outputRoot\wtp-tests.exe" "/r:$outputRoot\WhatThePort.Core.dll" (Join-Path $projectRoot 'tests\CoreTests.cs')
     if ($LASTEXITCODE -ne 0) { throw 'Test compilation failed.' }
-    & $compiler /nologo /target:exe /platform:x64 /optimize+ /warnaserror+ "/out:$outputRoot\wtp-ui-tests.exe" "/r:$outputRoot\WhatThePort.Core.dll" "/r:$outputRoot\WhatThePort.exe" "/r:$framework\WPF\PresentationFramework.dll" "/r:$framework\WPF\PresentationCore.dll" "/r:$framework\WPF\WindowsBase.dll" /r:System.Xaml.dll /r:System.Windows.Forms.dll /r:System.Drawing.dll (Join-Path $projectRoot 'tests\UiTests.cs')
+    & $compiler /nologo /target:exe /platform:x64 /optimize+ /warnaserror+ "/win32manifest:$projectRoot\src\app.manifest" "/out:$outputRoot\wtp-ui-tests.exe" "/r:$outputRoot\WhatThePort.Core.dll" "/r:$outputRoot\WhatThePort.exe" "/r:$framework\WPF\PresentationFramework.dll" "/r:$framework\WPF\PresentationCore.dll" "/r:$framework\WPF\WindowsBase.dll" /r:System.Xaml.dll /r:System.Windows.Forms.dll /r:System.Drawing.dll (Join-Path $projectRoot 'tests\UiTests.cs')
     if ($LASTEXITCODE -ne 0) { throw 'UI test compilation failed.' }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'src\App.config') -Destination (Join-Path $outputRoot 'wtp-ui-tests.exe.config') -Force
     & $compiler /nologo /target:exe /platform:x64 /optimize+ /warnaserror+ "/out:$outputRoot\wtp-startup-tests.exe" "/r:$outputRoot\WhatThePort.Core.dll" "/r:$outputRoot\WhatThePort.exe" "/r:$framework\WPF\PresentationFramework.dll" "/r:$framework\WPF\PresentationCore.dll" "/r:$framework\WPF\WindowsBase.dll" /r:System.Xaml.dll (Join-Path $projectRoot 'tests\StartupTests.cs')

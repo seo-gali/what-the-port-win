@@ -8,7 +8,14 @@ $firstHash = (Get-FileHash -LiteralPath $executable -Algorithm SHA256).Hash
 if ((Get-FileHash -LiteralPath $executable -Algorithm SHA256).Hash -ne $firstHash) { throw 'Repeated standalone builds changed an unchanged executable.' }
 Write-Output 'PASS standalone: repeated build preserves executable hash'
 foreach ($test in @('wtp-tests.exe','wtp-ui-tests.exe','wtp-single-file-tests.exe')) {
-    & (Join-Path $runtime $test) $projectRoot
+    $testArguments = @($projectRoot)
+    if ($test -eq 'wtp-single-file-tests.exe') {
+        # Read public source assets in the runner; compare every embedded byte by SHA-256.
+        $sourceAssets = @('LICENSE','assets\fonts\OFL.txt','assets\fonts\Geist-Regular.ttf','assets\fonts\Geist-Medium.ttf','assets\fonts\GeistMono-Regular.ttf','assets\fonts\GeistMono-Medium.ttf')
+        $sourceHashes = @($sourceAssets | ForEach-Object { (Get-FileHash -LiteralPath (Join-Path $projectRoot $_) -Algorithm SHA256).Hash.ToLowerInvariant() })
+        $testArguments += ($sourceHashes -join ',')
+    }
+    & (Join-Path $runtime $test) @testArguments
     if ($LASTEXITCODE -ne 0) { throw ('Standalone regression failed: ' + $test) }
 }
 & (Join-Path $PSScriptRoot 'test-startup.ps1') -RuntimeDirectory $runtime -SingleFile

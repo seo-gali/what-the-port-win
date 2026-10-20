@@ -22,7 +22,7 @@ namespace WhatThePort.App {
             NativeRect bounds;if(!GetWindowRect(new WindowInteropHelper(window).Handle,out bounds))throw new InvalidOperationException("Could not read panel position.");
             return new Rect(bounds.Left,bounds.Top,bounds.Right-bounds.Left,bounds.Bottom-bounds.Top);
         }
-        public static void Place(Window window,double height,Point? saved,bool opening,bool fromTray){
+        public static void Place(Window window,double height,Point? saved,bool opening,bool fromTray,double width=440){
             var handle=new WindowInteropHelper(window).EnsureHandle();
             Rect current=PhysicalBounds(window);IntPtr monitor;NativePoint cursor;
             if(opening&&saved.HasValue)monitor=MonitorFromPoint(new NativePoint((int)saved.Value.X,(int)saved.Value.Y-1),2);
@@ -32,7 +32,7 @@ namespace WhatThePort.App {
             if(GetDpiForMonitor(monitor,0,out dpiX,out dpiY)!=0){dpiX=96;dpiY=96;}
             double scale=dpiY/96.0;
             Rect? previous=opening?(saved.HasValue?(Rect?)new Rect(saved.Value.X,saved.Value.Y-1,1,1):null):current;
-            var bounds=Calculate(new Rect(area.Left,area.Top,area.Width,area.Height),new Size(440*scale,height*scale),previous,12*scale);
+            var bounds=Calculate(new Rect(area.Left,area.Top,area.Width,area.Height),new Size(width*scale,height*scale),previous,12*scale);
             // Native physical coordinates avoid ambiguous virtual-desktop DIP origins across monitors.
             window.Width=bounds.Width/scale;window.Height=bounds.Height/scale;
             if(!SetWindowPos(handle,IntPtr.Zero,(int)Math.Round(bounds.Left),(int)Math.Round(bounds.Top),(int)Math.Round(bounds.Width),(int)Math.Round(bounds.Height),0x0014))throw new InvalidOperationException("Could not position panel.");

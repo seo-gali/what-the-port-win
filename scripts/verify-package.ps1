@@ -46,7 +46,7 @@ try {
             if ($status -ne 'Valid' -and $status -ne 'NotSigned') { throw ('Invalid binary signature: ' + $name + ' (' + $status + ')') }
             $publisher = $null
             if ($signature.SignerCertificate) { $publisher = $signature.SignerCertificate.Subject }
-            $runtime += [ordered]@{name=$name; sha256=$entryHash; signature=$status; publisher=$publisher; timestamped=[bool]$signature.TimeStamperCertificate}
+            $runtime += [ordered]@{name=$name; version=[Diagnostics.FileVersionInfo]::GetVersionInfo($target).FileVersion; sha256=$entryHash; signature=$status; publisher=$publisher; timestamped=[bool]$signature.TimeStamperCertificate}
         }
     }
     foreach ($required in @($runtimeNames + @('WhatThePort.exe.config','README.md','LICENSE','fonts/Geist-Regular.ttf','fonts/Geist-Medium.ttf','fonts/OFL.txt'))) {

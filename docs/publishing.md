@@ -23,6 +23,8 @@ GitHub 저장소의 `blob/main/docs/index.html` 링크는 소스 보기 주소�
 
 ## 준비·검증
 
+버전은 `src/Core/AppVersion.cs`, 변경 기록은 루트 `CHANGELOG.md`에서 관리한다. 추가·개선·수정을 구분하고, 테스트 후 동일 버전의 단일 EXE·ZIP·검증 보고서·체크섬을 함께 게시한다. ZIP에는 `docs/CHANGELOG.md`를 포함한다. 검증된 커밋에 `v1.1.0` 형식의 태그를 붙인다. 버전 태그와 GitHub Releases 게시물은 별개이며, Releases에 게시할 때는 같은 변경 기록과 검증된 파일을 사용한다.
+
 사이트의 HTML·CSS·JavaScript만 변경하면 기존 다운로드 파일을 유지하고 아래 검사만 실행한다. Markdown 문서만 변경하면 상대 경로·앵커·명령과 설명의 정합성을 확인한다.
 
 ```powershell
@@ -38,7 +40,7 @@ node scripts/check-site.mjs
 정식 배포 준비는 신뢰된 서명·타임스탬프를 갖춘 산출물로 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-site.ps1`을 실행한다. 미서명 시험 배포가 승인된 경우에만 `-AllowUnsigned`를 명시한다. 로컬 준비와 공개 게시는 별개이며, 게시에는 위 승인 규칙을 적용한다.
 검증 범위: 320·360·390·430·768·1024·1440px의 홈·가이드·라이선스·404, 가로 넘침, 스크롤 시 헤더 고정, 키보드 메뉴·탭, 목차 이동 위치, 이미지 확대·Esc 복귀, 대체 텍스트, 라이선스 원문 일치, 로컬 링크, 중첩 주소 404, EXE·ZIP·SHA-256. 휴대폰 구간은 Chrome의 모바일·터치 에뮬레이션으로 확인한다. 실제 iOS Safari·Android 기기 검증은 별도다.
 
-사이트 이미지는 최신 앱의 데모 캡처를 `docs/images/`에 두고 준비 스크립트로 `docs/assets/images/`에 복사한다. 한국어 6개 화면, 영어 설정 화면, 보호 사유 도움말을 사용한다. README 소개 이미지 `docs/images/cover.jpg`는 실제 앱 캡처와 구분한 생성 일러스트다.
+사이트 이미지는 최신 앱의 데모 캡처를 `docs/images/`에 두고 준비 스크립트로 `docs/assets/images/`에 복사한다. 한국어 7개 화면(설정 하단 포함), 영어 설정·종료 결과 예시, 보호 사유 도움말을 사용한다. README 소개 이미지 `docs/images/cover.jpg`는 실제 앱 캡처와 구분한 생성 일러스트다.
 
 홈페이지는 원래 README 일러스트의 어두운 네이비 배경과 청록·보라·분홍 네온 서버를 디자인 기준으로 삼는다. 홈페이지 전용 레이아웃은 `assets/home.css`, 공통 페이지 색상과 탐색은 `assets/site.css`에서 관리한다. 홈페이지의 `assets/images/hero-servers.webp`는 원래 README 그림을 참조해 제작한 투명 배경 일러스트의 무손실 WebP이며 앱 패키지에는 포함하지 않는다. 첫 화면의 이미지이므로 지연 로딩하지 않는다. 제목·버튼·설명은 이미지에 넣지 않고 반응형 HTML로 표시한다. README의 원본 표지는 별도로 유지한다.
 

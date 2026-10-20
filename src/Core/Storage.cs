@@ -21,6 +21,8 @@ namespace WhatThePort {
         [DataMember] public string Language = "ko";
         [DataMember] public int? PanelLeft;
         [DataMember] public int? PanelBottom;
+        [DataMember] public int? PanelSize;
+        [DataMember] public int? PanelOpacity;
         public void Validate() {
             if (String.IsNullOrEmpty(Language)) Language = "ko";
             if (Language != "ko" && Language != "en") throw new ArgumentException("Invalid language.");
@@ -28,6 +30,8 @@ namespace WhatThePort {
             if (!new [] {"Off", "Ask", "Automatic"}.Contains(Cleanup)) throw new ArgumentException("Invalid cleanup mode.");
             if (!new [] {"PowerShell", "Windows Terminal"}.Contains(Terminal)) throw new ArgumentException("Invalid terminal.");
             if (PanelLeft.HasValue != PanelBottom.HasValue || (PanelLeft.HasValue && (Math.Abs((long)PanelLeft.Value)>1000000 || Math.Abs((long)PanelBottom.Value)>1000000))) throw new ArgumentException("Invalid saved panel position.");
+            if (PanelSize.HasValue && (PanelSize<0 || PanelSize>3)) throw new ArgumentException("Invalid panel size.");
+            if (PanelOpacity.HasValue && (PanelOpacity<40 || PanelOpacity>100)) throw new ArgumentException("Invalid background opacity.");
         }
         public Settings Copy() { return (Settings)MemberwiseClone(); }
     }

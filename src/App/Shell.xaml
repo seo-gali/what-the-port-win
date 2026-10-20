@@ -2,6 +2,18 @@
  Title="What the Port" Language="en-US" KeyboardNavigation.TabNavigation="Cycle" Width="440" Height="610" WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Topmost="True" FontFamily="Segoe UI" FontSize="13" Foreground="#F5F5F7" UseLayoutRounding="True" SnapsToDevicePixels="True">
  <Window.Resources>
   <SolidColorBrush x:Key="Muted" Color="#A4A6AF"/>
+  <Style x:Key="Switch" TargetType="ToggleButton">
+   <Setter Property="Width" Value="44"/><Setter Property="Height" Value="30"/><Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ToggleButton">
+    <Grid Background="Transparent"><Border x:Name="Track" Height="22" CornerRadius="11" Background="#454852" BorderBrush="#858995" BorderThickness="1"/>
+     <Ellipse x:Name="Thumb" Width="16" Height="16" Fill="#F5F5F7" HorizontalAlignment="Left" Margin="4,0"/>
+    </Grid>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsChecked" Value="True"><Setter TargetName="Track" Property="Background" Value="#3C7278"/><Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Track" Property="BorderBrush" Value="#7DDBE0"/><Setter TargetName="Track" Property="BorderThickness" Value="2"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
   <Style TargetType="Button">
    <Setter Property="Foreground" Value="#F5F5F7"/><Setter Property="Background" Value="#2D3039"/>
    <Setter Property="BorderBrush" Value="Transparent"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="12,7"/>
@@ -81,21 +93,24 @@
   </Style>
   <Style TargetType="ScrollViewer"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollViewer">
    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-    <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" CanContentScroll="{TemplateBinding CanContentScroll}"/>
+    <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" ClipToBounds="True" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" CanContentScroll="{TemplateBinding CanContentScroll}"/>
     <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="1" Width="5" MinWidth="0" MaxWidth="5" Margin="0,0,3,0" Orientation="Vertical" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}" Value="{Binding VerticalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
    </Grid>
   </ControlTemplate></Setter.Value></Setter></Style>
  </Window.Resources>
- <Border CornerRadius="17" BorderThickness="1" BorderBrush="#53555E" Padding="0,0,0,1">
+ <Border x:Name="PanelBackground" CornerRadius="17" BorderThickness="1" BorderBrush="#53555E" Padding="0,0,0,1">
   <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0.5,1"><GradientStop Color="#15171C" Offset="0"/><GradientStop Color="#1C2029" Offset="0.58"/><GradientStop Color="#242B39" Offset="1"/></LinearGradientBrush></Border.Background>
   <DockPanel LastChildFill="True">
    <Grid x:Name="Header" KeyboardNavigation.TabIndex="0" DockPanel.Dock="Top" Height="54" Margin="14,0">
-    <Grid.ColumnDefinitions><ColumnDefinition Width="68"/><ColumnDefinition Width="*"/><ColumnDefinition Width="36"/><ColumnDefinition Width="32"/></Grid.ColumnDefinitions>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
     <Button x:Name="Back" Height="32" Width="32" HorizontalAlignment="Left" VerticalAlignment="Center" Tag="header-back" AutomationProperties.Name="Back to servers" Content="‹" FontSize="25" Padding="0" Background="Transparent" ToolTip="Back (Esc)"/>
+    <Button x:Name="Smaller" Height="32" Width="32" HorizontalAlignment="Left" Margin="34,0,0,0" VerticalAlignment="Center" Tag="header-smaller" AutomationProperties.Name="Smaller panel" Content="−" FontSize="17" Padding="0" Background="Transparent"/>
+    <Button x:Name="Larger" Height="32" Width="32" HorizontalAlignment="Left" Margin="68,0,0,0" VerticalAlignment="Center" Tag="header-larger" AutomationProperties.Name="Larger panel" Content="+" FontSize="17" Padding="0" Background="Transparent"/>
     <TextBlock x:Name="Title" Grid.Column="1" Text="What the Port" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
-    <Button x:Name="Pin" Height="32" Width="32" VerticalAlignment="Center" Tag="header-pin" AutomationProperties.Name="Keep panel open" Grid.Column="2" Content="◇" Background="Transparent" Padding="0" ToolTip="Keep panel open"/>
-    <Button x:Name="Hide" Height="32" Width="32" VerticalAlignment="Center" Tag="header-hide" AutomationProperties.Name="Hide to tray" Grid.Column="3" Content="×" Background="Transparent" FontSize="19" Padding="0" ToolTip="Hide to tray (Esc)"/>
+    <Button x:Name="Pin" Height="32" Width="32" HorizontalAlignment="Right" Margin="0,0,34,0" VerticalAlignment="Center" Tag="header-pin" AutomationProperties.Name="Keep panel open" Grid.Column="2" Content="◇" Background="Transparent" Padding="0" ToolTip="Keep panel open"/>
+    <Button x:Name="Hide" Height="32" Width="32" HorizontalAlignment="Right" VerticalAlignment="Center" Tag="header-hide" AutomationProperties.Name="Hide to tray" Grid.Column="2" Content="×" Background="Transparent" FontSize="19" Padding="0" ToolTip="Hide to tray (Esc)"/>
    </Grid>
+   <StackPanel x:Name="Summary" DockPanel.Dock="Top" Margin="16,0,16,12"/>
    <StackPanel KeyboardNavigation.TabIndex="2" DockPanel.Dock="Bottom">
     <Border x:Name="MessageBox" Background="#36312B" Padding="12,9" Margin="12,4" CornerRadius="7" Visibility="Collapsed"><TextBlock x:Name="Message" AutomationProperties.LiveSetting="Polite" Foreground="#FFCF83" FontSize="11" TextWrapping="Wrap"/></Border>
     <Border BorderBrush="#30343D" BorderThickness="0,1,0,0"><StackPanel x:Name="Footer" Margin="12,11,12,8"/></Border>

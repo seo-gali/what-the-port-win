@@ -52,9 +52,6 @@ namespace WhatThePort {
                     History=oldServer == null ? new List<Sample>() : new List<Sample>(oldServer.History) };
                 if (server.Connections > 0 || server.Cpu >= 2) server.LastActive=now;
                 ResolveProject(server,root.Pid,now);
-                foreach (int ancestor in Policy.Ancestors(root.Pid,processes)) {
-                    ProcessNode p; if (processes.TryGetValue(ancestor,out p) && (p.Name == "codex" || p.Name == "claude")) { server.Agent=p.Name == "codex" ? "Codex" : "Claude Code"; break; }
-                }
                 server.History.Add(new Sample { At=now, Memory=server.Memory, Cpu=server.Cpu }); Policy.PruneHistory(server.History,now);
                 server.Warning=Policy.Warning(server,settings);
                 tracked[key]=server; live.Add(key); output.Servers.Add(server);
@@ -62,8 +59,41 @@ namespace WhatThePort {
             foreach (var key in tracked.Keys.Where(k => !live.Contains(k)).ToList()) { tracked.Remove(key); projects.Remove(key); }
             foreach (var pid in previous.Keys.Where(p => !sampled.ContainsKey(p)).ToList()) previous.Remove(pid);
             output.Servers=output.Servers.OrderBy(s => s.Port).ToList();
+            var clientSamples=new Dictionary<int,ProcessNode>(sampled);
+            var connections=new Connections(sockets);
+            foreach(var server in output.Servers){
+                server.Agent=FindAgent(server.Processes[0],processes,clientSamples,now);
+                foreach(var client in connections.ClientPids(server)){
+                    ProcessNode process;if(!processes.TryGetValue(client.Key,out process))continue;
+                    ProcessNode identity;
+                    if(!clientSamples.TryGetValue(client.Key,out identity)){
+                        DateTime start;double cpu;long memory;
+                        if(!Native.SampleProcess(client.Key,out start,out cpu,out memory)||start>now)continue;
+                        identity=new ProcessNode{Pid=process.Pid,Name=process.Name,Parent=process.Parent,Started=start};clientSamples[client.Key]=identity;
+                    }
+                    var project=output.Servers.FirstOrDefault(s=>s.Processes.Any(p=>p.Pid==identity.Pid&&Native.SameStart(p.Started,identity.Started)));
+                    string agent=FindAgent(identity,processes,clientSamples,now);
+                    server.Clients.Add(new ConnectedApp{Pid=identity.Pid,Started=identity.Started,Name=identity.Name,Project=project==null?null:project.Name,Agent=agent,Connections=client.Value});
+                }
+                server.Clients=server.Clients.OrderBy(c=>c.Project??c.Agent??c.Name).ThenBy(c=>c.Pid).ToList();
+            }
             Native.Memory(out output.TotalMemory,out output.FreeMemory);
             return output;
+        }
+        static string FindAgent(ProcessNode child,IDictionary<int,ProcessNode> processes,IDictionary<int,ProcessNode> sampled,DateTime at){
+            var seen=new HashSet<int>();DateTime childStart=child.Started;
+            for(int pid=child.Pid;pid>0&&seen.Count<64&&seen.Add(pid);){
+                ProcessNode node,identity;if(!processes.TryGetValue(pid,out node))break;
+                if(!sampled.TryGetValue(pid,out identity)){
+                    DateTime start;double cpu;long memory;
+                    if(!Native.SampleProcess(pid,out start,out cpu,out memory)||start>at)break;
+                    identity=new ProcessNode{Pid=pid,Started=start};sampled[pid]=identity;
+                }
+                if(identity.Started>childStart)break;childStart=identity.Started;
+                if(node.Name=="codex"||node.Name=="claude")return node.Name=="codex"?"Codex":"Claude Code";
+                pid=node.Parent;
+            }
+            return null;
         }
         void ResolveProject(Server s,int pid,DateTime now) {
             Tuple<DateTime,string,string> cached;

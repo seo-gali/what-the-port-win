@@ -21,8 +21,14 @@ namespace WhatThePort {
         public string Identity { get { return Pid + ":" + Started.Ticks; } }
     }
     public sealed class SocketRow {
-        public int Pid, Port, State;
-        public string Address;
+        public int Pid, Port, State, RemotePort;
+        public string Address, RemoteAddress;
+    }
+    [DataContract] public sealed class ConnectedApp {
+        [DataMember] public int Pid;
+        [DataMember] public DateTime Started;
+        [DataMember] public string Name,Project,Agent;
+        [DataMember] public int Connections;
     }
     [DataContract] public sealed class Server {
         [DataMember] public string Key;
@@ -40,6 +46,7 @@ namespace WhatThePort {
         [DataMember] public long Memory;
         [DataMember] public double Cpu;
         [DataMember] public int Connections;
+        [DataMember] public List<ConnectedApp> Clients = new List<ConnectedApp>();
         [DataMember] public bool Protected;
         [DataMember] public string ProtectionReason;
         [DataMember] public string Warning;

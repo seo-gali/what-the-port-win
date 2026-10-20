@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace WhatThePort.App {
     public static class Demo {
+        public static ProjectLink LinkFor(Server server){return server.Key=="demo-0"?new ProjectLink{Folder=server.Folder,Port=server.Port,Agent="Codex",Session="demo-session",Preview="https://demo.vercel.app"}:null;}
         public static Snapshot Create() {
             DateTime now=DateTime.UtcNow; var result=new Snapshot { At=now,TotalMemory=16*Format.GB,FreeMemory=(long)(4.2*Format.GB) };
             string[] names={"menubar port monitor","main","feat/export svg","tokens v2","fix/auth timeout"};
@@ -16,6 +17,7 @@ namespace WhatThePort.App {
                 }
                 server.Processes.Add(new ProcessNode{Pid=12000+i*100,Name=i==2?"python":"node",Started=server.Started,Memory=memory[i]*3/4,Cpu=server.Cpu});
                 server.Processes.Add(new ProcessNode{Pid=12001+i*100,Name="worker",Started=server.Started,Memory=memory[i]/4,Depth=1});
+                if(i==0)server.Clients.Add(new ConnectedApp{Pid=15000,Started=now.AddHours(-2),Name="node",Project="token-studio",Agent="Codex",Connections=2});
                 result.Servers.Add(server);
             }
             return result;

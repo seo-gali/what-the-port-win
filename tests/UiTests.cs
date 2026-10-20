@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,12 +31,14 @@ public static class UiTests {
             // Exercise actual WPF templates invisibly; every operation uses isolated demo data.
             Layout();Check("list starts with five servers",Rows().Count()==5);
             HeaderTests();
+            NavigationLayoutTests();
             ToolTipTests();
             KeyboardTests();
             CheckNames("list controls have screen reader names");
             Click(Rows().First());Check("row opens server detail",Title()=="menubar port monitor");
             CheckPlacement("detail grows upward with visible footer",bottom);
             Check("detail has memory and CPU charts",All(Body()).OfType<Chart>().Count()==2);
+            CaptureVisual((FrameworkElement)window.Content,"detail-compact");
             ProcessDetailsLoadingTests();
             CheckNames("detail controls have screen reader names");
             Check("window title identifies current screen",window.Title.Contains(Title()));
@@ -78,6 +80,50 @@ public static class UiTests {
         Console.WriteLine("\n"+passed+" UI passed, "+failed+" failed");return failed==0?0:1;
     }
     const BindingFlags PrivateInstance=BindingFlags.NonPublic|BindingFlags.Instance;
+    static void NavigationLayoutTests(){
+        Invoke("Place",false,false);Layout();
+        Rect initial=PanelPlacement.PhysicalBounds(window);
+        var summary=(StackPanel)window.FindName("Summary");var summaryAt=summary.TranslatePoint(new Point(),window);
+        var scroll=(ScrollViewer)window.FindName("Scroll");scroll.ScrollToBottom();Layout();
+        Check("memory and CPU summary stay fixed while server rows scroll",summary.TranslatePoint(new Point(),window)==summaryAt&&scroll.VerticalOffset>0);scroll.ScrollToTop();
+        Check("server rows have no redundant hover tooltips",Rows().All(r=>r.ToolTip==null&&All(r).OfType<FrameworkElement>().All(e=>e.ToolTip==null)));
+        Click(Rows().First());
+        Check("detail keeps list size and position",PanelPlacement.PhysicalBounds(window)==initial);
+        var expander=All(Body()).OfType<Expander>().Single();
+        var chart=All(Body()).OfType<Chart>().First();
+        Check("process details appear beside project information before charts",expander.TranslatePoint(new Point(),Body()).Y<chart.TranslatePoint(new Point(),Body()).Y);
+        Click(ByName("Manage project links and copy local URL"));
+        Check("links keep list size and position",PanelPlacement.PhysicalBounds(window)==initial);
+        Click((Button)window.FindName("Back"));
+        Check("links Back returns to the originating detail",Title()=="menubar port monitor");
+        Invoke("Navigate","list");Click(ByName("Settings (Ctrl+,)"));
+        Check("settings keep list size and position",PanelPlacement.PhysicalBounds(window)==initial);
+        var inputs=All(Body()).OfType<TextBox>().Take(4).ToArray();
+        var a=inputs[0].TranslatePoint(new Point(),Body());var second=inputs[1].TranslatePoint(new Point(),Body());
+        var c=inputs[2].TranslatePoint(new Point(),Body());var d=inputs[3].TranslatePoint(new Point(),Body());
+        Check("numeric settings use two equal-width fields per row",Near(a.Y,second.Y)&&second.X>a.X&&Near(c.Y,d.Y)&&c.Y>a.Y&&Near(inputs[0].ActualWidth,inputs[1].ActualWidth));
+        Check("settings offer Windows login startup toggle",All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Any(t=>(string)t.Tag=="startup"));
+        Check("header offers smaller and larger buttons",window.FindName("Smaller") is Button&&window.FindName("Larger") is Button);
+        inputs[0].Text="9";
+        var startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
+        var opacity=All(Body()).OfType<Slider>().Single();opacity.Value=60;Layout();
+        Check("opacity preview affects only background",Near(((Border)window.FindName("PanelBackground")).Background.Opacity,.6)&&Near(window.Opacity,0)&&Near(inputs[0].Opacity,1));
+        Invoke("ToggleSnooze");
+        Check("snooze toggles on with visible state without losing draft input",(DateTime)Field("snoozeUntil")>DateTime.UtcNow&&Message().Contains("snoozed")&&inputs[0].Text=="9"&&All(Body()).OfType<Button>().Any(b=>b.Content as string=="Resume alerts"));
+        Invoke("ToggleSnooze");Check("snooze toggles off immediately",(DateTime)Field("snoozeUntil")<DateTime.UtcNow&&Message().Contains("resumed")&&All(Body()).OfType<TextBlock>().Any(t=>t.Text=="Alerts active"));
+        Click(ByName("Discard changes"));Click(ByName("Settings (Ctrl+,)"));
+        Check("cancel discards startup and opacity previews",All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked==false&&Near(((Border)window.FindName("PanelBackground")).Background.Opacity,1));
+        Invoke("Navigate","list");
+        Click((Button)window.FindName("Larger"));var larger=PanelPlacement.PhysicalBounds(window);
+        Check("plus enlarges panel while preserving bottom",larger.Width>initial.Width&&larger.Height>=initial.Height&&Near(larger.Bottom,initial.Bottom));
+        Click(Rows().First());Check("navigation preserves user-selected size",PanelPlacement.PhysicalBounds(window)==larger);
+        Click(ByName("Manage project links and copy local URL"));Press(Key.Escape);Check("links Escape returns to server detail",Title()=="menubar port monitor");
+        Invoke("Navigate","list");Click((Button)window.FindName("Smaller"));var smaller=PanelPlacement.PhysicalBounds(window);Check("minus restores original size and keeps bottom",Near(smaller.Width,initial.Width)&&Near(smaller.Height,initial.Height)&&Near(smaller.Bottom,larger.Bottom));
+        typeof(WhatThePort.App.Panel).GetField("stopDetails",PrivateInstance).SetValue(panel,"Test server stopped.");
+        var dialog=(Window)typeof(WhatThePort.App.Panel).GetMethod("StopDetailsWindow",PrivateInstance).Invoke(panel,null);
+        try{var text=All(dialog).OfType<TextBox>().Single();Check("stop result window uses app theme and offers close",text.IsReadOnly&&((SolidColorBrush)text.Background).Color==Color.FromRgb(32,37,48)&&All(dialog).OfType<Button>().Any(b=>AutomationProperties.GetName(b)=="Close"));dialog.Opacity=0;dialog.Show();dialog.UpdateLayout();CaptureVisual((FrameworkElement)dialog.Content,"stop-result");}finally{dialog.Close();}
+        typeof(WhatThePort.App.Panel).GetField("stopDetails",PrivateInstance).SetValue(panel,null);
+    }
     [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr owner,int message,IntPtr wparam,IntPtr lparam);
     [DllImport("user32.dll")] static extern bool PostMessage(IntPtr owner,int message,IntPtr wparam,IntPtr lparam);
     [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern int RegisterWindowMessage(string name);
@@ -111,7 +157,7 @@ public static class UiTests {
         string storage=Path.Combine(Path.GetTempPath(),"wtp-ui-"+Guid.NewGuid().ToString("N"));
         try{
             new WhatThePort.Store(storage).SaveSettings(new WhatThePort.Settings{Notifications=false,Cleanup="Off"});
-            panel=new WhatThePort.App.Panel(false,false,storage,"en");window=null;
+            panel=new WhatThePort.App.Panel(false,false,storage,"en",Path.Combine(storage,"startup"));window=null;
             var tray=(TrayIcon)Field("tray");var owner=(IntPtr)Field("handle");
             Check("background startup creates tray without a WPF panel",panel.Window==null&&tray.Visible&&IsWindow(owner));
             SendMessage(owner,0x8002,IntPtr.Zero,new IntPtr((2<<16)|0x400));
@@ -123,6 +169,9 @@ public static class UiTests {
             SendMessage(owner,0x0312,new IntPtr(1),IntPtr.Zero);Layout();
             Click((Button)window.FindName("Pin"));
             typeof(WhatThePort.App.Panel).GetField("current",PrivateInstance).SetValue(panel,Demo.Create());Rerender();
+            Click(Rows().First());
+            Check("unregistered session and preview share one link management button",!All(window).OfType<Button>().Any(b=>AutomationProperties.GetName(b)=="Resume linked agent session (A)"||AutomationProperties.GetName(b)=="Open Vercel preview (V)")&&All(window).OfType<Button>().Count(b=>AutomationProperties.GetName(b)=="Manage project links and copy local URL")==1);
+            Invoke("Navigate","list");
             Click(Rows().First());var chart=All(Body()).OfType<Chart>().First();chart.Focus();Press(Key.Home);var selectedTime=chart.SelectedTime;
             string detailTitle=Title();TrayEvent(owner,0x401);
             Check("native tray keyboard activation hides panel and releases chart controls",!panel.IsVisible&&Body().Children.Count==0);
@@ -158,6 +207,19 @@ public static class UiTests {
     static ComboBox LanguageChoice(){return All(Body()).OfType<ComboBox>().Single(c=>(string)c.Tag=="select-LANGUAGE / 언어");}
     static void ChooseLanguage(string choice){var language=LanguageChoice();language.Focus();language.IsDropDownOpen=true;language.SelectedItem=choice;Layout();Pump();}
     static void LanguagePreviewTests(string storage){
+        Invoke("Navigate","list");
+        Click(ByName("Settings (Ctrl+,)"));
+        var startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
+        Click(ByName("Discard changes"));Check("cancel leaves actual isolated startup registration off",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup")));
+        Click(ByName("Settings (Ctrl+,)"));startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
+        All(Body()).OfType<Slider>().Single().Value=70;Click(ByName("Save preferences"));
+        Check("save applies actual isolated startup registration and opacity",WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup"))&&new WhatThePort.Store(storage).LoadSettings().PanelOpacity==70);
+        Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked=false;Click(ByName("Save preferences"));
+        Check("startup toggle off removes isolated registration",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup")));
+        string blockedShortcut=Path.Combine(storage,"startup","What the Port.lnk");Directory.CreateDirectory(blockedShortcut);
+        Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked=true;All(Body()).OfType<TextBox>().First().Text="17";Click(ByName("Save preferences"));
+        Check("failed startup registration rolls back persisted preferences",Title()=="Settings"&&new WhatThePort.Store(storage).LoadSettings().ScanSeconds==3&&!String.IsNullOrEmpty(Message()));
+        Directory.Delete(blockedShortcut);Click(ByName("Discard changes"));
         Click(ByName("Settings (Ctrl+,)"));ChooseLanguage("한국어");Click(ByName("설정 저장"));
         string preferences=Path.Combine(storage,"settings.json"),saved=File.ReadAllText(preferences);
         Click(ByName("설정 (Ctrl+,)"));
@@ -250,6 +312,9 @@ public static class UiTests {
         var cleanup=All(Body()).OfType<Grid>().First(g=>(g.Tag as string)=="row-"+snapshot.Servers[0].Key);
         double[] y=cleanup.Children.OfType<FrameworkElement>().Where(e=>Grid.GetColumn(e)>0).Select(e=>e.TranslatePoint(new Point(),window).X).ToArray();
         Check("list and cleanup columns retain identical positions",x.Length==y.Length&&x.Zip(y,(a,b)=>Near(a,b)).All(equal=>equal));
+        var marker=regular.Children.OfType<FrameworkElement>().Single(e=>Grid.GetColumn(e)==0);var portText=regular.Children.OfType<FrameworkElement>().Single(e=>Grid.GetColumn(e)==1);
+        var checkbox=cleanup.Children.OfType<FrameworkElement>().Single(e=>Grid.GetColumn(e)==0);var cleanupPort=cleanup.Children.OfType<FrameworkElement>().Single(e=>Grid.GetColumn(e)==1);
+        Check("shield and checkbox centers align with port numbers",Near(marker.TranslatePoint(new Point(0,marker.ActualHeight/2),regular).Y,portText.TranslatePoint(new Point(0,portText.ActualHeight/2),regular).Y)&&Near(checkbox.TranslatePoint(new Point(0,checkbox.ActualHeight/2),cleanup).Y,cleanupPort.TranslatePoint(new Point(0,cleanupPort.ActualHeight/2),cleanup).Y));
         var protectedBox=All(Body()).OfType<CheckBox>().First();
         Check("protected checkbox explains why without enabling stop",!protectedBox.IsEnabled&&ToolTipService.GetShowOnDisabled(protectedBox)&&AutomationProperties.GetHelpText(protectedBox).Contains("parent process"));
         Press(Key.Escape);Click(ByName("Settings (Ctrl+,)"));
@@ -263,7 +328,7 @@ public static class UiTests {
         CaptureVisual((FrameworkElement)window.Content,"protected-detail-ko");
         Check("Korean chart exposes samples and keyboard instructions",UIElementAutomationPeer.CreatePeerForElement(chart).GetName().Contains("측정값")&&UIElementAutomationPeer.CreatePeerForElement(chart).GetHelpText().Contains("방향키"));
         Click(ByName("프로젝트 연결 관리 및 로컬 URL 복사"));Check("Korean project link labels",Title()=="프로젝트 연결"&&All(Body()).OfType<TextBox>().Any(t=>AutomationProperties.GetName(t)=="세션 ID"));
-        Press(Key.Escape);Click(ByName("종료할 서버 선택 (C)"));Check("Korean protected cleanup explanation is visible",All(Body()).OfType<TextBlock>().Any(t=>t.Text.Contains("보호된 항목")));
+        Press(Key.Escape);Press(Key.Escape);Click(ByName("종료할 서버 선택 (C)"));Check("Korean protected cleanup explanation is visible",All(Body()).OfType<TextBlock>().Any(t=>t.Text.Contains("보호된 항목")));
         Press(Key.Escape);Click(ByName("설정 (Ctrl+,)"));
         var sample=All(Body()).OfType<TextBox>().First();sample.Text="bad";Click(ByName("설정 저장"));Check("invalid numeric input has Korean feedback",Message().Contains("올바른 숫자"));sample.Text="3";
         var modes=All(Body()).OfType<ComboBox>().Single(c=>(string)c.Tag=="select-AUTOMATIC CLEAN UP");Check("cleanup options are localized",modes.Items.Cast<string>().SequenceEqual(new[]{"끄기","알림 후 직접 선택","자동 종료"}));

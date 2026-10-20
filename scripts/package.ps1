@@ -34,6 +34,7 @@ if ($packageDocs -ne [IO.Path]::GetFullPath((Join-Path $projectRoot 'dist\docs')
 if (Test-Path -LiteralPath $packageDocs) { Remove-Item -LiteralPath $packageDocs -Recurse -Force }
 New-Item -ItemType Directory -Path $packageDocs -Force | Out-Null
 Copy-Item -Path (Join-Path $projectRoot 'docs\*.md') -Destination $packageDocs -Force
+Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination $packageDocs -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\images') -Destination $packageDocs -Recurse -Force
 # Always refresh fonts from the trusted source, including on a cached build.
 New-Item -ItemType Directory -Path (Join-Path $outputRoot 'fonts') -Force | Out-Null

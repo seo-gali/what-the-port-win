@@ -16,11 +16,39 @@ public static class CoreTests {
     public static int Main(string[] args) {
         if(args.Length>0&&args[0]=="--fixture")return Fixture();
         temp=Path.Combine(Path.GetTempPath(),"wtp-tests-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(temp);
-        try{Units();Integration();}catch(Exception e){failed++;Console.WriteLine("FAIL unexpected: "+e);}
+        try{Units();ConnectionTests();StartupTests();Integration();}catch(Exception e){failed++;Console.WriteLine("FAIL unexpected: "+e);}
         finally{if(Directory.Exists(temp))Directory.Delete(temp,true);}
         Console.WriteLine("\n"+passed+" passed, "+failed+" failed");return failed==0?0:1;
     }
     static void Check(string name,bool condition){if(condition){passed++;Console.WriteLine("PASS "+name);}else{failed++;Console.WriteLine("FAIL "+name);}}
+    static void StartupTests(){
+        string folder=Path.Combine(temp,"startup"),executable=Path.Combine(temp,"portable app.exe");File.WriteAllText(executable,"fixture");
+        StartupRegistration.Set(false,executable,folder);Check("startup defaults to off without creating directories",!StartupRegistration.IsEnabled(folder)&&!Directory.Exists(folder));
+        StartupRegistration.Set(true,executable,folder);Check("startup creates only the app shortcut",StartupRegistration.IsEnabled(folder)&&Directory.GetFiles(folder).Length==1);
+        object shell=null,shortcut=null;
+        try{
+            shell=Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell",true));shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{Path.Combine(folder,"What the Port.lnk")});
+            var type=shortcut.GetType();
+            Check("startup keeps path with spaces and launches in background",(string)type.InvokeMember("TargetPath",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==executable&&(string)type.InvokeMember("Arguments",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)=="--background");
+        }finally{if(shortcut!=null)System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);if(shell!=null)System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);}
+        StartupRegistration.Set(true,executable,folder);Check("saving startup again replaces rather than duplicates shortcut",Directory.GetFiles(folder).Length==1);
+        File.WriteAllText(Path.Combine(folder,"unrelated.txt"),"keep");StartupRegistration.Set(false,executable,folder);Check("startup off removes only app registration",!StartupRegistration.IsEnabled(folder)&&File.Exists(Path.Combine(folder,"unrelated.txt")));
+        Throws("startup rejects nonexistent executable",()=>StartupRegistration.Set(true,Path.Combine(temp,"missing.exe"),folder));
+        Throws("invalid opacity rejected",()=>new Settings{PanelOpacity=0}.Validate());Throws("invalid panel size rejected",()=>new Settings{PanelSize=4}.Validate());
+    }
+    static void ConnectionTests(){
+        var server=new Server{Ports=new List<int>{8000},Processes=new List<ProcessNode>{new ProcessNode{Pid=10}}};
+        var rows=new List<SocketRow>{
+            new SocketRow{Pid=10,State=5,Address="127.0.0.1",Port=8000,RemoteAddress="127.0.0.1",RemotePort=52000},
+            new SocketRow{Pid=20,State=5,Address="127.0.0.1",Port=52000,RemoteAddress="127.0.0.1",RemotePort=8000},
+            new SocketRow{Pid=21,State=5,Address="127.0.0.2",Port=52000,RemoteAddress="127.0.0.1",RemotePort=8000},
+            new SocketRow{Pid=22,State=2,Address="127.0.0.1",Port=52000,RemoteAddress="127.0.0.1",RemotePort=8000}};
+        var clients=new Connections(rows).ClientPids(server);Check("client attribution matches both reversed endpoints and established state",clients.Count==1&&clients[20]==1);
+        rows[1].Address="::ffff:127.0.0.1";Check("mapped IPv6 endpoint matches IPv4",new Connections(rows).ClientPids(server).ContainsKey(20));
+        rows[0].Address=rows[0].RemoteAddress=rows[1].Address=rows[1].RemoteAddress="::1";Check("IPv6 peers correlate",new Connections(rows).ClientPids(server).ContainsKey(20));
+        rows[0].Address="fe80::1%3";rows[0].RemoteAddress="fe80::2%3";rows[1].Address="fe80::2%4";rows[1].RemoteAddress="fe80::1%3";Check("different IPv6 scopes cannot identify a caller",new Connections(rows).ClientPids(server).Count==0);
+        Check("unknown process tree gives no attribution",new Connections(rows).ClientPids(new Server()).Count==0);
+    }
     static void Throws(string name,Action action){try{action();Check(name,false);}catch(ArgumentException){Check(name,true);}}
     static Server Idle(DateTime now){return new Server{Observed=now.AddHours(-5),LastActive=now.AddHours(-5),SampledAt=now,Memory=100*Format.MB};}
     static void Units(){
@@ -108,13 +136,23 @@ public static class CoreTests {
                 Check("working set and total RAM measured",server.Memory>0&&snap.TotalMemory>snap.FreeMemory&&snap.FreeMemory>0);
                 Check("live uptime from process creation",server.Started<=DateTime.UtcNow&&DateTime.UtcNow-server.Started<TimeSpan.FromMinutes(1));
                 Thread.Sleep(300);snap=scanner.Scan(config);server=snap.Servers.Single(s=>s.Processes[0].Pid==first.Id);Check("CPU/history samples collected",server.History.Count==2&&server.Cpu>=0&&server.Cpu<=100);
-                using(var client=new TcpClient()) {client.Connect(IPAddress.Loopback,ports[0]);Thread.Sleep(100);snap=scanner.Scan(config);server=snap.Servers.Single(s=>s.Processes[0].Pid==first.Id);Check("established inbound connection measured",server.Connections>=1);}
+                using(var client=new TcpClient()) {
+                    client.Connect(IPAddress.Loopback,ports[0]);Thread.Sleep(100);snap=scanner.Scan(config);server=snap.Servers.Single(s=>s.Processes[0].Pid==first.Id);Check("established inbound connection measured",server.Connections>=1);
+                    int selfPid=Process.GetCurrentProcess().Id;
+                    Check("live TCP client identifies current process without adding stop targets",server.Clients.Any(c=>c.Pid==selfPid&&c.Started!=default(DateTime)&&c.Connections>=1)&&!server.Processes.Any(p=>p.Pid==selfPid));
+                }
+                using(var client=new TcpClient(AddressFamily.InterNetworkV6)){
+                    client.Connect(IPAddress.IPv6Loopback,ports[1]);Thread.Sleep(100);snap=scanner.Scan(config);server=snap.Servers.Single(s=>s.Processes[0].Pid==first.Id);
+                    Check("live IPv6 endpoints identify the local client",server.Clients.Any(c=>c.Pid==Process.GetCurrentProcess().Id));
+                }
                 var node=server.Processes[0];var stale=new ProcessNode{Pid=node.Pid,Name=node.Name,Started=node.Started.AddSeconds(-1)};string error;
                 Check("real process PID mismatch refuses termination",!Native.Stop(stale,out error)&&!first.HasExited);
                 var self=new ProcessNode{Pid=Process.GetCurrentProcess().Id,Name="wtp-tests",Started=Process.GetCurrentProcess().StartTime.ToUniversalTime()};Check("own process cannot be stopped",!Native.Stop(self,out error));
                 server.Protected=true;Check("protected server stop refused",ProcessControl.Stop(server).Count>0&&!first.HasExited);server.Protected=false;
                 server.SampledAt=DateTime.UtcNow.AddMinutes(-1);Check("stale process stop refused",ProcessControl.Stop(server).Count>0&&!first.HasExited);server.SampledAt=DateTime.UtcNow;
-                Check("owned test server stops",ProcessControl.Stop(server).Count==0);first.WaitForExit(3000);Check("fixture actually exited",first.HasExited);
+                Check("owned test server stops",ProcessControl.Stop(server).Count==0);
+                Check("stop waits for exit before immediate refresh",!scanner.Scan(config).Servers.Any(s=>s.Key==server.Key));
+                first.WaitForExit(3000);Check("fixture actually exited",first.HasExited);
                 Check("unselected fixture preserved",!second.HasExited);Check("stopped listener disappeared",!Native.Sockets().Any(s=>s.State==2&&s.Pid==first.Id));
                 Check("scanner removes exited server",!scanner.Scan(config).Servers.Any(s=>s.Key==server.Key));
                 var timer=Stopwatch.StartNew();for(int i=0;i<5;i++)scanner.Scan(config);timer.Stop();Console.WriteLine("INFO 5 native scans: "+timer.ElapsedMilliseconds+" ms");Check("native scan cycle under 3 seconds",timer.ElapsedMilliseconds<3000);

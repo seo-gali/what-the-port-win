@@ -16,6 +16,7 @@ namespace WhatThePort {
         [DllImport("kernel32.dll")] static extern int GetCurrentProcessId();
         [DllImport("psapi.dll", SetLastError=true)] static extern bool GetProcessMemoryInfo(IntPtr process,ref ProcessMemory memory,uint size);
         [DllImport("kernel32.dll", SetLastError=true)] static extern bool TerminateProcess(IntPtr handle, uint code);
+        [DllImport("kernel32.dll", SetLastError=true)] static extern uint WaitForSingleObject(IntPtr handle,uint milliseconds);
         [DllImport("kernel32.dll")] static extern bool ProcessIdToSessionId(int pid, out int session);
         [DllImport("advapi32.dll", SetLastError=true)] static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
         [DllImport("kernel32.dll")] static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint pid);
@@ -93,7 +94,13 @@ namespace WhatThePort {
                             int port = Marshal.ReadByte(row, portOffset)*256 + Marshal.ReadByte(row, portOffset+1);
                             byte[] address = new byte[family == 2 ? 4 : 16];
                             Marshal.Copy(IntPtr.Add(row, family == 2 ? 4 : 0), address, 0, address.Length);
-                            result.Add(new SocketRow { Pid=Marshal.ReadInt32(row, family == 2 ? 20 : 52), State=Marshal.ReadInt32(row, family == 2 ? 0 : 48), Port=port, Address=new System.Net.IPAddress(address).ToString() });
+                            byte[] remote=new byte[address.Length];
+                            Marshal.Copy(IntPtr.Add(row,family==2?12:24),remote,0,remote.Length);
+                            int remotePortOffset=family==2?16:44;
+                            result.Add(new SocketRow { Pid=Marshal.ReadInt32(row, family == 2 ? 20 : 52), State=Marshal.ReadInt32(row, family == 2 ? 0 : 48), Port=port,
+                                Address=family==2?new System.Net.IPAddress(address).ToString():new System.Net.IPAddress(address,(uint)System.Net.IPAddress.NetworkToHostOrder(Marshal.ReadInt32(row,16))).ToString(),
+                                RemoteAddress=family==2?new System.Net.IPAddress(remote).ToString():new System.Net.IPAddress(remote,(uint)System.Net.IPAddress.NetworkToHostOrder(Marshal.ReadInt32(row,40))).ToString(),
+                                RemotePort=Marshal.ReadByte(row,remotePortOffset)*256+Marshal.ReadByte(row,remotePortOffset+1) });
                         }
                         succeeded = true; break;
                     } finally { Marshal.FreeHGlobal(memory); }
@@ -122,13 +129,15 @@ namespace WhatThePort {
             error = null;
             if (node.Pid <= 4 || Policy.IsProtectedName(node.Name) || Policy.Ancestors(Process.GetCurrentProcess().Id, Processes()).Contains(node.Pid)) { error="Protected process."; return false; }
             // A single handle pins the identity through validation and termination.
-            IntPtr h = OpenProcess(0x1001, false, node.Pid);
+            IntPtr h = OpenProcess(0x101001, false, node.Pid);
             if (h == IntPtr.Zero) { error="Process exited or access denied."; return false; }
             try {
                 long created, exited, kernel, user;
                 if (!GetProcessTimes(h, out created, out exited, out kernel, out user) || !SameStart(DateTime.FromFileTimeUtc(created), node.Started)) { error="Process identity changed; stop cancelled."; return false; }
                 if (!OwnedByCurrentUser(h, node.Pid)) { error="Process belongs to another user or session."; return false; }
                 if (!TerminateProcess(h, 0)) { error=new Win32Exception().Message; return false; }
+                uint wait=WaitForSingleObject(h,2000);
+                if(wait!=0){error=wait==258?"Process exit confirmation timed out.":new Win32Exception().Message;return false;}
                 return true;
             } finally { CloseHandle(h); }
         }

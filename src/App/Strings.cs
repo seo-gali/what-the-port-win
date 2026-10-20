@@ -20,6 +20,11 @@ namespace WhatThePort.App {
             return value;
         }
         static readonly Dictionary<string,string> Korean=new Dictionary<string,string>{
+            {"Close","닫기"},{"Process exit confirmation timed out.","종료 요청 후 완료 확인 시간이 초과되었습니다."},
+            {"Smaller panel","창 작게"},{"Larger panel","창 크게"},{"BACKGROUND OPACITY","배경 불투명도"},
+            {"Start when I sign in to Windows","Windows 로그인 시 자동 실행"},{"Starts this EXE in the tray. Save again after moving the file.","현재 EXE를 트레이에서 시작합니다. 파일을 옮기면 다시 저장해 주세요."},
+            {"Resume alerts","알림 재개"},{"Pause or resume resource notifications","리소스 알림 일시 중지 또는 재개"},{"Alerts resumed.","알림을 재개했습니다."},{"Alerts active","알림 사용 중"},{"Alerts paused until {0}","{0}까지 알림 쉬는 중"},
+            {"Started via","실행 출처"},{"Connected apps","연결 앱"},{"No identified local apps","확인된 로컬 앱 없음"},{"Via {0}","{0}에서 실행"},{"Connected: {0}","연결: {0}"},
             {"Servers","서버"},{"Clean up","서버 정리"},{"Settings","설정"},{"Project links","프로젝트 연결"},
             {"Cancel","취소"},{"Save preferences","설정 저장"},{"Save links","연결 저장"},{"Save project links","프로젝트 연결 저장"},{"Discard changes","변경 취소"},
             {"Servers home","서버 목록"},{"Back to servers","서버 목록으로"},{"Back to servers (Esc)","서버 목록으로 (Esc)"},{"Back to server","서버 상세로"},
@@ -39,7 +44,7 @@ namespace WhatThePort.App {
             {"A little breathing room.","잠시, 여유로운 상태."},{"No development servers found.\nStart a local server and it will appear here.","실행 중인 개발 서버가 없습니다.\n로컬 서버를 시작하면 여기에 표시됩니다."},
             {"Show all user listeners","모든 사용자 리스너 표시"},{"Include custom executables and other local apps","사용자 정의 실행 파일과 다른 로컬 앱도 표시"},
             {"Stopping ends the selected process trees immediately.","선택한 서버와 하위 프로세스를 즉시 종료합니다."},
-            {"Protected rows cannot be selected. Hover the status for the reason.","보호된 항목은 선택할 수 없습니다. 상태 위에 마우스를 올리면 이유가 표시됩니다."},
+            {"Protected rows cannot be selected. Open server details from the list for the reason.","보호된 항목은 선택할 수 없습니다. 목록에서 서버 상세를 열면 사유를 확인할 수 있습니다."},
             {"All listed processes are protected. There are no servers you can stop here.","표시된 항목이 모두 보호 대상입니다. 이 화면에서 종료할 수 있는 서버가 없습니다."},
             {"Stop {0} servers · free {1}","서버 {0}개 종료 · {1} 확보"},{"Stop {0} server · free {1}","서버 {0}개 종료 · {1} 확보"},
             {"Cancel cleanup","서버 정리 취소"},{"Stop selected server process trees","선택한 서버와 하위 프로세스 종료"},{"Select servers to stop (C)","종료할 서버 선택 (C)"},

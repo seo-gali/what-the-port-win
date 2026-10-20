@@ -7,6 +7,7 @@ if (-not $testRoot.StartsWith($artifactRoot + '\', [StringComparison]::OrdinalIg
 New-Item -ItemType Directory -Path $testRoot -Force | Out-Null
 foreach ($folder in @('src','scripts','assets','docs','tests')) { Copy-Item -LiteralPath (Join-Path $projectRoot $folder) -Destination $testRoot -Recurse -Force }
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination $testRoot
+Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination $testRoot
 $passed = 0
 function Check($name, $condition) {
     if (-not $condition) { throw ('FAIL ' + $name) }

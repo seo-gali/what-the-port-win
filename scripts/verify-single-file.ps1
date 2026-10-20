@@ -27,7 +27,7 @@ if ($signature.SignerCertificate) { $publisher = $signature.SignerCertificate.Su
 $trusted = $status -eq 'Valid' -and [bool]$signature.TimeStamperCertificate
 $report = [ordered]@{
     checkedAtUtc = [DateTime]::UtcNow.ToString('o')
-    executable = [ordered]@{ name=[IO.Path]::GetFileName($ExecutablePath); bytes=(Get-Item -LiteralPath $ExecutablePath).Length; sha256=$hash; signature=$status; publisher=$publisher; timestamped=[bool]$signature.TimeStamperCertificate }
+    executable = [ordered]@{ name=[IO.Path]::GetFileName($ExecutablePath); version=[Diagnostics.FileVersionInfo]::GetVersionInfo($ExecutablePath).FileVersion; bytes=(Get-Item -LiteralPath $ExecutablePath).Length; sha256=$hash; signature=$status; publisher=$publisher; timestamped=[bool]$signature.TimeStamperCertificate }
     trustedTimestampedSignature = $trusted
     runtime = 'Windows 10/11 x64; .NET Framework 4.8'
     distribution = 'Standalone GUI executable with embedded Core, WPF resources, fonts and licenses; CLI remains in the optional ZIP.'

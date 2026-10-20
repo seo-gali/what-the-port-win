@@ -46,7 +46,9 @@ if ($cached) { Write-Output 'Reusing unchanged standalone executable.' } else {
 if ($Tests) {
     foreach ($test in @('CoreTests','UiTests','StartupTests','SingleFileTests')) {
         $name = @{ CoreTests='wtp-tests'; UiTests='wtp-ui-tests'; StartupTests='wtp-startup-tests'; SingleFileTests='wtp-single-file-tests' }[$test]
-        & $compiler /nologo /target:exe /platform:x64 /optimize+ /warnaserror+ "/out:$outputRoot\$name.exe" "/r:$executable" $references /r:System.Windows.Forms.dll /r:System.Drawing.dll (Join-Path $projectRoot ('tests\' + $test + '.cs'))
+        $testManifest = @()
+        if ($test -eq 'UiTests') { $testManifest = @("/win32manifest:$projectRoot\src\app.manifest") }
+        & $compiler /nologo /target:exe /platform:x64 /optimize+ /warnaserror+ $testManifest "/out:$outputRoot\$name.exe" "/r:$executable" $references /r:System.Windows.Forms.dll /r:System.Drawing.dll (Join-Path $projectRoot ('tests\' + $test + '.cs'))
         if ($LASTEXITCODE -ne 0) { throw ('Test compilation failed: ' + $test) }
         if ($test -ne 'SingleFileTests') { Copy-Item -LiteralPath (Join-Path $projectRoot 'src\App.config') -Destination (Join-Path $outputRoot ($name + '.exe.config')) -Force }
     }

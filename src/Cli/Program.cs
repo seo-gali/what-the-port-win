@@ -1,9 +1,12 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Reflection;
+[assembly: AssemblyVersion(WhatThePort.AppVersion.Current)]
+[assembly: AssemblyFileVersion(WhatThePort.AppVersion.Current)]
 
 namespace WhatThePort.Cli {
     public static class Program {
@@ -31,6 +34,6 @@ namespace WhatThePort.Cli {
             }catch(Exception e){Console.Error.WriteLine("wtp: "+e.Message);return 1;}
         }
         static string Option(string[] args,string name,string fallback){int i=Array.IndexOf(args,name);return i<0?fallback:i+1<args.Length?args[i+1]:fallback;}
-        static void Help(){Console.WriteLine("What the Port for Windows 1.0\n\n  wtp                    Open the tray panel\n  wtp list               Show development servers\n  wtp list --json         Machine-readable snapshot\n  wtp list --all          Include all current-user listeners\n  wtp link --port 3000 --folder C:\\dev\\app --agent codex --session ID\n  wtp link --port 3000 --folder C:\\dev\\app --preview https://app.vercel.app\n\nUse the tray panel to review and stop processes. No admin rights required.");}
+        static void Help(){Console.WriteLine("What the Port for Windows "+AppVersion.Current+"\n\n  wtp                    Open the tray panel\n  wtp list               Show development servers\n  wtp list --json         Machine-readable snapshot\n  wtp list --all          Include all current-user listeners\n  wtp link --port 3000 --folder C:\\dev\\app --agent codex --session ID\n  wtp link --port 3000 --folder C:\\dev\\app --preview https://app.vercel.app\n\nUse the tray panel to review and stop processes. No admin rights required.");}
     }
 }

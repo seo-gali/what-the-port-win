@@ -51,9 +51,10 @@
           <p class="chapter-number">02 / TRAY &amp; WINDOW</p><h2 id="window-title">숨겨도, 감시는 계속.</h2>
           <div class="guide-split"><div>
             <p><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>P</kbd>는 <strong>창 표시/숨김</strong> 단축키입니다. 열려 있을 때 누르면 트레이로 숨고, 다시 누르면 나타납니다. 트레이의 점 격자 아이콘도 같은 동작을 합니다.</p>
-            <p><strong>×</strong>도 창을 숨깁니다. <strong>Esc</strong>는 하위 화면에서 목록으로 돌아가고, 목록에서는 창을 숨깁니다. 감시를 끝내려면 트레이 메뉴의 <strong>앱 종료 / Quit</strong>을 선택하세요.</p>
+            <p><strong>×</strong>도 창을 숨깁니다. <strong>Esc</strong>는 프로젝트 연결에서 서버 상세로, 상세·설정에서는 목록으로 돌아가며 목록에서는 창을 숨깁니다. 감시를 끝내려면 트레이 메뉴의 <strong>앱 종료 / Quit</strong>을 선택하세요.</p>
             <p><strong>◇ / ◆</strong>는 다른 창을 클릭해도 패널을 유지하는 핀입니다. 제목을 드래그하면 위치가 저장되며, <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + 방향키로도 옮길 수 있습니다.</p>
             <p>하단의 <strong>3초마다 갱신</strong>은 서버 조회 간격입니다. 숨긴 동안에도 조회·알림은 계속되지만 목록과 차트는 다시 그리지 않습니다.</p>
+            <p>제목 표시줄의 <strong>− / +</strong>로 네 가지 창 크기를 선택합니다. 크기는 저장되며 화면을 오가도 위치가 유지됩니다. 서버 행을 스크롤해도 메모리·CPU 요약은 상단에 고정됩니다.</p>
           </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/list.png"><img class="app-shot" src="assets/images/list.png" width="660" height="891" loading="lazy" alt="최신 앱의 서버 목록과 상단 핀·숨김 버튼"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>서버 목록 · 프로젝트 이름과 사용량을 한눈에</figcaption></figure></div>
         </section>
         <section class="guide-chapter" id="servers" aria-labelledby="servers-title">
@@ -63,8 +64,9 @@
             <p>목록 상단의 큰 메모리 숫자는 <strong>감시하는 서버들의 합계</strong>입니다. 각 서버는 소유 하위 프로세스까지 집계하며, 공유 메모리는 중복될 수 있습니다.</p>
             <p>What the Port 자체의 자원 사용량은 Windows 작업 관리자에서 <code>WhatThePort.exe</code>를 확인하세요. 앱 화면의 서버 합계와 다른 수치입니다.</p>
             <p><strong>localhost 열기</strong>는 로컬 주소를 브라우저로 엽니다. wmux·에이전트·디버거의 내부 포트도 목록에 포함될 수 있어, 모든 포트가 웹 페이지를 제공하지는 않습니다.</p>
-            <p>긴 이름과 폴더 경로는 마우스를 올려 전체 내용을 볼 수 있습니다. 도움말은 문장별로 줄을 나누고, 경로·URL·소수점은 그대로 표시합니다.</p>
-          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/detail.png"><img class="app-shot" src="assets/images/detail.png" width="660" height="1056" loading="lazy" alt="프로젝트 폴더, 브랜치, 메모리와 CPU 차트를 보여 주는 서버 상세 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>상세 화면 · 최근 10분의 자원 추이</figcaption></figure></div>
+            <p>전체 경로와 브랜치, 프로세스 더보기는 상세 상단에서 확인하세요. <strong>실행 출처</strong>와 <strong>등록 세션</strong>은 별도입니다. 목록의 중복 마우스오버 설명은 제거했습니다.</p>
+            <p><strong>연결 앱</strong>은 현재 TCP 연결 양쪽 끝점으로 확인한 같은 사용자의 로컬 프로세스입니다. 다른 감지 서버에 속하면 프로젝트 이름도 표시합니다. 연결 유지가 실제 요청 실행을 뜻하지 않으며 조회 사이에 끝난 짧은 호출은 놓칠 수 있습니다.</p>
+          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/detail.png"><img class="app-shot" src="assets/images/detail.png" width="660" height="891" loading="lazy" alt="프로젝트 폴더, 브랜치, 메모리와 CPU 차트를 보여 주는 서버 상세 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>상세 화면 · 최근 10분의 자원 추이</figcaption></figure></div>
         </section>
         <section class="guide-chapter" id="links" aria-labelledby="links-title">
           <p class="chapter-number">04 / PICK UP YOUR WORK</p><h2 id="links-title">작업하던 곳으로 돌아가기.</h2>
@@ -72,8 +74,8 @@
             <p>상세의 <strong>세션·미리보기 연결 · URL 복사</strong>를 누르면 프로젝트 연결 화면이 열립니다. 필요한 항목을 입력하고 <strong>연결 저장</strong>을 누르세요.</p>
             <ul><li><strong>&gt;_</strong> · 프로젝트 폴더에서 터미널 열기</li><li><strong>A</strong> · 직접 등록한 에이전트 세션 재개</li><li><strong>↗</strong> · 등록한 Vercel 미리보기 주소 열기</li></ul>
             <p>세션 ID와 Vercel 주소는 <strong>각각 선택 사항</strong>입니다. 사용하지 않는 기능의 입력란은 비워 두어도 됩니다.</p>
-            <div class="note-card"><p><strong>“Vercel 미리보기 URL을 등록해 주세요”</strong><br>↗에 연결된 주소가 없어 표시하는 등록 안내입니다. 앱이 Vercel에 배포하거나 주소를 자동으로 찾지는 않습니다.</p></div>
-          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/links.png"><img class="app-shot" src="assets/images/links.png" width="660" height="975" loading="lazy" alt="프로젝트 폴더, 에이전트, 세션 ID, Vercel 주소와 저장·취소 버튼이 있는 프로젝트 연결 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>필요한 연결만 등록 · 대화 기록은 읽지 않음</figcaption></figure></div>
+            <div class="note-card"><p><strong>등록 전에는 연결 관리 버튼 하나.</strong><br>A·↗는 해당 세션·주소가 등록된 경우에만 표시됩니다. 연결 화면의 뒤로 가기·취소·Esc는 해당 서버 상세로 돌아갑니다.</p></div>
+          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/links.png"><img class="app-shot" src="assets/images/links.png" width="660" height="891" loading="lazy" alt="프로젝트 폴더, 에이전트, 세션 ID, Vercel 주소와 저장·취소 버튼이 있는 프로젝트 연결 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>필요한 연결만 등록 · 대화 기록은 읽지 않음</figcaption></figure></div>
           <table><caption class="sr-only">프로젝트 연결 입력란 설명</caption><thead><tr><th scope="col">입력란·버튼</th><th scope="col">무엇을 넣나요?</th></tr></thead><tbody>
             <tr><td>프로젝트 폴더</td><td>감지된 서버 폴더와 일치하는, 실제로 존재하는 절대 경로.</td></tr>
             <tr><td>에이전트</td><td>재개할 세션에 맞춰 Codex 또는 Claude Code 선택.</td></tr>
@@ -82,15 +84,18 @@
             <tr><td>로컬 URL 복사</td><td>주소만 클립보드에 복사. 입력 중인 설정은 저장하지 않음.</td></tr>
             <tr><td>연결 저장 / 취소</td><td>폴더·포트별로 연결 저장 / 저장 없이 상세 화면으로 복귀.</td></tr>
           </tbody></table>
-          <p>세션 재개에는 해당 CLI의 설치·로그인과 접근 가능한 세션이 필요합니다. 상세의 <strong>세션: Codex</strong>는 연관 프로세스 정보일 수 있으며 정확한 연결 완료를 뜻하지 않습니다. wmux 같은 일반 앱의 내부 포트에는 연결 정보가 없어도 됩니다.</p>
+          <p>세션 재개에는 해당 CLI의 설치·로그인과 접근 가능한 세션이 필요합니다. <strong>세션</strong>에는 직접 등록한 ID만 표시합니다. 실행 출처의 Codex 표시는 부모 프로세스 기준 정보로 구분합니다. wmux 같은 일반 앱의 내부 포트에는 연결 정보가 없어도 됩니다.</p>
         </section>
         <section class="guide-chapter" id="settings" aria-labelledby="settings-title">
           <p class="chapter-number">05 / YOUR PREFERENCES</p><h2 id="settings-title">언어는 먼저 보고, 저장.</h2>
           <p>톱니바퀴 또는 <kbd>Ctrl</kbd> + <kbd>,</kbd>로 설정을 엽니다. <strong>한국어 / English를 선택하는 순간</strong> 제목·설명·버튼이 바뀝니다. 다른 입력값은 유지됩니다.</p>
           <ul><li><strong>설정 저장 / Save preferences</strong> · 언어와 설정을 확정하고 다음 실행에도 유지.</li><li><strong>취소 / Cancel · 뒤로 가기 · Esc</strong> · 저장 전 언어와 설정으로 복원.</li><li><strong>트레이로 숨겼다 다시 열기</strong> · 미리보기와 작성 중인 입력 유지.</li></ul>
+          <p>수치 입력은 한 줄에 두 개씩 배치합니다. <strong>Windows 로그인 시 자동 실행</strong>을 켜고 저장하면 현재 EXE가 로그인 시 트레이에서 시작됩니다. 끄고 저장하면 해제됩니다. EXE를 옮긴 뒤에는 새 위치에서 다시 저장하세요.</p>
+          <p><strong>배경 불투명도</strong>는 40–100%로 조절하고 즉시 미리 볼 수 있습니다. 글자와 버튼의 선명도는 유지됩니다. <strong>알림 1시간 쉬기</strong>는 설정·트레이에 같은 상태를 표시하며 쉬는 동안 다시 누르면 알림이 재개됩니다.</p>
+          <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings-startup.png"><img class="app-shot" src="assets/images/settings-startup.png" width="660" height="891" loading="lazy" alt="Windows 로그인 자동 실행 토글, 배경 불투명도 슬라이더, 알림 쉬기 상태가 있는 설정 하단"><span class="image-zoom">시작·배경 설정 크게 보기 ↗</span></a><figcaption>자동 실행과 불투명도는 설정 저장으로 확정</figcaption></figure>
           <div class="language-comparison">
-            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings.png"><img class="app-shot" src="assets/images/settings.png" width="660" height="1074" loading="lazy" alt="한국어 설정 화면: 언어 선택, 조회 간격, 자원 경고와 저장 버튼"><span class="image-zoom">한국어 화면 크게 보기 ↗</span></a><figcaption>기본 언어 · 한국어</figcaption></figure>
-            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings-en.png"><img class="app-shot" src="assets/images/settings-en.png" width="660" height="1074" loading="lazy" alt="영어 설정 화면: Language, sample interval, memory alert, Cancel, Save preferences"><span class="image-zoom">English 화면 크게 보기 ↗</span></a><figcaption>언어 선택 시 즉시 전환 · English</figcaption></figure>
+            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings.png"><img class="app-shot" src="assets/images/settings.png" width="660" height="891" loading="lazy" alt="한국어 설정 화면: 언어 선택, 조회 간격, 자원 경고와 저장 버튼"><span class="image-zoom">한국어 화면 크게 보기 ↗</span></a><figcaption>기본 언어 · 한국어</figcaption></figure>
+            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings-en.png"><img class="app-shot" src="assets/images/settings-en.png" width="660" height="891" loading="lazy" alt="영어 설정 화면: Language, sample interval, memory alert, Cancel, Save preferences"><span class="image-zoom">English 화면 크게 보기 ↗</span></a><figcaption>언어 선택 시 즉시 전환 · English</figcaption></figure>
           </div>
           <table><caption class="sr-only">주요 설정의 기본값</caption><thead><tr><th scope="col">설정</th><th scope="col">기본값과 의미</th></tr></thead><tbody><tr><td>조회 간격</td><td>3초. 1–30초 범위. 길어지면 조회 횟수와 갱신 빈도가 함께 줄어듦.</td></tr><tr><td>메모리 경고</td><td>2 GB 초과.</td></tr><tr><td>증가량 경고</td><td>10분 동안 500 MB 증가. 0으로 설정하면 끄기.</td></tr><tr><td>CPU 경고</td><td>컴퓨터 전체 기준 80% 이상, 연속 3회 관측.</td></tr><tr><td>자동 정리</td><td>끄기 / Off. 유휴 기준 기본 4시간.</td></tr></tbody></table>
         </section>
@@ -101,14 +106,16 @@
             <p>선택한 서버와 소유 하위 프로세스가 즉시 종료됩니다. 작업 저장이나 종료 훅 실행은 보장되지 않습니다. 다른 리스너를 가진 하위 트리는 별도로 다룹니다.</p>
             <p><strong>보호됨 · 종료 불가</strong>인 항목은 선택할 수 없습니다. 이 앱·상위 프로세스, 터미널·에이전트·시스템·DB·컨테이너 등은 작업을 보호하기 위해 제외합니다.</p>
             <img class="tooltip-example" src="assets/images/protection-tooltip.png" width="447" height="87" loading="lazy" alt="보호 사유 도움말: 터미널·에이전트·시스템·DB·컨테이너는 보호되며 해당 앱에서 직접 종료">
-            <p>보호 사유는 상태 위의 도움말과 상세 화면의 안내 상자에서 확인할 수 있습니다.</p>
-          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/cleanup.png"><img class="app-shot" src="assets/images/cleanup.png" width="660" height="921" loading="lazy" alt="서버별 선택 체크박스와 예상 회수량, 종료 버튼이 있는 서버 정리 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>선택한 서버만 정리 · 자동 정리는 기본 Off</figcaption></figure></div>
+            <p>보호 사유는 상세 화면의 안내 상자에서 확인할 수 있습니다. 보호 표시·체크박스는 포트 번호와 같은 줄에 정렬됩니다.</p>
+          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/cleanup.png"><img class="app-shot" src="assets/images/cleanup.png" width="660" height="891" loading="lazy" alt="서버별 선택 체크박스와 예상 회수량, 종료 버튼이 있는 서버 정리 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>선택한 서버만 정리 · 자동 정리는 기본 Off</figcaption></figure></div>
           <p><strong>끄기 / Off</strong>는 자동 정리 중단, <strong>알림 후 직접 선택 / Ask</strong>는 후보 알림, <strong>자동 종료 / Automatic</strong>은 연속 관측된 idle 서버의 자동 정리입니다. 보호·경고 서버는 자동 종료하지 않으며, 조회 실패 시에도 자동 정리를 수행하지 않습니다.</p>
           <p>서버 본체는 종료됐지만 일부 하위 프로세스가 남을 수 있습니다. <strong>일부 종료</strong> 안내가 보이면 <strong>종료 결과 상세</strong>에서 성공·실패와 제외 사유를 확인하세요.</p>
+          <p>정리 후에는 종료 완료를 확인하고 즉시 다시 조회합니다. 설정의 정기 갱신 간격을 기다리지 않습니다.</p>
+          <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/stop-result.png"><img class="app-shot" src="assets/images/stop-result.png" width="660" height="450" loading="lazy" alt="앱과 같은 어두운 테마를 사용한 종료 결과 상세 창과 닫기 버튼의 영어 예시"><span class="image-zoom">종료 결과 창 크게 보기 ↗</span></a><figcaption>종료 결과 상세 · 영어 예시</figcaption></figure>
         </section>
         <section class="guide-chapter" id="keyboard" aria-labelledby="keyboard-title">
           <p class="chapter-number">07 / KEYBOARD</p><h2 id="keyboard-title">손에 익으면, 더 빠르게.</h2>
-          <table><caption class="sr-only">키보드 단축키</caption><thead><tr><th scope="col">키·조작</th><th scope="col">동작</th></tr></thead><tbody><tr><td>Ctrl+Alt+P</td><td>창 표시·숨김. 감시는 계속됨.</td></tr><tr><td>Tab / Shift+Tab</td><td>다음·이전 컨트롤.</td></tr><tr><td>↑ / ↓ / Enter</td><td>목록 선택·서버 상세.</td></tr><tr><td>Esc</td><td>목록 복귀. 목록에서는 트레이로 숨김.</td></tr><tr><td>Ctrl+, / C</td><td>설정 / 정리 화면.</td></tr><tr><td>O / T / A / V</td><td>상세에서 로컬 URL / 터미널 / 등록 세션 / 등록 미리보기.</td></tr><tr><td>Ctrl+Shift+방향키</td><td>패널 이동·위치 저장.</td></tr><tr><td>차트의 ← / → / Home / End</td><td>이전·다음·첫·마지막 표본 값.</td></tr></tbody></table>
+          <table><caption class="sr-only">키보드 단축키</caption><thead><tr><th scope="col">키·조작</th><th scope="col">동작</th></tr></thead><tbody><tr><td>Ctrl+Alt+P</td><td>창 표시·숨김. 감시는 계속됨.</td></tr><tr><td>Tab / Shift+Tab</td><td>다음·이전 컨트롤.</td></tr><tr><td>↑ / ↓ / Enter</td><td>목록 선택·서버 상세.</td></tr><tr><td>Esc</td><td>프로젝트 연결에서는 해당 상세, 그 외 하위 화면에서는 목록으로. 목록에서는 트레이로 숨김.</td></tr><tr><td>Ctrl+, / C</td><td>설정 / 정리 화면.</td></tr><tr><td>O / T / A / V</td><td>상세에서 로컬 URL / 터미널 / 등록 세션 / 등록 미리보기.</td></tr><tr><td>Ctrl+Shift+방향키</td><td>패널 이동·위치 저장.</td></tr><tr><td>차트의 ← / → / Home / End</td><td>이전·다음·첫·마지막 표본 값.</td></tr></tbody></table>
         </section>
         <section class="guide-chapter" id="cli" aria-labelledby="cli-title">
           <p class="chapter-number">08 / COMMAND LINE</p><h2 id="cli-title">터미널에서도 같은 목록.</h2>
