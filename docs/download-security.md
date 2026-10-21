@@ -1,4 +1,4 @@
-# Chrome 다운로드 경고 대응
+# 다운로드 경고·백신 탐지 확인
 
 현재 기본 다운로드는 단일 GUI EXE이며 터미널용 ZIP도 선택할 수 있다. 두 다운로드 모두 HTTPS로 제공하지만 Authenticode 서명은 없다. 단일 EXE는 압축 해제 없는 실행 편의를 위한 것으로, 확장자 변경만으로 Chrome 경고가 사라진다는 뜻은 아니다. SHA-256·ZIP 구성 검사와 악성코드 검사, Chrome 평판은 서로 다른 결과다. 무결성 검사를 통과했다고 안전 판정 또는 경고 해제를 주장하지 않는다.
 
@@ -7,6 +7,14 @@
 “일반적으로 다운로드되지 않으며 위험할 수 있습니다”는 Google Safe Browsing이 아직 충분히 알지 못하는 파일에 대한 **Uncommon downloads** 경고다. 악성코드 검출·HTTPS 혼합 콘텐츠 경고와 구분한다. Google의 평가 전까지 경고가 남을 수 있고, 서명만 추가해도 즉시 사라진다고 보장할 수 없다.
 
 [Google의 경고 설명](https://support.google.com/chrome/answer/6261569?hl=ko) · [Search Console의 Uncommon downloads 항목](https://support.google.com/webmasters/answer/9044101?hl=ko)
+
+## IObit `Suspicious.Startup` 보고
+
+2026-10-21 사용자가 IObit Malware Fighter에서 1.1.0 EXE의 `Suspicious.Startup` 탐지를 보고했다. 해당 다운로드 파일은 공개 배포본과 SHA-256이 일치했다. 해시는 `07a5afd6601fc6640d2d12f5574baaba91a126d0eb8613cc6c354a4ec03e5078`이며, Authenticode 서명은 없다. 파일 일치는 악성코드 검사 통과나 오탐 확정을 뜻하지 않는다.
+
+앱은 사용자가 설정의 Windows 로그인 시 시작을 켜고 저장할 때만 현재 사용자 시작프로그램 폴더에 `What the Port.lnk`를 생성한다. 대상은 현재 EXE와 `--background`이며, 끄고 저장하면 해당 바로가기만 삭제한다. 등록에는 Windows의 `WScript.Shell` 바로가기 API를 사용한다. 자동 실행 코드가 탐지와 관련됐을 가능성은 추정이며, 제조사의 판정 근거는 확인되지 않았다. 보고 당시 확인한 사용자 시작프로그램 폴더에는 이 바로가기가 없었다.
+
+IObit 공식 설명서의 [Report False Positive](https://www.iobit.com/product-manuals/imf-help/) 절차로 해당 파일·탐지명을 제조사에 검토 요청할 수 있다. 백신 보호 해제나 예외 추가를 해결책으로 안내하지 않는다. 제조사 검토·독립적인 악성코드 검사 결과는 아직 없으며, 새 UI 버전 배포만으로 이 탐지가 해결됐다고 주장하지 않는다.
 
 ## 단일 EXE
 

@@ -46,7 +46,9 @@ namespace WhatThePort.App {
         bool awaitingLaunchInteraction;
         bool releasingWindow;
         string pendingNotice;
-        static readonly Size[] PanelSizes={new Size(396,550),new Size(440,594),new Size(500,660),new Size(560,720)};
+        static readonly Size[] PanelSizes={new Size(344,460),new Size(440,594),new Size(500,660),new Size(560,720)};
+        static readonly double[] PanelScales={.85,1,1.08,1.15},SparkWidths={28,38,68,96};
+        bool? resizeFromTop;
         double preferredHeight {get{return PanelSizes[settings.PanelSize??1].Height;}}
         int rowIndex;
         DateTime snoozeUntil=DateTime.MinValue,cleanupAsked=DateTime.MinValue;
@@ -172,7 +174,22 @@ namespace WhatThePort.App {
         void ResizePanel(int change){
             int size=Math.Max(0,Math.Min(PanelSizes.Length-1,(settings.PanelSize??1)+change));
             if(size==(settings.PanelSize??1))return;
-            settings.PanelSize=size;Place(false);RememberPosition();UpdateSizeButtons();
+            settings.PanelSize=size;
+            bool top=PanelPlacement.Place(Window,preferredHeight,null,false,false,PanelSizes[size].Width,resizeFromTop);
+            RememberPosition();resizeFromTop=top;ApplyPanelSize();UpdateSizeButtons();
+        }
+        void ApplyPanelSize(){
+            int size=settings.PanelSize??1;double scale=PanelScales[size];
+            var current=body.LayoutTransform as ScaleTransform;
+            if(current!=null&&Math.Abs(current.ScaleX-scale)<.001)return;
+            var transform=new ScaleTransform(scale,scale);transform.Freeze();
+            foreach(var element in new FrameworkElement[]{body,footer,Find<StackPanel>("Summary"),messageBox,status})element.LayoutTransform=transform;
+            Window.Resources["ControlHitSize"]=30/scale;
+            Window.Resources["ButtonMinHeight"]=Math.Max(32,30/scale);
+            Window.Resources["InputMinHeight"]=Math.Max(34,30/scale);
+            Window.Resources["MarkerWidth"]=new GridLength(Math.Max(26,30/scale));
+            Window.Resources["SparkWidth"]=new GridLength(SparkWidths[size]);
+            title.FontSize=13*scale;
         }
         void UpdateSizeButtons(){
             var smaller=Find<Button>("Smaller");var larger=Find<Button>("Larger");
@@ -184,6 +201,7 @@ namespace WhatThePort.App {
             var background=Find<Border>("PanelBackground");var brush=background.Background.Clone();brush.Opacity=opacity/100.0;background.Background=brush;
         }
         void RememberPosition(){
+            resizeFromTop=null;
             var bounds=PanelPlacement.PhysicalBounds(Window);settings.PanelLeft=(int)Math.Round(bounds.Left);settings.PanelBottom=(int)Math.Round(bounds.Bottom);
             if(!demo)Try(delegate{store.SaveSettings(settings);});
         }
@@ -235,7 +253,7 @@ namespace WhatThePort.App {
             Find<StackPanel>("Summary").Visibility=view=="list"||view=="cleanup"?Visibility.Visible:Visibility.Collapsed;
             back.Content=view=="list"?(object)DotGrid():"‹";back.IsEnabled=true;back.FontSize=25;back.Foreground=B("#A4A6AF");
             AutomationProperties.SetName(back,T(view=="list"?"Servers home":view=="links"?"Back to server":"Back to servers"));back.ToolTip=T(view=="list"?"Servers home":view=="links"?"Back to server":"Back to servers (Esc)");
-            UpdateSizeButtons();ApplyOpacity(settingsDraft==null?settings.PanelOpacity??100:settingsDraft.Opacity);
+            UpdateSizeButtons();ApplyPanelSize();ApplyOpacity(settingsDraft==null?settings.PanelOpacity??100:settingsDraft.Opacity);
             pin.ToolTip=T(pinned?"Unpin panel":"Keep panel open");AutomationProperties.SetName(pin,(string)pin.ToolTip);Find<Button>("Hide").ToolTip=T("Hide to tray (Esc)");AutomationProperties.SetName(Find<Button>("Hide"),T("Hide to tray"));
             title.ToolTip=T("Drag to move. Position is saved. Ctrl+Shift+arrow keys also move the panel.");Window.Language=XmlLanguage.GetLanguage(strings.Language=="ko"?"ko-KR":"en-US");
             status.Text=demo?T("DEMO · SAMPLE DATA · NO SYSTEM ACTIONS"):F("LOCAL ONLY   ·   Ctrl+Alt+P show/hide   ·   every {0}s",settings.ScanSeconds);
@@ -295,8 +313,9 @@ namespace WhatThePort.App {
         }
         UIElement ServerRow(Server s,bool cleanup,int index){
             var row=Columns(26,65,-1,38,64);row.Height=68;row.Margin=new Thickness(0,0,0,1);row.Tag="row-"+s.Key;
+            row.ColumnDefinitions[0].SetResourceReference(ColumnDefinition.WidthProperty,"MarkerWidth");row.ColumnDefinitions[3].SetResourceReference(ColumnDefinition.WidthProperty,"SparkWidth");
             foreach(double height in new[]{16.0,22,16,14})row.RowDefinitions.Add(new RowDefinition{Height=new GridLength(height)});
-            if(cleanup){var check=new CheckBox{Width=24,Height=28,HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Center,IsChecked=selected.Contains(s.Key),IsEnabled=!s.Protected,ToolTip=null};ToolTipService.SetShowOnDisabled(check,true);check.Tag="select-"+s.Key;AutomationProperties.SetName(check,F("Select server {0}",s.Port)+(s.Protected?" · "+Protection(s):""));AutomationProperties.SetHelpText(check,s.Protected?Protection(s):T("Stop selected server process trees"));check.Click+=delegate{if(check.IsChecked==true)selected.Add(s.Key);else selected.Remove(s.Key);Render();};Cell(row,check,0);}
+            if(cleanup){var check=new CheckBox{Height=28,HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Center,IsChecked=selected.Contains(s.Key),IsEnabled=!s.Protected,ToolTip=null};check.SetResourceReference(FrameworkElement.WidthProperty,"ControlHitSize");ToolTipService.SetShowOnDisabled(check,true);check.Tag="select-"+s.Key;AutomationProperties.SetName(check,F("Select server {0}",s.Port)+(s.Protected?" · "+Protection(s):""));AutomationProperties.SetHelpText(check,s.Protected?Protection(s):T("Stop selected server process trees"));check.Click+=delegate{if(check.IsChecked==true)selected.Add(s.Key);else selected.Remove(s.Key);Render();};Cell(row,check,0);}
             else if(s.Protected){var shield=Text("◇",14,"#A4A6AF");shield.Margin=new Thickness(4,0,0,0);AutomationProperties.SetName(shield,Protection(s));Cell(row,shield,0);}
             var port=Mono(":"+s.Port,13,Format.PortColor(s.Port));port.FontWeight=FontWeights.Medium;port.Margin=new Thickness(0,0,3,0);Cell(row,port,1);
             var name=Text(s.Name,13,"#F5F5F7",false);name.FontWeight=FontWeights.Medium;name.Margin=new Thickness(0,0,10,0);Cell(row,name,2);
@@ -434,11 +453,11 @@ namespace WhatThePort.App {
             var startup=new ToggleButton{Tag="startup",Style=(Style)Window.FindResource("Switch"),IsChecked=draft.Startup};AutomationProperties.SetName(startup,T("Start when I sign in to Windows"));startup.ToolTip=T("Starts this EXE in the tray. Save again after moving the file.");Cell(startupRow,startup,1);body.Children.Add(startupRow);
             startup.Checked+=delegate{draft.Startup=true;};startup.Unchecked+=delegate{draft.Startup=false;};
             Caption("BACKGROUND OPACITY");var opacityCaption=(TextBlock)body.Children[body.Children.Count-1];opacityCaption.Text+=" · "+draft.Opacity+"%";
-            var opacity= new Slider{Minimum=40,Maximum=100,Value=draft.Opacity,TickFrequency=5,IsSnapToTickEnabled=true,Margin=new Thickness(3,0,3,0),Tag="opacity"};AutomationProperties.SetName(opacity,T("BACKGROUND OPACITY"));body.Children.Add(opacity);
+            var opacity= new Slider{Minimum=40,Maximum=100,Value=draft.Opacity,TickFrequency=5,IsSnapToTickEnabled=true,Margin=new Thickness(3,0,3,0),Tag="opacity"};opacity.SetResourceReference(FrameworkElement.MinHeightProperty,"ControlHitSize");AutomationProperties.SetName(opacity,T("BACKGROUND OPACITY"));body.Children.Add(opacity);
             opacity.ToolTip=draft.Opacity+"%";opacity.ValueChanged+=delegate{draft.Opacity=(int)opacity.Value;opacityCaption.Text=T("BACKGROUND OPACITY")+" · "+draft.Opacity+"%";opacity.ToolTip=draft.Opacity+"%";ApplyOpacity(draft.Opacity);};
             var snooze=Button(T(DateTime.UtcNow<snoozeUntil?"Resume alerts":"Snooze alerts for 1 hour"),ToggleSnooze,"Pause or resume resource notifications");snooze.Margin=new Thickness(3,18,3,4);body.Children.Add(snooze);
             var snoozeState=Text(DateTime.UtcNow<snoozeUntil?F("Alerts paused until {0}",snoozeUntil.ToLocalTime().ToString("HH:mm")):T("Alerts active"),11,"#A4A6AF",false);snoozeState.Tag="snooze-state";snoozeState.Margin=new Thickness(3,3,3,0);body.Children.Add(snoozeState);
-            var position=Button("Reset panel position",delegate{settings.PanelLeft=null;settings.PanelBottom=null;if(!demo)store.SaveSettings(settings);Place(true);Notice("Position reset to the primary monitor. Drag the title to save a new position.");},"Reset panel position to primary monitor");position.Margin=new Thickness(3,8,3,4);body.Children.Add(position);
+            var position=Button("Reset panel position",delegate{resizeFromTop=null;settings.PanelLeft=null;settings.PanelBottom=null;if(!demo)store.SaveSettings(settings);Place(true);Notice("Position reset to the primary monitor. Drag the title to save a new position.");},"Reset panel position to primary monitor");position.Margin=new Thickness(3,8,3,4);body.Children.Add(position);
             var positionHelp=new TextBlock{Text=T("Drag the title to move the panel. Position is saved automatically. Keyboard: Ctrl+Shift+arrow keys."),TextWrapping=TextWrapping.Wrap,FontSize=11,Foreground=B("#A4A6AF"),Margin=new Thickness(3,4,3,0)};body.Children.Add(positionHelp);
             var help=new TextBlock{Text="Windows 10 / 11 · x64\nWhat the Port for Windows "+AppVersion.Current+"\nBased on WhatThePort by Tomjohn Design · MIT",FontSize=10,Foreground=B("#A4A6AF"),Margin=new Thickness(3,18,3,8),LineHeight=18};body.Children.Add(help);
             var buttons=Columns(90,-1);var cancel=Button("Cancel",delegate{Navigate("list");},"Discard changes");cancel.Margin=new Thickness(0,0,8,0);Cell(buttons,cancel,0);
@@ -536,8 +555,9 @@ namespace WhatThePort.App {
         }
         public void CaptureAll(string directory){
             Directory.CreateDirectory(directory);capturing=true;pinned=true;Window.Left=30;Window.Top=30;Window.Show();
-            foreach(string page in new[]{"list","detail","cleanup","settings","settings-startup","links","empty"}){
-                current=Demo.Create();detailKey=current.Servers[0].Key;selected.Clear();if(page=="cleanup")selected.Add(current.Servers[4].Key);if(page=="empty")current.Servers.Clear();Navigate(page=="empty"?"list":page=="settings-startup"?"settings":page);
+            foreach(string page in new[]{"list-small","list-large","list","detail","cleanup","settings","settings-startup","links","empty"}){
+                settings.PanelSize=page=="list-small"?0:page=="list-large"?3:1;
+                current=Demo.Create();detailKey=current.Servers[0].Key;selected.Clear();if(page=="cleanup")selected.Add(current.Servers[4].Key);if(page=="empty")current.Servers.Clear();Navigate(page=="empty"||page.StartsWith("list")?"list":page=="settings-startup"?"settings":page);
                 Window.UpdateLayout();Find<ScrollViewer>("Scroll").ScrollToTop();Window.UpdateLayout();
                 if(page=="settings-startup"){Find<ScrollViewer>("Scroll").ScrollToBottom();Window.UpdateLayout();}
                 Window.Dispatcher.Invoke(DispatcherPriority.ContextIdle,new Action(delegate{}));

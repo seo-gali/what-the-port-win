@@ -1,8 +1,12 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib"
  Title="What the Port" Language="en-US" KeyboardNavigation.TabNavigation="Cycle" Width="440" Height="610" WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Topmost="True" FontFamily="Segoe UI" FontSize="13" Foreground="#F5F5F7" UseLayoutRounding="True" SnapsToDevicePixels="True">
  <Window.Resources>
+  <sys:Double x:Key="ControlHitSize">30</sys:Double>
+  <sys:Double x:Key="ButtonMinHeight">32</sys:Double>
+  <sys:Double x:Key="InputMinHeight">34</sys:Double>
   <SolidColorBrush x:Key="Muted" Color="#A4A6AF"/>
   <Style x:Key="Switch" TargetType="ToggleButton">
+   <Setter Property="MinHeight" Value="{DynamicResource ControlHitSize}"/>
    <Setter Property="Width" Value="44"/><Setter Property="Height" Value="30"/><Setter Property="Cursor" Value="Hand"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ToggleButton">
     <Grid Background="Transparent"><Border x:Name="Track" Height="22" CornerRadius="11" Background="#454852" BorderBrush="#858995" BorderThickness="1"/>
@@ -17,7 +21,7 @@
   <Style TargetType="Button">
    <Setter Property="Foreground" Value="#F5F5F7"/><Setter Property="Background" Value="#2D3039"/>
    <Setter Property="BorderBrush" Value="Transparent"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="12,7"/>
-   <Setter Property="Cursor" Value="Hand"/><Setter Property="MinHeight" Value="32"/>
+   <Setter Property="Cursor" Value="Hand"/><Setter Property="MinHeight" Value="{DynamicResource ButtonMinHeight}"/>
    <Setter Property="HorizontalContentAlignment" Value="Center"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
     <Grid><Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="7" Padding="{TemplateBinding Padding}">
@@ -35,11 +39,12 @@
    <Setter Property="Foreground" Value="#F5F5F7"/><Setter Property="Background" Value="#292D36"/><Setter Property="BorderBrush" Value="#727989"/>
    <Setter Property="Padding" Value="9,7"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CaretBrush" Value="White"/>
    <Setter Property="SelectionBrush" Value="#586CAA"/>
-   <Setter Property="MinHeight" Value="34"/>
+   <Setter Property="MinHeight" Value="{DynamicResource InputMinHeight}"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}"><ScrollViewer x:Name="PART_ContentHost" Style="{x:Null}"/></Border></ControlTemplate></Setter.Value></Setter>
    <Style.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="#7DDBE0"/></Trigger></Style.Triggers>
   </Style>
   <Style TargetType="CheckBox">
+   <Setter Property="MinHeight" Value="{DynamicResource ControlHitSize}"/>
    <Setter Property="Foreground" Value="#F5F5F7"/><Setter Property="VerticalContentAlignment" Value="Center"/><Setter Property="Cursor" Value="Hand"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox">
     <Grid Background="Transparent"><StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -55,11 +60,12 @@
    </ControlTemplate></Setter.Value></Setter>
   </Style>
   <Style TargetType="ComboBoxItem">
+   <Setter Property="MinHeight" Value="{DynamicResource ControlHitSize}"/>
    <Setter Property="Foreground" Value="#F5F5F7"/><Setter Property="Padding" Value="10,8"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="ItemBorder" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="ItemBorder" Property="Background" Value="#434B5F"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
   </Style>
   <Style TargetType="ComboBox">
-   <Setter Property="MinHeight" Value="34"/><Setter Property="Foreground" Value="#F5F5F7"/>
+   <Setter Property="MinHeight" Value="{DynamicResource InputMinHeight}"/><Setter Property="Foreground" Value="#F5F5F7"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
     <Grid>
      <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" ClickMode="Press">

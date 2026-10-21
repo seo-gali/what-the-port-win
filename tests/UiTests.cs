@@ -32,6 +32,7 @@ public static class UiTests {
             Layout();Check("list starts with five servers",Rows().Count()==5);
             HeaderTests();
             NavigationLayoutTests();
+            ResponsiveSizingTests();
             ToolTipTests();
             KeyboardTests();
             CheckNames("list controls have screen reader names");
@@ -80,6 +81,54 @@ public static class UiTests {
         Console.WriteLine("\n"+passed+" UI passed, "+failed+" failed");return failed==0?0:1;
     }
     const BindingFlags PrivateInstance=BindingFlags.NonPublic|BindingFlags.Instance;
+    static Rect Displayed(FrameworkElement element){return element.TransformToAncestor(window).TransformBounds(new Rect(new Point(),element.RenderSize));}
+    static void ResponsiveSizingTests(){
+        var original=PanelPlacement.PhysicalBounds(window);var work=System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(window).Handle).WorkingArea;
+        double textHeight=Displayed(All(Rows().First()).OfType<TextBlock>().First(t=>t.Text=="menubar port monitor")).Height;
+        var spark=All(Rows().First()).OfType<Chart>().Single();double sparkWidth=Displayed(spark).Width;int samples=spark.Samples.Count;
+        double scale=original.Height/window.ActualHeight;
+        try{
+            PanelPlacement.Place(window,594,new Point(work.Left+40,work.Top+24*scale+original.Height),true,false);Layout();Invoke("RememberPosition");
+            double top=PanelPlacement.PhysicalBounds(window).Top;
+            Click((Button)window.FindName("Larger"));Click((Button)window.FindName("Larger"));
+            Check("top-positioned panel keeps top during consecutive growth",Math.Abs(PanelPlacement.PhysicalBounds(window).Top-top)<=1);
+            var name=All(Rows().First()).OfType<TextBlock>().First(t=>t.Text=="menubar port monitor");spark=All(Rows().First()).OfType<Chart>().Single();
+            Check("large panel enlarges text and gives graphs more space",Displayed(name).Height>textHeight*1.08&&Displayed(spark).Width>sparkWidth*2&&spark.Samples.Count==samples);
+            CaptureVisual((FrameworkElement)window.Content,"list-large");
+            for(int i=0;i<3;i++)Click((Button)window.FindName("Smaller"));
+            name=All(Rows().First()).OfType<TextBlock>().First(t=>t.Text=="menubar port monitor");
+            Check("minimum panel and text are smaller than previous minimum",window.Width<396&&window.Height<550&&Displayed(name).Height<textHeight*.95);
+            Check("top stays fixed when shrinking",Math.Abs(PanelPlacement.PhysicalBounds(window).Top-top)<=1);
+            CaptureVisual((FrameworkElement)window.Content,"list-small");
+            Click(ByName("Settings (Ctrl+,)"));var input=All(Body()).OfType<TextBox>().First();input.Text="unfinished";
+            for(int i=0;i<3;i++)Click((Button)window.FindName("Larger"));
+            Check("resizing preserves incomplete form input",All(Body()).OfType<TextBox>().First()==input&&input.Text=="unfinished");
+            CheckScaledPopup("large");
+            for(int i=0;i<3;i++)Click((Button)window.FindName("Smaller"));
+            Check("small form fields retain a 30 DIP hit area",All(Body()).OfType<TextBox>().All(t=>Displayed(t).Height>=29.5));
+            Check("small settings switches and sliders retain a 30 DIP hit area",All(Body()).OfType<Control>().Where(c=>c is Slider||c is System.Windows.Controls.Primitives.ToggleButton).All(c=>Displayed(c).Height>=29.5));
+            CheckScaledPopup("small");
+            CaptureVisual((FrameworkElement)window.Content,"settings-small");
+            var footer=(FrameworkElement)window.FindName("Footer");Check("small forms keep footer visible",Displayed(footer).Bottom<=window.ActualHeight&&Displayed(footer).Top>0);
+            Invoke("Navigate","list");Click((Button)window.FindName("Larger"));
+            PanelPlacement.Place(window,594,null,true,false);Layout();Invoke("RememberPosition");double bottom=PanelPlacement.PhysicalBounds(window).Bottom;
+            Click((Button)window.FindName("Larger"));Click((Button)window.FindName("Larger"));Click((Button)window.FindName("Smaller"));Click((Button)window.FindName("Smaller"));
+            Check("moving down reselects bottom anchoring",Math.Abs(PanelPlacement.PhysicalBounds(window).Bottom-bottom)<=1);
+        }finally{
+            Invoke("Navigate","list");while(((WhatThePort.Settings)Field("settings")).PanelSize>1)Click((Button)window.FindName("Smaller"));while(((WhatThePort.Settings)Field("settings")).PanelSize<1)Click((Button)window.FindName("Larger"));
+            PanelPlacement.Place(window,594,new Point(original.Left,original.Bottom),true,false);Layout();Invoke("RememberPosition");
+        }
+    }
+    static void CheckScaledPopup(string size){
+        var select=All(Body()).OfType<ComboBox>().First();select.IsDropDownOpen=true;Layout();Pump();
+        try{
+            var popup=(System.Windows.Controls.Primitives.Popup)select.Template.FindName("PART_Popup",select);var child=(FrameworkElement)popup.Child;child.UpdateLayout();
+            double popupWidth=child.PointToScreen(new Point(child.ActualWidth,0)).X-child.PointToScreen(new Point()).X;
+            double selectWidth=select.PointToScreen(new Point(select.ActualWidth,0)).X-select.PointToScreen(new Point()).X;
+            if(Math.Abs(popupWidth-selectWidth)>2)Console.WriteLine("INFO "+size+" dropdown="+popupWidth+" field="+selectWidth+" child="+child.ActualWidth);
+            Check(size+" dropdown matches scaled field width",popup.IsOpen&&Math.Abs(popupWidth-selectWidth)<=2);
+        }finally{select.IsDropDownOpen=false;Pump();}
+    }
     static void NavigationLayoutTests(){
         Invoke("Place",false,false);Layout();
         Rect initial=PanelPlacement.PhysicalBounds(window);
@@ -412,6 +461,12 @@ public static class UiTests {
         var leftMonitor=new Rect(-1920,40,1920,1000);
         var secondary=PanelPlacement.Calculate(leftMonitor,new Size(440,716),null);
         Check("secondary monitor with negative origin and top taskbar",leftMonitor.Contains(secondary)&&Near(secondary.Right,-12)&&Near(secondary.Bottom,1028));
+        var upper=new Rect(-900,64,440,460);
+        var upperLarge=PanelPlacement.Calculate(leftMonitor,new Size(560,720),upper,12,true);
+        var upperSmall=PanelPlacement.Calculate(leftMonitor,new Size(344,460),upperLarge,12,true);
+        Check("top anchor respects negative monitor origin and top taskbar",Near(upperLarge.Top,upper.Top)&&Near(upperSmall.Top,upper.Top));
+        var topClamped=PanelPlacement.Calculate(shortWork,new Size(560,720),new Rect(40,80,344,460),12,true);
+        Check("top anchor clamps to short work area",shortWork.Contains(topClamped)&&Near(topClamped.Top,12)&&Near(topClamped.Bottom,628));
         var sideTaskbar=new Rect(60,0,1220,720);
         var corrected=PanelPlacement.Calculate(sideTaskbar,new Size(440,716),new Rect(-100,200,440,594));
         Check("side taskbar and offscreen bounds are clamped",sideTaskbar.Contains(corrected)&&Near(corrected.Left,72));

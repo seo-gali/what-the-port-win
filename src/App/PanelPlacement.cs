@@ -22,7 +22,7 @@ namespace WhatThePort.App {
             NativeRect bounds;if(!GetWindowRect(new WindowInteropHelper(window).Handle,out bounds))throw new InvalidOperationException("Could not read panel position.");
             return new Rect(bounds.Left,bounds.Top,bounds.Right-bounds.Left,bounds.Bottom-bounds.Top);
         }
-        public static void Place(Window window,double height,Point? saved,bool opening,bool fromTray,double width=440){
+        public static bool Place(Window window,double height,Point? saved,bool opening,bool fromTray,double width=440,bool? anchorTop=null){
             var handle=new WindowInteropHelper(window).EnsureHandle();
             Rect current=PhysicalBounds(window);IntPtr monitor;NativePoint cursor;
             if(opening&&saved.HasValue)monitor=MonitorFromPoint(new NativePoint((int)saved.Value.X,(int)saved.Value.Y-1),2);
@@ -32,10 +32,12 @@ namespace WhatThePort.App {
             if(GetDpiForMonitor(monitor,0,out dpiX,out dpiY)!=0){dpiX=96;dpiY=96;}
             double scale=dpiY/96.0;
             Rect? previous=opening?(saved.HasValue?(Rect?)new Rect(saved.Value.X,saved.Value.Y-1,1,1):null):current;
-            var bounds=Calculate(new Rect(area.Left,area.Top,area.Width,area.Height),new Size(width*scale,height*scale),previous,12*scale);
+            bool top=!opening&&(anchorTop??(current.Top+current.Height/2<area.Top+area.Height/2));
+            var bounds=Calculate(area,new Size(width*scale,height*scale),previous,12*scale,top);
             // Native physical coordinates avoid ambiguous virtual-desktop DIP origins across monitors.
             window.Width=bounds.Width/scale;window.Height=bounds.Height/scale;
             if(!SetWindowPos(handle,IntPtr.Zero,(int)Math.Round(bounds.Left),(int)Math.Round(bounds.Top),(int)Math.Round(bounds.Width),(int)Math.Round(bounds.Height),0x0014))throw new InvalidOperationException("Could not position panel.");
+            return top;
         }
 
         public static Rect WorkArea(Window window) {
@@ -58,8 +60,7 @@ namespace WhatThePort.App {
             return new Rect(transform.Transform(pixels.TopLeft), transform.Transform(pixels.BottomRight));
         }
 
-        // Keep the existing bottom edge while growing upward, within this monitor's work area.
-        public static Rect Calculate(Rect workArea, Size desired, Rect? previous, double margin=Margin) {
+        public static Rect Calculate(Rect workArea, Size desired, Rect? previous, double margin=Margin,bool anchorTop=false) {
             double insetX = Math.Min(margin, workArea.Width / 4);
             double insetY = Math.Min(margin, workArea.Height / 4);
             var available = new Rect(workArea.Left + insetX, workArea.Top + insetY,
@@ -67,10 +68,10 @@ namespace WhatThePort.App {
             double width = Math.Min(desired.Width, available.Width);
             double height = Math.Min(desired.Height, available.Height);
             double left = previous.HasValue ? previous.Value.Left : available.Right - width;
-            double bottom = previous.HasValue ? previous.Value.Bottom : available.Bottom;
+            double top = previous.HasValue ? anchorTop?previous.Value.Top:previous.Value.Bottom-height : available.Bottom-height;
             left = Math.Max(available.Left, Math.Min(left, available.Right - width));
-            bottom = Math.Max(available.Top + height, Math.Min(bottom, available.Bottom));
-            return new Rect(left, bottom - height, width, height);
+            top = Math.Max(available.Top, Math.Min(top,available.Bottom-height));
+            return new Rect(left, top, width, height);
         }
     }
 }
