@@ -1,9 +1,9 @@
 {
-    "checkedAtUtc":  "2026-10-21T12:56:38.2891352Z",
+    "checkedAtUtc":  "2026-10-22T11:07:47.7979312Z",
     "archive":  {
                     "name":  "WhatThePort-Windows-x64.zip",
-                    "bytes":  1373816,
-                    "sha256":  "18076720ee1e79a710566a172c53c5f935412d3af4a7f875cf2c960c4af27b2f",
+                    "bytes":  1390934,
+                    "sha256":  "3a9459ffeccb992417c14e8b232d067d486c96c14bec197ac2cfd22662ace832",
                     "entryCount":  35
                 },
     "trustedTimestampedSignatures":  false,
@@ -12,24 +12,24 @@
     "binaries":  [
                      {
                          "name":  "WhatThePort.exe",
-                         "version":  "1.1.1",
-                         "sha256":  "95e269d5e5ec5e55cb1aea518cbfc3de98137da00bbcebeff04935833ce49684",
+                         "version":  "1.1.2",
+                         "sha256":  "86ffaa72f564a6a2a8c98b4f7c92c10352a2befa93e5759e3edad5f5820313a4",
                          "signature":  "NotSigned",
                          "publisher":  null,
                          "timestamped":  false
                      },
                      {
                          "name":  "WhatThePort.Core.dll",
-                         "version":  "1.1.1",
-                         "sha256":  "833d28bf4cd340a4f602d59a1130e392a194132b1b31a66d60b289d9cbfda994",
+                         "version":  "1.1.2",
+                         "sha256":  "3b0253411b5f4ee16ede6f12d428a499ebacbae4ab09dcac096327102cdbe337",
                          "signature":  "NotSigned",
                          "publisher":  null,
                          "timestamped":  false
                      },
                      {
                          "name":  "wtp.exe",
-                         "version":  "1.1.1",
-                         "sha256":  "473671c0708d7731a938c193363a4474378523d3884b015e02ae6272814d14ea",
+                         "version":  "1.1.2",
+                         "sha256":  "17a686ee9348dbaeed2f2b6b116930aeee70f1597382faa5a7e1b0915c5a2a91",
                          "signature":  "NotSigned",
                          "publisher":  null,
                          "timestamped":  false
@@ -73,8 +73,8 @@
                   },
                   {
                       "name":  "docs/CHANGELOG.md",
-                      "bytes":  2305,
-                      "sha256":  "13777a0e42aef0de103e899f41cfd04cc4da951dadb09551546b74dc297284d8"
+                      "bytes":  2884,
+                      "sha256":  "0d0c8d6e8afb4235a65eb243d00a774ffbc7c12dc93652097222ff05221ad402"
                   },
                   {
                       "name":  "docs/checklist.md",
@@ -113,13 +113,13 @@
                   },
                   {
                       "name":  "docs/usage.md",
-                      "bytes":  15522,
-                      "sha256":  "8e8b33007f410baa1918a17e974512c8b9f1ac0fea6f7b0a5ddf45b2cbcce7b3"
+                      "bytes":  15986,
+                      "sha256":  "9ca0ddecae1947ed717396a50fccf63562aefcfcc7654173a549faf6a55987d9"
                   },
                   {
                       "name":  "docs/images/cleanup.png",
-                      "bytes":  111088,
-                      "sha256":  "9ad9f40431522ac27db12e8d39735be78ca9ed4c8d6342e7b76899398b628902"
+                      "bytes":  114001,
+                      "sha256":  "1cc873a029827aec3f1a21971b9fde06d4b57a3c17ac282d8e651b20ee728a8d"
                   },
                   {
                       "name":  "docs/images/cover.jpg",
@@ -128,8 +128,8 @@
                   },
                   {
                       "name":  "docs/images/detail.png",
-                      "bytes":  102511,
-                      "sha256":  "f4cf3e104e4971d186b82db77332688e65e3fbfd5183d65c81160d3a4af16c92"
+                      "bytes":  104512,
+                      "sha256":  "a5f42817570e144d5de9bcea9d29c4829d5609c75cfaeaa8365cae3d6e20231f"
                   },
                   {
                       "name":  "docs/images/empty.png",
@@ -143,18 +143,18 @@
                   },
                   {
                       "name":  "docs/images/list-large.png",
-                      "bytes":  138040,
-                      "sha256":  "50e0e62f3a56125dcadc276af12f71fd690585da255818bdccfd324e6f47e9d5"
+                      "bytes":  144633,
+                      "sha256":  "5b221739785498e2766ec7998cf6dafbfe45ae0c665d5b513a36d6bd92b2c513"
                   },
                   {
                       "name":  "docs/images/list-small.png",
-                      "bytes":  80219,
-                      "sha256":  "96e360e6d8211693a2374e2edca80a621b20ccb9c0c98341fdcfbc076e4c4d7d"
+                      "bytes":  81564,
+                      "sha256":  "a55bd1b469b3def36912fdacab824267f6a70865acf64bde3b4c28eb433f0f51"
                   },
                   {
                       "name":  "docs/images/list.png",
-                      "bytes":  110772,
-                      "sha256":  "ade85803c1d43c789f0438b8bba81c1c726bc6898df6e16c087de363f38a5381"
+                      "bytes":  113669,
+                      "sha256":  "3314f8e2d14d8e574d08903ca00340053ddcf17dc4220e8baf4771a20236b397"
                   },
                   {
                       "name":  "docs/images/protection-tooltip.png",
@@ -168,8 +168,8 @@
                   },
                   {
                       "name":  "docs/images/settings-startup.png",
-                      "bytes":  88025,
-                      "sha256":  "b137a79eb55e018511af96031caeb81335dc4144b1639a5ca6fcd1b0c8e10ae7"
+                      "bytes":  88198,
+                      "sha256":  "ecf20a4341224e7fa5bde85b96133cddb34f3e9bfaa11a9950e992df245386cb"
                   },
                   {
                       "name":  "docs/images/settings.png",
@@ -183,8 +183,8 @@
                   },
                   {
                       "name":  "WhatThePort.exe",
-                      "bytes":  126464,
-                      "sha256":  "95e269d5e5ec5e55cb1aea518cbfc3de98137da00bbcebeff04935833ce49684"
+                      "bytes":  126976,
+                      "sha256":  "86ffaa72f564a6a2a8c98b4f7c92c10352a2befa93e5759e3edad5f5820313a4"
                   },
                   {
                       "name":  "WhatThePort.exe.config",
@@ -194,12 +194,12 @@
                   {
                       "name":  "WhatThePort.Core.dll",
                       "bytes":  39424,
-                      "sha256":  "833d28bf4cd340a4f602d59a1130e392a194132b1b31a66d60b289d9cbfda994"
+                      "sha256":  "3b0253411b5f4ee16ede6f12d428a499ebacbae4ab09dcac096327102cdbe337"
                   },
                   {
                       "name":  "wtp.exe",
                       "bytes":  8192,
-                      "sha256":  "473671c0708d7731a938c193363a4474378523d3884b015e02ae6272814d14ea"
+                      "sha256":  "17a686ee9348dbaeed2f2b6b116930aeee70f1597382faa5a7e1b0915c5a2a91"
                   },
                   {
                       "name":  "LICENSE",

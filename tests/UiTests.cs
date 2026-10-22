@@ -33,6 +33,7 @@ public static class UiTests {
             HeaderTests();
             NavigationLayoutTests();
             ResponsiveSizingTests();
+            ChartRangeTests();
             ToolTipTests();
             KeyboardTests();
             CheckNames("list controls have screen reader names");
@@ -81,6 +82,28 @@ public static class UiTests {
         Console.WriteLine("\n"+passed+" UI passed, "+failed+" failed");return failed==0?0:1;
     }
     const BindingFlags PrivateInstance=BindingFlags.NonPublic|BindingFlags.Instance;
+    static double ChartVariation(Chart chart){
+        double width=chart.Spark?38:360;chart.Height=chart.Spark?20:112;chart.Measure(new Size(width,chart.Height));chart.Arrange(new Rect(0,0,width,chart.Height));
+        var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())typeof(Chart).GetMethod("OnRender",PrivateInstance).Invoke(chart,new object[]{drawing});
+        var line=visual.Drawing.Children.OfType<GeometryDrawing>().Single(d=>d.Pen!=null&&d.Geometry is StreamGeometry);
+        return line.Geometry.GetRenderBounds(line.Pen).Height-line.Pen.Thickness;
+    }
+    static void ChartRangeTests(){
+        var now=DateTime.UtcNow;
+        var history=new List<WhatThePort.Sample>{new WhatThePort.Sample{At=now.AddSeconds(-6),Memory=67*WhatThePort.Format.MB,Cpu=.1},new WhatThePort.Sample{At=now.AddSeconds(-3),Memory=68*WhatThePort.Format.MB,Cpu=.2},new WhatThePort.Sample{At=now,Memory=67*WhatThePort.Format.MB,Cpu=.1}};
+        foreach(bool spark in new[]{false,true})foreach(bool cpu in new[]{false,true}){
+            var chart=new Chart{Samples=history,Spark=spark,Cpu=cpu,Threshold=spark?0:2*WhatThePort.Format.GB};double variation=ChartVariation(chart);
+            Console.WriteLine("INFO "+(spark?"list":"detail")+" "+(cpu?"CPU":"memory")+" painted variation="+variation.ToString("0.000",System.Globalization.CultureInfo.InvariantCulture)+" DIP");
+            Check((spark?"list":"detail")+" "+(cpu?"CPU":"memory")+" shows small measured changes",variation>(spark?5:8));
+            chart.Samples=history.Select(s=>new WhatThePort.Sample{At=s.At,Memory=67*WhatThePort.Format.MB,Cpu=.1}).ToList();variation=ChartVariation(chart);
+            Check((spark?"list":"detail")+" "+(cpu?"CPU":"memory")+" keeps unchanged values flat",Math.Abs(variation)<.01);
+        }
+        Invoke("Navigate","detail");var server=((WhatThePort.Snapshot)Field("current")).Servers.First();
+        var previous=All(Body()).OfType<Chart>().First().Samples.Count;var sample=new WhatThePort.Sample{At=server.History.Last().At.AddSeconds(3),Memory=server.Memory+WhatThePort.Format.MB,Cpu=.2};
+        server.History.Add(sample);server.Memory=sample.Memory;server.Cpu=sample.Cpu;Rerender();
+        Check("visible charts receive the newest measurements after refresh",All(Body()).OfType<Chart>().All(c=>c.Samples.Count==previous+1&&c.Samples.Last()==sample));
+        server.History.Remove(sample);server.Memory=server.History.Last().Memory;server.Cpu=server.History.Last().Cpu;Invoke("Navigate","list");
+    }
     static Rect Displayed(FrameworkElement element){return element.TransformToAncestor(window).TransformBounds(new Rect(new Point(),element.RenderSize));}
     static void ResponsiveSizingTests(){
         var original=PanelPlacement.PhysicalBounds(window);var work=System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(window).Handle).WorkingArea;
