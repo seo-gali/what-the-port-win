@@ -6,6 +6,7 @@
   <sys:Double x:Key="InputMinHeight">34</sys:Double>
   <SolidColorBrush x:Key="Muted" Color="#A4A6AF"/>
   <Style x:Key="Switch" TargetType="ToggleButton">
+   <Setter Property="AutomationProperties.AutomationId" Value="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue={x:Static sys:String.Empty}}"/>
    <Setter Property="MinHeight" Value="{DynamicResource ControlHitSize}"/>
    <Setter Property="Width" Value="44"/><Setter Property="Height" Value="30"/><Setter Property="Cursor" Value="Hand"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ToggleButton">
@@ -19,6 +20,7 @@
    </ControlTemplate></Setter.Value></Setter>
   </Style>
   <Style TargetType="Button">
+   <Setter Property="AutomationProperties.AutomationId" Value="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue={x:Static sys:String.Empty}}"/>
    <Setter Property="Foreground" Value="#F5F5F7"/><Setter Property="Background" Value="#2D3039"/>
    <Setter Property="BorderBrush" Value="Transparent"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="12,7"/>
    <Setter Property="Cursor" Value="Hand"/><Setter Property="MinHeight" Value="{DynamicResource ButtonMinHeight}"/>
@@ -36,6 +38,7 @@
    </ControlTemplate></Setter.Value></Setter>
   </Style>
   <Style TargetType="TextBox">
+   <Setter Property="AutomationProperties.AutomationId" Value="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue={x:Static sys:String.Empty}}"/>
    <Setter Property="Foreground" Value="#F5F5F7"/><Setter Property="Background" Value="#292D36"/><Setter Property="BorderBrush" Value="#727989"/>
    <Setter Property="Padding" Value="9,7"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CaretBrush" Value="White"/>
    <Setter Property="SelectionBrush" Value="#586CAA"/>
@@ -44,6 +47,7 @@
    <Style.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="#7DDBE0"/></Trigger></Style.Triggers>
   </Style>
   <Style TargetType="CheckBox">
+   <Setter Property="AutomationProperties.AutomationId" Value="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue={x:Static sys:String.Empty}}"/>
    <Setter Property="MinHeight" Value="{DynamicResource ControlHitSize}"/>
    <Setter Property="Foreground" Value="#F5F5F7"/><Setter Property="VerticalContentAlignment" Value="Center"/><Setter Property="Cursor" Value="Hand"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox">
@@ -65,6 +69,7 @@
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="ItemBorder" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="ItemBorder" Property="Background" Value="#434B5F"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
   </Style>
   <Style TargetType="ComboBox">
+   <Setter Property="AutomationProperties.AutomationId" Value="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue={x:Static sys:String.Empty}}"/>
    <Setter Property="MinHeight" Value="{DynamicResource InputMinHeight}"/><Setter Property="Foreground" Value="#F5F5F7"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
     <Grid>

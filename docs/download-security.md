@@ -91,7 +91,13 @@ IObit 공식 설명서의 [Report False Positive](https://www.iobit.com/product-
 - 보고서의 BDVersion은 기록했지만 선택형 Bitdefender 엔진의 실제 활성 여부와 제조사 최신 DB 여부는 별도로 검증하지 않았다.
 - Windows Defender는 `Not running`, `AntivirusEnabled=false`여서 다른 제품을 이용한 독립 검사 결과는 얻지 못했다. 보호 설정이나 서비스 상태는 변경하지 않았다.
 - IObit의 **이번 검사에서 탐지되지 않았음**을 확인했다. 악성코드 부재·전체 보안 통과·기존 탐지의 오탐 확정을 뜻하지 않는다.
-- 원본 로그·검사 파일 목록·해시와 제조사 요청 초안은 로컬 `artifacts/antivirus-review-20261022/`에 보관했다. 외부 제출과 제조사의 정확한 판정은 아직 완료하지 않았다.
+- 원본 로그·검사 파일 목록·해시와 제조사 요청 초안은 로컬 `artifacts/security/antivirus-review-20261022/`에 보관했다. 외부 제출과 제조사의 정확한 판정은 아직 완료하지 않았다.
+
+### 2026-10-23 · 1.1.3 EXE 재검사
+
+1.1.3 최종 단일 EXE를 같은 방식으로 검사했다. IObit 13.5.0.1684 · DB 2638, `Manual / Right Scan`, 2개 개체 · 12초 · **Completed · 탐지 0건**이다. 검사 전후 SHA-256은 `e89d81ec284c03fbfc855350d96dd9fe0d6b529497701bb674afc25f61a2e3ae`로 동일했다. 원본 보고서와 해시는 로컬 `artifacts/security/antivirus-review-1.1.3/`에 보관한다.
+
+파일을 실행하거나 보호 설정·시작프로그램을 변경하지 않았다. 이번 파일 검사 결과이며, 기존 시작프로그램 탐지의 오탐 확정이나 코드 서명 완료를 뜻하지 않는다.
 
 ## 단일 EXE
 

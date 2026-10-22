@@ -87,6 +87,7 @@ await key('End','End',35);check('End selects last preview tab',await evaluate('d
 const tree=await call('Accessibility.getFullAXTree');
 check('screen reader tree exposes menu and screenshot text',tree.nodes.some(n=>n.role?.value==='button'&&n.name?.value.includes('메뉴'))&&tree.nodes.some(n=>n.role?.value==='image'&&n.name?.value.includes('설정 화면')));
 await navigate('/guide.html',390,844);
+check('guide serves readable Korean UTF-8 instructions',await evaluate('document.querySelector("main h1").textContent === "사용 가이드" && document.querySelector("#start").textContent.includes("앱 종료") && !document.querySelector("main").textContent.includes("??") && !document.querySelector("main").textContent.includes("\uFFFD")'));
 check('guide keeps its page navigation selected',await evaluate('document.querySelector("#main-nav [aria-current=page]")?.getAttribute("href")==="guide.html"'));
 await evaluate('document.querySelector(".guide-toc a[href$=links]").click()');
 await new Promise(r=>setTimeout(r,650));
@@ -142,4 +143,9 @@ check('Pages .nojekyll marker exists',(await fetch(base+'/.nojekyll')).ok);
 check('local root remains previewable',(await fetch('http://127.0.0.1:4173/')).ok);
 await fs.writeFile(path.join(project,'artifacts/site-checks.json'),JSON.stringify({passed,results},null,2));
 console.log(`${passed} site checks passed`);
-}finally{socket.close();try{await fetch(devtools+'/json/close/'+target.id);}finally{browser.kill();}}
+}finally{socket.close();try{await fetch(devtools+'/json/close/'+target.id);}finally{
+  browser.kill();
+  const relative=path.relative(path.join(project,'artifacts'),await fs.realpath(profile));
+  if(path.dirname(relative)!=='.'||!relative.startsWith('site-browser-qa-'))throw new Error('Unexpected browser profile path; cleanup refused.');
+  await fs.rm(profile,{recursive:true,force:true,maxRetries:10,retryDelay:100});
+}}

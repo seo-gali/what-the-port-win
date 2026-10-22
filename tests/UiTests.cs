@@ -34,6 +34,7 @@ public static class UiTests {
             NavigationLayoutTests();
             ResponsiveSizingTests();
             ChartRangeTests();
+            MotionTests();
             ToolTipTests();
             KeyboardTests();
             CheckNames("list controls have screen reader names");
@@ -71,7 +72,7 @@ public static class UiTests {
             Click(ByName("Select servers to stop (C)"));foreach(var check in All(Body()).OfType<CheckBox>().ToList()){if(check.IsChecked!=true){check.IsChecked=true;Click(check);}}
             // Every click re-renders the view, so select remaining current controls by iteration.
             for(int i=0;i<5;i++){var uncheckedBox=All(Body()).OfType<CheckBox>().FirstOrDefault(c=>c.IsChecked!=true);if(uncheckedBox==null)break;uncheckedBox.IsChecked=true;Click(uncheckedBox);}
-            Click(ByName("Stop selected server process trees"));Check("empty state after final cleanup",Rows().Count()==0&&All(Body()).OfType<TextBlock>().Any(t=>t.Text=="A little breathing room."));
+            Click(ByName("Stop selected server process trees"));Check("empty state after final cleanup offers listener discovery",Rows().Count()==0&&ByName("Include custom executables and other local apps").IsEnabled);
             var pin=(Button)window.FindName("Pin");Click(pin);Check("pin toggles",pin.Content.ToString()=="◆");
             Check("pin state has a meaningful accessible name",UIElementAutomationPeer.CreatePeerForElement(pin).GetName()=="Unpin panel");
             LocalizationTests();
@@ -105,6 +106,33 @@ public static class UiTests {
         server.History.Remove(sample);server.Memory=server.History.Last().Memory;server.Cpu=server.History.Last().Cpu;Invoke("Navigate","list");
     }
     static Rect Displayed(FrameworkElement element){return element.TransformToAncestor(window).TransformBounds(new Rect(new Point(),element.RenderSize));}
+    static void WaitForMotion(int milliseconds=350){var frame=new System.Windows.Threading.DispatcherFrame();var timer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromMilliseconds(milliseconds)};timer.Tick+=delegate{timer.Stop();frame.Continue=false;};timer.Start();System.Windows.Threading.Dispatcher.PushFrame(frame);Layout();}
+    static string ChartLine(Chart chart){
+        ChartVariation(chart);var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())typeof(Chart).GetMethod("OnRender",PrivateInstance).Invoke(chart,new object[]{drawing});
+        return visual.Drawing.Children.OfType<GeometryDrawing>().Single(d=>d.Pen!=null&&d.Geometry is StreamGeometry).Geometry.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+    static void MotionTests(){
+        if(!SystemParameters.ClientAreaAnimation){Console.WriteLine("INFO Windows animations disabled; snapshot instant sizing remains covered.");return;}
+        var mode=typeof(WhatThePort.App.Panel).GetField("snapshotMode",PrivateInstance);var original=PanelPlacement.PhysicalBounds(window);var settings=(WhatThePort.Settings)Field("settings");
+        try{
+            mode.SetValue(panel,false);Invoke("Navigate","list");
+            WaitForMotion(30);Check("navigation starts a short visual transition",Body().Opacity<1);WaitForMotion();
+            Check("navigation finishes fully visible",Math.Abs(Body().Opacity-1)<.001);
+            Click((Button)window.FindName("Larger"));var start=PanelPlacement.PhysicalBounds(window);
+            Check("resize begins at the current size",Math.Abs(start.Width-original.Width)<4);WaitForMotion();var larger=PanelPlacement.PhysicalBounds(window);
+            Check("resize reaches the requested size and keeps its anchor",larger.Width>original.Width&&Math.Min(Math.Abs(larger.Top-original.Top),Math.Abs(larger.Bottom-original.Bottom))<=1);
+            Click((Button)window.FindName("Smaller"));Click((Button)window.FindName("Larger"));WaitForMotion();
+            Check("rapid resize reversal reaches the last requested size",Math.Abs(PanelPlacement.PhysicalBounds(window).Width-larger.Width)<=1);
+            Invoke("Navigate","detail");WaitForMotion();var server=((WhatThePort.Snapshot)Field("current")).Servers.First();
+            var history=server.History;server.History=new List<WhatThePort.Sample>(history);var sample=new WhatThePort.Sample{At=server.History.Last().At.AddSeconds(3),Memory=server.Memory+50*WhatThePort.Format.MB,Cpu=20};server.History.Add(sample);Rerender();
+            var chart=All(Body()).OfType<Chart>().First();string first=ChartLine(chart);WaitForMotion();
+            Check("graph animates toward the newest sample without delaying data",chart.Samples.Last()==sample&&first!=ChartLine(chart));
+            server.History=history;Invoke("Navigate","list");Click((Button)window.FindName("Smaller"));window.Hide();
+            Check("hiding finishes resize without a background animation",Math.Abs(PanelPlacement.PhysicalBounds(window).Width-original.Width)<=1);
+            window.Show();Invoke("Navigate","settings");var input=All(Body()).OfType<TextBox>().First();input.Text="unfinished";Click((Button)window.FindName("Larger"));Click(ByName("Reset panel position to primary monitor"));
+            Check("position reset during resize keeps the form and clears the saved position",input.Text=="unfinished"&&!settings.PanelLeft.HasValue&&!settings.PanelBottom.HasValue);
+        }finally{mode.SetValue(panel,true);settings.PanelSize=1;window.Show();Invoke("Navigate","list");PanelPlacement.Place(window,594,new Point(original.Left,original.Bottom),true,false);Layout();}
+    }
     static void ResponsiveSizingTests(){
         var original=PanelPlacement.PhysicalBounds(window);var work=System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(window).Handle).WorkingArea;
         double textHeight=Displayed(All(Rows().First()).OfType<TextBlock>().First(t=>t.Text=="menubar port monitor")).Height;
@@ -157,14 +185,16 @@ public static class UiTests {
         Rect initial=PanelPlacement.PhysicalBounds(window);
         var summary=(StackPanel)window.FindName("Summary");var summaryAt=summary.TranslatePoint(new Point(),window);
         var scroll=(ScrollViewer)window.FindName("Scroll");scroll.ScrollToBottom();Layout();
-        Check("memory and CPU summary stay fixed while server rows scroll",summary.TranslatePoint(new Point(),window)==summaryAt&&scroll.VerticalOffset>0);scroll.ScrollToTop();
+        Check("memory and CPU summary stay fixed while server rows scroll",summary.TranslatePoint(new Point(),window)==summaryAt&&scroll.VerticalOffset>0);
         Check("server rows have no redundant hover tooltips",Rows().All(r=>r.ToolTip==null&&All(r).OfType<FrameworkElement>().All(e=>e.ToolTip==null)));
         Click(Rows().First());
+        Check("server detail opens at the top after scrolling the list",Near(scroll.VerticalOffset,0));
         Check("detail keeps list size and position",PanelPlacement.PhysicalBounds(window)==initial);
         var expander=All(Body()).OfType<Expander>().Single();
         var chart=All(Body()).OfType<Chart>().First();
         Check("process details appear beside project information before charts",expander.TranslatePoint(new Point(),Body()).Y<chart.TranslatePoint(new Point(),Body()).Y);
-        Click(ByName("Manage project links and copy local URL"));
+        scroll.ScrollToBottom();Layout();Click(ByName("Manage project links and copy local URL"));
+        Check("project links open at the top after scrolling detail",Near(scroll.VerticalOffset,0));
         Check("links keep list size and position",PanelPlacement.PhysicalBounds(window)==initial);
         Click((Button)window.FindName("Back"));
         Check("links Back returns to the originating detail",Title()=="menubar port monitor");
@@ -181,8 +211,8 @@ public static class UiTests {
         var opacity=All(Body()).OfType<Slider>().Single();opacity.Value=60;Layout();
         Check("opacity preview affects only background",Near(((Border)window.FindName("PanelBackground")).Background.Opacity,.6)&&Near(window.Opacity,0)&&Near(inputs[0].Opacity,1));
         Invoke("ToggleSnooze");
-        Check("snooze toggles on with visible state without losing draft input",(DateTime)Field("snoozeUntil")>DateTime.UtcNow&&Message().Contains("snoozed")&&inputs[0].Text=="9"&&All(Body()).OfType<Button>().Any(b=>b.Content as string=="Resume alerts"));
-        Invoke("ToggleSnooze");Check("snooze toggles off immediately",(DateTime)Field("snoozeUntil")<DateTime.UtcNow&&Message().Contains("resumed")&&All(Body()).OfType<TextBlock>().Any(t=>t.Text=="Alerts active"));
+        Check("snooze button exposes resume and expiry without losing draft input",(DateTime)Field("snoozeUntil")>DateTime.UtcNow&&Message().Contains("snoozed")&&inputs[0].Text=="9"&&ByName("Pause or resume resource notifications").Content.ToString().Contains("Resume alerts")&&ByName("Pause or resume resource notifications").Content.ToString().Contains(((DateTime)Field("snoozeUntil")).ToLocalTime().ToString("HH:mm")));
+        Invoke("ToggleSnooze");Check("snooze toggles off immediately",(DateTime)Field("snoozeUntil")<DateTime.UtcNow&&Message().Contains("resumed")&&ByName("Pause or resume resource notifications").Content.ToString()=="Snooze alerts for 1 hour");
         Click(ByName("Discard changes"));Click(ByName("Settings (Ctrl+,)"));
         Check("cancel discards startup and opacity previews",All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked==false&&Near(((Border)window.FindName("PanelBackground")).Background.Opacity,1));
         Invoke("Navigate","list");
@@ -191,6 +221,7 @@ public static class UiTests {
         Click(Rows().First());Check("navigation preserves user-selected size",PanelPlacement.PhysicalBounds(window)==larger);
         Click(ByName("Manage project links and copy local URL"));Press(Key.Escape);Check("links Escape returns to server detail",Title()=="menubar port monitor");
         Invoke("Navigate","list");Click((Button)window.FindName("Smaller"));var smaller=PanelPlacement.PhysicalBounds(window);Check("minus restores original size and keeps bottom",Near(smaller.Width,initial.Width)&&Near(smaller.Height,initial.Height)&&Near(smaller.Bottom,larger.Bottom));
+        Rows().First().Focus();scroll.ScrollToBottom();Layout();double offset=scroll.VerticalOffset;Rerender();Check("refresh preserves scroll even when the focused row is outside the viewport",Near(scroll.VerticalOffset,offset));
         typeof(WhatThePort.App.Panel).GetField("stopDetails",PrivateInstance).SetValue(panel,"Test server stopped.");
         var dialog=(Window)typeof(WhatThePort.App.Panel).GetMethod("StopDetailsWindow",PrivateInstance).Invoke(panel,null);
         try{var text=All(dialog).OfType<TextBox>().Single();Check("stop result window uses app theme and offers close",text.IsReadOnly&&((SolidColorBrush)text.Background).Color==Color.FromRgb(32,37,48)&&All(dialog).OfType<Button>().Any(b=>AutomationProperties.GetName(b)=="Close"));dialog.Opacity=0;dialog.Show();dialog.UpdateLayout();CaptureVisual((FrameworkElement)dialog.Content,"stop-result");}finally{dialog.Close();}
@@ -236,7 +267,7 @@ public static class UiTests {
             Check("unrelated tray icon callbacks are ignored",panel.Window==null);
             SendMessage(owner,0x8002,IntPtr.Zero,new IntPtr((1<<16)|0x400));window=panel.Window;window.Opacity=0;Layout();
             Check("native tray click opens the deferred panel",panel.IsVisible&&Title()=="What the Port");
-            Check("footer explains the shortcut and refresh interval",((TextBlock)window.FindName("Status")).Text.Contains("Ctrl+Alt+P show/hide")&&((TextBlock)window.FindName("Status")).Text.Contains("every 3s"));
+            Check("live footer leaves room for actions",((TextBlock)window.FindName("Status")).Visibility==Visibility.Collapsed);
             SendMessage(owner,0x0312,new IntPtr(1),IntPtr.Zero);Pump();Check("hotkey hides the visible panel while tray stays active",!panel.IsVisible&&tray.Visible);
             SendMessage(owner,0x0312,new IntPtr(1),IntPtr.Zero);Layout();
             Click((Button)window.FindName("Pin"));
@@ -300,7 +331,8 @@ public static class UiTests {
         All(Body()).OfType<ComboBox>().Single(c=>(string)c.Tag=="select-AUTOMATIC CLEAN UP").SelectedIndex=1;
         Click(ByName("설정 저장"));
         ChooseLanguage("English");
-        Check("language preview immediately translates labels, header and actions",Title()=="Settings"&&String.Equals(window.Language.IetfLanguageTag,"en-US",StringComparison.OrdinalIgnoreCase)&&ByName("Discard changes")!=null&&ByName("Save preferences")!=null&&All(Body()).OfType<TextBlock>().Any(t=>t.Text=="A quieter laptop, on your terms."));
+        Check("language preview immediately translates labels, header and actions",Title()=="Settings"&&String.Equals(window.Language.IetfLanguageTag,"en-US",StringComparison.OrdinalIgnoreCase)&&ByName("Discard changes")!=null&&ByName("Save preferences")!=null&&AutomationProperties.GetName(All(Body()).OfType<TextBox>().First())=="SAMPLE INTERVAL · seconds (1–30)");
+        CheckNames("language preview preserves accessible controls");
         Check("language preview also translates the existing validation notice",Message()=="Enter valid numbers for the sampling and alert thresholds.");
         Check("language preview preserves incomplete input and other unsaved preferences",All(Body()).OfType<TextBox>().First().Text=="unfinished"&&All(Body()).OfType<CheckBox>().First().IsChecked==true&&All(Body()).OfType<ComboBox>().Single(c=>(string)c.Tag=="select-AUTOMATIC CLEAN UP").SelectedItem.ToString()=="Ask");
         Check("preview never saves or changes active monitoring settings",File.ReadAllText(preferences)==saved&&((WhatThePort.Settings)Field("settings")).Language=="ko"&&((WhatThePort.Settings)Field("settings")).Cleanup=="Off");
@@ -329,10 +361,11 @@ public static class UiTests {
             try{
                 tip.IsOpen=true;Pump();tip.UpdateLayout();
                 var block=Visuals(tip).OfType<TextBlock>().First();
-                Check("long tooltip renders complete left-aligned text on multiple lines within the panel width",block.Text.Replace("\n"," ")==text&&block.TextAlignment==TextAlignment.Left&&block.ActualHeight>18&&block.ActualWidth<=314.5&&tip.ActualWidth<=340.5);
+                bool longText=text!=heading&&text!=strings.T(heading);
+                Check("tooltip preserves complete left-aligned text and wraps long content within the panel width",block.Text.Replace("\n"," ")==text&&block.TextAlignment==TextAlignment.Left&&(!longText||block.ActualHeight>18)&&block.ActualWidth<=314.5&&tip.ActualWidth<=340.5);
                 if(text==strings.T(reason))CaptureVisual(tip,"tooltip-protection-ko");
-                if(text==heading)CaptureVisual(tip,"tooltip-title-sentences");
-                if(text==strings.T(heading))CaptureVisual(tip,"tooltip-title-sentences-ko");
+                if(text==heading)CaptureVisual(tip,"tooltip-title-command");
+                if(text==strings.T(heading))CaptureVisual(tip,"tooltip-title-command-ko");
             }finally{tip.IsOpen=false;Pump();}
         }
         // Open the automatic string tooltip through WPF, then detach its owner as a refresh does.
@@ -400,7 +433,7 @@ public static class UiTests {
         CaptureVisual((FrameworkElement)window.Content,"protected-detail-ko");
         Check("Korean chart exposes samples and keyboard instructions",UIElementAutomationPeer.CreatePeerForElement(chart).GetName().Contains("측정값")&&UIElementAutomationPeer.CreatePeerForElement(chart).GetHelpText().Contains("방향키"));
         Click(ByName("프로젝트 연결 관리 및 로컬 URL 복사"));Check("Korean project link labels",Title()=="프로젝트 연결"&&All(Body()).OfType<TextBox>().Any(t=>AutomationProperties.GetName(t)=="세션 ID"));
-        Press(Key.Escape);Press(Key.Escape);Click(ByName("종료할 서버 선택 (C)"));Check("Korean protected cleanup explanation is visible",All(Body()).OfType<TextBlock>().Any(t=>t.Text.Contains("보호된 항목")));
+        Press(Key.Escape);Press(Key.Escape);Click(ByName("종료할 서버 선택 (C)"));Check("Korean cleanup identifies protected rows",All(Body()).OfType<TextBlock>().Any(t=>t.Text.Contains("보호됨 · 종료 불가")));
         Press(Key.Escape);Click(ByName("설정 (Ctrl+,)"));
         var sample=All(Body()).OfType<TextBox>().First();sample.Text="bad";Click(ByName("설정 저장"));Check("invalid numeric input has Korean feedback",Message().Contains("올바른 숫자"));sample.Text="3";
         var modes=All(Body()).OfType<ComboBox>().Single(c=>(string)c.Tag=="select-AUTOMATIC CLEAN UP");Check("cleanup options are localized",modes.Items.Cast<string>().SequenceEqual(new[]{"끄기","알림 후 직접 선택","자동 종료"}));
@@ -409,7 +442,7 @@ public static class UiTests {
         var strings=new Strings("ko");var outcome=new WhatThePort.StopResult{Port=3000,ListenerStopped=true,Stopped=1};outcome.Errors.Add("Access denied");
         Check("partial stop feedback cannot claim total failure or total success",strings.StopSummary(outcome).Contains("일부 종료")&&strings.StopSummary(outcome).Contains("서버 본체 종료")&&strings.StopSummary(outcome).Contains("오류 1건"));
         foreach(var s in snapshot.Servers)s.Protected=true;Rerender();Click(ByName("Select servers to stop (C)"));
-        Check("all-protected list explains zero selectable servers",!ByName("Stop selected server process trees").IsEnabled&&All(Body()).OfType<TextBlock>().Any(t=>t.Text.Contains("There are no servers you can stop")));
+        Check("all-protected list prevents selecting or stopping any server",!ByName("Stop selected server process trees").IsEnabled&&All(Body()).OfType<CheckBox>().All(c=>!c.IsEnabled));
         Check("header focus controls stay compact",((Button)window.FindName("Pin")).ActualHeight==32);
     }
     static void NativePlacementTests(){
@@ -456,10 +489,12 @@ public static class UiTests {
         Press(Key.Escape);Rows().First().Focus();
     }
     static void CheckNames(string label){
-        var controls=All(window).OfType<Control>().Where(c=>c.IsVisible&&(c is Button||c is CheckBox||c is ComboBox||c is TextBox||c is Expander));
+        var controls=All(window).OfType<Control>().Where(c=>c.IsVisible&&(c is Button||c is System.Windows.Controls.Primitives.ToggleButton||c is ComboBox||c is TextBox||c is Expander||c is Slider));
         Check(label,controls.All(c=>{var peer=UIElementAutomationPeer.CreatePeerForElement(c);return peer!=null&&!String.IsNullOrWhiteSpace(peer.GetName());}));
+        var tagged=controls.Where(c=>c.Tag is string).ToList();
+        Check(label+" with stable unique automation IDs",tagged.All(c=>UIElementAutomationPeer.CreatePeerForElement(c).GetAutomationId()==(string)c.Tag)&&tagged.Select(c=>AutomationProperties.GetAutomationId(c)).Distinct().Count()==tagged.Count);
     }
-    static void Rerender(){typeof(WhatThePort.App.Panel).GetMethod("Render",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(panel,null);Layout();Pump();}
+    static void Rerender(){typeof(WhatThePort.App.Panel).GetMethod("Render",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(panel,new object[]{false});Layout();Pump();}
     static void Pump(){var frame=new System.Windows.Threading.DispatcherFrame();window.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,new Action(()=>frame.Continue=false));System.Windows.Threading.Dispatcher.PushFrame(frame);}
     static void Press(Key key){
         var target=Keyboard.FocusedElement as UIElement;if(target==null)throw new Exception("No keyboard focus for "+key);

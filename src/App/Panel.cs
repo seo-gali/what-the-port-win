@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
@@ -28,6 +30,11 @@ namespace WhatThePort.App {
         readonly Scanner scanner=new Scanner();
         readonly DispatcherTimer timer=new DispatcherTimer();
         readonly DispatcherTimer releaseTimer=new DispatcherTimer{Interval=TimeSpan.FromSeconds(30)};
+        readonly DispatcherTimer resizeTimer=new DispatcherTimer{Interval=TimeSpan.FromMilliseconds(16)};
+        readonly Stopwatch resizeClock=new Stopwatch();
+        Rect resizeStart,resizeTarget;
+        double resizeDpi,resizeScale,resizeSpark;
+        bool MotionEnabled {get{return !snapshotMode&&IsVisible&&SystemParameters.ClientAreaAnimation;}}
         readonly Dictionary<string,DateTime> alerted=new Dictionary<string,DateTime>();
         readonly HashSet<string> selected=new HashSet<string>();
         readonly bool demo,snapshotMode;
@@ -72,6 +79,7 @@ namespace WhatThePort.App {
             timer.Tick+=async delegate { await Refresh(); };
             timer.Interval=TimeSpan.FromSeconds(settings.ScanSeconds);
             releaseTimer.Tick+=delegate{SuspendWindow();};
+            resizeTimer.Tick+=delegate{try{ResizeFrame();}catch(Exception e){resizeTimer.Stop();Notice(e.Message);}};
             if(demo)current=Demo.Create();
             if(!snapshotMode)CreateTray();
             if(demo||snapshotMode){EnsureWindow();Render();}
@@ -101,12 +109,12 @@ namespace WhatThePort.App {
             Find<Button>("Larger").Click+=delegate{Try(delegate{ResizePanel(1);});};
             pin.Click+=delegate{pinned=!pinned; pin.Content=pinned?"◆":"◇"; pin.ToolTip=T(pinned?"Unpin panel":"Keep panel open");AutomationProperties.SetName(pin,(string)pin.ToolTip);};
             pin.Content=pinned?"◆":"◇";
-            title.ToolTip=T("Drag to move. Position is saved. Ctrl+Shift+arrow keys also move the panel.");title.Cursor=Cursors.SizeAll;
-            Find<Grid>("Header").MouseLeftButtonDown+=delegate(object sender,MouseButtonEventArgs e){if(e.OriginalSource==title||e.OriginalSource==sender)Window.DragMove();};
+            title.ToolTip=T("Move panel (Ctrl+Shift+arrows)");title.Cursor=Cursors.SizeAll;
+            Find<Grid>("Header").MouseLeftButtonDown+=delegate(object sender,MouseButtonEventArgs e){if(e.OriginalSource==title||e.OriginalSource==sender){FinishResize();Window.DragMove();}};
             Window.PreviewKeyDown+=OnKey;
             Window.PreviewMouseDown+=delegate{awaitingLaunchInteraction=false;};
             Window.Deactivated+=OnDeactivated;
-            Window.IsVisibleChanged+=delegate{if(IsVisible)releaseTimer.Stop();else if(!closing&&!releasingWindow){ReleaseTransientView();if(!demo&&!snapshotMode)releaseTimer.Start();}};
+            Window.IsVisibleChanged+=delegate{if(IsVisible)releaseTimer.Stop();else {FinishResize();body.BeginAnimation(UIElement.OpacityProperty,null);body.RenderTransform=Transform.Identity;foreach(var chart in Descendants(body).OfType<Chart>())chart.StopTransition();if(!closing&&!releasingWindow){ReleaseTransientView();if(!demo&&!snapshotMode)releaseTimer.Start();}}};
             Window.Closing+=delegate(object sender,System.ComponentModel.CancelEventArgs e){if(!closing&&!releasingWindow){e.Cancel=true;Window.Hide();}};
             Window.SourceInitialized+=delegate {
                 HwndSource.FromHwnd(new WindowInteropHelper(Window).Handle).AddHook(Hook);
@@ -168,27 +176,44 @@ namespace WhatThePort.App {
             body.Children.Clear();footer.Children.Clear();
         }
         void Place(bool opening,bool fromTray=false){
+            FinishResize();
             Point? saved=settings.PanelLeft.HasValue?(Point?)new Point(settings.PanelLeft.Value,settings.PanelBottom.Value):null;
             PanelPlacement.Place(Window,preferredHeight,saved,opening,fromTray,PanelSizes[settings.PanelSize??1].Width);
         }
         void ResizePanel(int change){
             int size=Math.Max(0,Math.Min(PanelSizes.Length-1,(settings.PanelSize??1)+change));
             if(size==(settings.PanelSize??1))return;
+            resizeTimer.Stop();resizeStart=PanelPlacement.PhysicalBounds(Window);
+            resizeScale=((ScaleTransform)body.LayoutTransform).ScaleX;resizeSpark=((GridLength)Window.Resources["SparkWidth"]).Value;
             settings.PanelSize=size;
-            bool top=PanelPlacement.Place(Window,preferredHeight,null,false,false,PanelSizes[size].Width,resizeFromTop);
-            RememberPosition();resizeFromTop=top;ApplyPanelSize();UpdateSizeButtons();
+            bool top=PanelPlacement.Place(Window,preferredHeight,null,false,false,PanelSizes[size].Width,resizeFromTop,delegate(Rect bounds,double dpi){resizeTarget=bounds;resizeDpi=dpi;});
+            resizeFromTop=top;UpdateSizeButtons();
+            if(MotionEnabled){resizeClock.Restart();resizeTimer.Start();}else CompleteResize();
         }
-        void ApplyPanelSize(){
-            int size=settings.PanelSize??1;double scale=PanelScales[size];
+        void ResizeFrame(){
+            if(!MotionEnabled){FinishResize();return;}
+            double progress=Math.Min(1,resizeClock.Elapsed.TotalMilliseconds/200);double eased=1-Math.Pow(1-progress,3);
+            PanelPlacement.Apply(Window,new Rect(resizeStart.Left+(resizeTarget.Left-resizeStart.Left)*eased,resizeStart.Top+(resizeTarget.Top-resizeStart.Top)*eased,resizeStart.Width+(resizeTarget.Width-resizeStart.Width)*eased,resizeStart.Height+(resizeTarget.Height-resizeStart.Height)*eased),resizeDpi);
+            int size=settings.PanelSize??1;ApplyPanelSize(resizeScale+(PanelScales[size]-resizeScale)*eased,resizeSpark+(SparkWidths[size]-resizeSpark)*eased);
+            if(progress>=1)CompleteResize();
+        }
+        void FinishResize(){if(resizeTimer.IsEnabled)CompleteResize();}
+        void CompleteResize(){
+            resizeTimer.Stop();resizeClock.Stop();PanelPlacement.Apply(Window,resizeTarget,resizeDpi);ApplyPanelSize();
+            bool? top=resizeFromTop;RememberPosition();resizeFromTop=top;
+        }
+        void ApplyPanelSize(double? animatedScale=null,double? animatedSpark=null){
+            if(resizeTimer.IsEnabled&&!animatedScale.HasValue)return;
+            int size=settings.PanelSize??1;double scale=animatedScale??PanelScales[size];
             var current=body.LayoutTransform as ScaleTransform;
-            if(current!=null&&Math.Abs(current.ScaleX-scale)<.001)return;
+            if(current!=null&&Math.Abs(current.ScaleX-scale)<.00001)return;
             var transform=new ScaleTransform(scale,scale);transform.Freeze();
             foreach(var element in new FrameworkElement[]{body,footer,Find<StackPanel>("Summary"),messageBox,status})element.LayoutTransform=transform;
             Window.Resources["ControlHitSize"]=30/scale;
             Window.Resources["ButtonMinHeight"]=Math.Max(32,30/scale);
             Window.Resources["InputMinHeight"]=Math.Max(34,30/scale);
             Window.Resources["MarkerWidth"]=new GridLength(Math.Max(26,30/scale));
-            Window.Resources["SparkWidth"]=new GridLength(SparkWidths[size]);
+            Window.Resources["SparkWidth"]=new GridLength(animatedSpark??SparkWidths[size]);
             title.FontSize=13*scale;
         }
         void UpdateSizeButtons(){
@@ -225,7 +250,7 @@ namespace WhatThePort.App {
                     var targets=current.Servers.Where(s=>Policy.CleanupCandidate(s,settings,DateTime.UtcNow)).ToList();
                     if(targets.Count>0)await StopServers(targets,true);
                 }
-            }catch(Exception e){current.Error=e.Message;Notice("Scan unavailable. "+e.Message);if(status!=null)status.Text=T("SCAN PAUSED · retrying automatically");}
+            }catch(Exception e){current.Error=e.Message;Notice("Scan unavailable. "+e.Message);}
             finally{scanning=false;}
         }
         void Navigate(string target){
@@ -234,13 +259,20 @@ namespace WhatThePort.App {
             if(view=="settings"&&target!="settings"){
                 settingsDraft=null;strings.Language=settings.Language;ApplyOpacity(settings.PanelOpacity??100);UpdateTrayMenu();
             }
-            view=target;suspendedView=null;Notice(null);Find<ScrollViewer>("Scroll").ScrollToTop();Render();if(IsVisible){
+            view=target;suspendedView=null;Notice(null);Render(true);
+            body.BeginAnimation(UIElement.OpacityProperty,null);body.RenderTransform=Transform.Identity;
+            if(MotionEnabled){
+                var duration=TimeSpan.FromMilliseconds(160);var easing=new CubicEase{EasingMode=EasingMode.EaseOut};
+                body.BeginAnimation(UIElement.OpacityProperty,new DoubleAnimation(.65,1,duration){EasingFunction=easing,FillBehavior=FillBehavior.Stop});
+                var slide=new TranslateTransform();body.RenderTransform=slide;slide.BeginAnimation(TranslateTransform.YProperty,new DoubleAnimation(6,0,duration){EasingFunction=easing,FillBehavior=FillBehavior.Stop});
+            }
+            if(IsVisible){
             if(view=="list"){var row=body.Children.OfType<Button>().FirstOrDefault(b=>(b.Tag as string)=="server-"+detailKey);if(row!=null){row.Focus();return;}}
             if(view=="settings"||view=="links"){var input=Descendants(body).OfType<TextBox>().FirstOrDefault();if(input!=null){input.Focus();return;}}
             back.Focus();
         }}
         void Back(){Navigate(view=="links"&&CurrentServer()!=null?"detail":"list");}
-        void Render(){
+        void Render(bool resetView=false){
             if(Window==null)return;
             // Preserve keyboard focus and scroll position through live refreshes.
             var focusedElement=Keyboard.FocusedElement as DependencyObject;
@@ -249,24 +281,27 @@ namespace WhatThePort.App {
             var focusedChart=focusedElement as Chart;DateTime? chartTime=focusedChart==null?null:focusedChart.SelectedTime;
             double offset=Find<ScrollViewer>("Scroll").VerticalOffset;
             if(suspendedView!=null){focused=suspendedView.Tag;chartTime=suspendedView.ChartTime;offset=suspendedView.Scroll;suspendedView=null;}
+            if(resetView){focused=null;chartTime=null;offset=0;}
+            var oldCharts=!resetView&&MotionEnabled?Descendants(body).OfType<Chart>().Where(c=>c.Tag is string).ToDictionary(c=>(string)c.Tag):new Dictionary<string,Chart>();
             body.Children.Clear();footer.Children.Clear();Find<StackPanel>("Summary").Children.Clear();
             Find<StackPanel>("Summary").Visibility=view=="list"||view=="cleanup"?Visibility.Visible:Visibility.Collapsed;
             back.Content=view=="list"?(object)DotGrid():"‹";back.IsEnabled=true;back.FontSize=25;back.Foreground=B("#A4A6AF");
             AutomationProperties.SetName(back,T(view=="list"?"Servers home":view=="links"?"Back to server":"Back to servers"));back.ToolTip=T(view=="list"?"Servers home":view=="links"?"Back to server":"Back to servers (Esc)");
             UpdateSizeButtons();ApplyPanelSize();ApplyOpacity(settingsDraft==null?settings.PanelOpacity??100:settingsDraft.Opacity);
             pin.ToolTip=T(pinned?"Unpin panel":"Keep panel open");AutomationProperties.SetName(pin,(string)pin.ToolTip);Find<Button>("Hide").ToolTip=T("Hide to tray (Esc)");AutomationProperties.SetName(Find<Button>("Hide"),T("Hide to tray"));
-            title.ToolTip=T("Drag to move. Position is saved. Ctrl+Shift+arrow keys also move the panel.");Window.Language=XmlLanguage.GetLanguage(strings.Language=="ko"?"ko-KR":"en-US");
-            status.Text=demo?T("DEMO · SAMPLE DATA · NO SYSTEM ACTIONS"):F("LOCAL ONLY   ·   Ctrl+Alt+P show/hide   ·   every {0}s",settings.ScanSeconds);
-            status.ToolTip=demo?null:T("Ctrl+Alt+P shows or hides this panel. Monitoring continues while hidden.");
+            title.ToolTip=T("Move panel (Ctrl+Shift+arrows)");Window.Language=XmlLanguage.GetLanguage(strings.Language=="ko"?"ko-KR":"en-US");
+            status.Text=demo?T("DEMO · SAMPLE DATA · NO SYSTEM ACTIONS"):null;status.Visibility=demo?Visibility.Visible:Visibility.Collapsed;
             if(view=="detail")Detail();else if(view=="cleanup")List(true);else if(view=="settings")SettingsView();else if(view=="links")LinksView();else List(false);
+            foreach(var chart in Descendants(body).OfType<Chart>()){Chart previous;if(chart.Tag is string&&oldCharts.TryGetValue((string)chart.Tag,out previous))chart.TransitionFrom(previous);}
             if(capturing||!Window.IsVisible){Window.Height=preferredHeight;Window.Width=PanelSizes[settings.PanelSize??1].Width;}
             Window.Title=view=="list"?"What the Port":title.Text+" · What the Port";
             var bookmark=new ViewBookmark{Tag=focused,ChartTime=chartTime,Scroll=offset};
             if(IsVisible)RestoreView(bookmark);else suspendedView=bookmark;
         }
         void RestoreView(ViewBookmark bookmark){
-            Window.UpdateLayout();Find<ScrollViewer>("Scroll").ScrollToVerticalOffset(bookmark.Scroll);
+            Window.UpdateLayout();
             if(bookmark.Tag!=null)foreach(var element in Descendants(Window).OfType<FrameworkElement>())if((element.Tag as string)==bookmark.Tag){if(element is Chart&&bookmark.ChartTime.HasValue)((Chart)element).SelectTime(bookmark.ChartTime.Value);element.Focus();element.BringIntoView();break;}
+            Find<ScrollViewer>("Scroll").ScrollToVerticalOffset(bookmark.Scroll);
         }
         static IEnumerable<DependencyObject> Descendants(DependencyObject root){for(int i=0;i<VisualTreeHelper.GetChildrenCount(root);i++){var child=VisualTreeHelper.GetChild(root,i);yield return child;foreach(var node in Descendants(child))yield return node;}}
         void Summary(bool cleanup){
@@ -288,13 +323,8 @@ namespace WhatThePort.App {
             if(current.Servers.Count==0){
                 var empty=new StackPanel{Margin=new Thickness(20,42,20,45),HorizontalAlignment=HorizontalAlignment.Center};
                 var glyph=Mono(":_",38,"#7DDBE0");glyph.HorizontalAlignment=HorizontalAlignment.Center;empty.Children.Add(glyph);
-                empty.Children.Add(new TextBlock{Text=T("A little breathing room."),FontSize=18,FontWeight=FontWeights.Medium,HorizontalAlignment=HorizontalAlignment.Center,Margin=new Thickness(0,18,0,10)});
-                empty.Children.Add(new TextBlock{Text=T("No development servers found.\nStart a local server and it will appear here."),FontSize=12,Foreground=B("#A4A6AF"),TextAlignment=TextAlignment.Center,LineHeight=20});body.Children.Add(empty);
+                empty.Children.Add(new TextBlock{Text=T("No development servers"),FontSize=18,FontWeight=FontWeights.Medium,HorizontalAlignment=HorizontalAlignment.Center,Margin=new Thickness(0,18,0,10)});body.Children.Add(empty);
                 var more=Button("Show all user listeners",delegate{settings.AllListeners=true;Task ignored=Refresh();},"Include custom executables and other local apps");more.Margin=new Thickness(15,0,15,12);body.Children.Add(more);
-            }
-            if(cleanup&&current.Servers.Any(s=>s.Protected)){
-                    var protection=Text(current.Servers.All(s=>s.Protected)?"All listed processes are protected. There are no servers you can stop here.":"Protected rows cannot be selected. Open server details from the list for the reason.",11,"#FFCF83");
-                    protection.TextWrapping=TextWrapping.Wrap;protection.Margin=new Thickness(4,4,4,10);body.Children.Add(protection);
             }
             for(int i=0;i<current.Servers.Count;i++){Server s=current.Servers[i];int index=i;body.Children.Add(ServerRow(s,cleanup,index));}
             if(cleanup){
@@ -304,10 +334,9 @@ namespace WhatThePort.App {
                 var targets=current.Servers.Where(s=>selected.Contains(s.Key)&&!s.Protected).ToList();
                 var stop=Button(F(targets.Count==1?"Stop {0} server · free {1}":"Stop {0} servers · free {1}",targets.Count,Format.Bytes(targets.Sum(s=>s.Memory))),async delegate{await StopServers(targets,false);},"Stop selected server process trees");stop.Background=B("#FF453A");stop.IsEnabled=targets.Count>0&&!acting&&current.Error==null;Cell(buttons,stop,1);footer.Children.Add(buttons);
             }else{
-                var buttons=Columns(-1,130,36);int count=current.Servers.Count(s=>Policy.CleanupCandidate(s,settings,DateTime.UtcNow));
+                var buttons=Columns(-1,36);int count=current.Servers.Count(s=>Policy.CleanupCandidate(s,settings,DateTime.UtcNow));
                 var clean=Button(T("Clean up")+(count>0?"  "+count:""),EnterCleanup,"Select servers to stop (C)");clean.HorizontalAlignment=HorizontalAlignment.Left;Cell(buttons,clean,0);
-                var live=Text(F("{0} servers · monitoring",current.Servers.Count),10,"#A4A6AF");live.HorizontalAlignment=HorizontalAlignment.Right;live.Margin=new Thickness(0,0,10,0);Cell(buttons,live,1);
-                var gear=Button("\uE713",delegate{Navigate("settings");},"Settings (Ctrl+,)");gear.FontFamily=new FontFamily("Segoe MDL2 Assets");gear.Background=Brushes.Transparent;gear.FontSize=16;gear.Padding=new Thickness(0);Cell(buttons,gear,2);footer.Children.Add(buttons);
+                var gear=Button("\uE713",delegate{Navigate("settings");},"Settings (Ctrl+,)");gear.FontFamily=new FontFamily("Segoe MDL2 Assets");gear.Background=Brushes.Transparent;gear.FontSize=16;gear.Padding=new Thickness(0);Cell(buttons,gear,1);footer.Children.Add(buttons);
                 if(!String.IsNullOrEmpty(stopDetails)){var results=Button("Stop result details",ShowStopDetails,"Stop result details");results.Margin=new Thickness(0,6,0,0);footer.Children.Add(results);}
             }
         }
@@ -320,7 +349,7 @@ namespace WhatThePort.App {
             var port=Mono(":"+s.Port,13,Format.PortColor(s.Port));port.FontWeight=FontWeights.Medium;port.Margin=new Thickness(0,0,3,0);Cell(row,port,1);
             var name=Text(s.Name,13,"#F5F5F7",false);name.FontWeight=FontWeights.Medium;name.Margin=new Thickness(0,0,10,0);Cell(row,name,2);
             var meta=Text(State(s),10,s.Warning==null?"#A4A6AF":"#FFB224");meta.Margin=new Thickness(0,0,10,0);AutomationProperties.SetHelpText(meta,s.Protected?Protection(s):State(s));Cell(row,meta,2);
-            var chart=new Chart{Samples=s.History,Spark=true,Height=20,VerticalAlignment=VerticalAlignment.Center,Stroke=(Color)ColorConverter.ConvertFromString(s.Warning==null?"#B7BAC4":"#FFB224")};Cell(row,chart,3);
+            var chart=new Chart{Tag="chart-spark-"+s.Key,Samples=s.History,Spark=true,Height=20,VerticalAlignment=VerticalAlignment.Center,Stroke=(Color)ColorConverter.ConvertFromString(s.Warning==null?"#B7BAC4":"#FFB224")};Cell(row,chart,3);
             var memory=Mono(Format.Bytes(s.Memory),11,s.Warning==null?"#DADCE4":"#FFB224");memory.HorizontalAlignment=HorizontalAlignment.Right;memory.Margin=new Thickness(0,0,2,0);Cell(row,memory,4);
             foreach(UIElement element in row.Children){Grid.SetRow(element,1);}Grid.SetRow(meta,2);
             if(s.Clients.Count>0){var clients=Text(F("Connected: {0}",String.Join(", ",s.Clients.Select(ClientName).Distinct())),10,"#7DDBE0",false);Cell(row,clients,2);Grid.SetRow(clients,3);Grid.SetColumnSpan(clients,3);AutomationProperties.SetName(clients,clients.Text);}
@@ -349,7 +378,7 @@ namespace WhatThePort.App {
             Property("Ports",F("{0}   ·   {1} connections",String.Join(", ",s.Ports),s.Connections),null);
             Property("Connected apps",s.Clients.Count==0?T("No identified local apps"):String.Join("\n",s.Clients.Select(c=>ClientName(c)+"   #"+c.Pid+"   ·   "+c.Connections)),null);
             var processes=new Expander{Header=F("Processes   ·   {0}   ·   {1}",s.Processes.Count,Format.Bytes(s.Memory)),Foreground=B("#B7BAC4"),FontSize=12,Margin=new Thickness(3,0,3,8),IsExpanded=processesExpanded};
-            processes.Tag="processes";AutomationProperties.SetName(processes,(string)processes.Header);
+            processes.Tag="processes";AutomationProperties.SetName(processes,(string)processes.Header);AutomationProperties.SetAutomationId(processes,(string)processes.Tag);
             var nodes=new StackPanel();
             Action loadProcesses=delegate{
                 if(nodes.Children.Count>0)return;
@@ -365,13 +394,13 @@ namespace WhatThePort.App {
             MetricTitle("CPU",Format.Percent(s.Cpu),"#F5F5F7");body.Children.Add(new Chart{UiLanguage=settings.Language,Tag="chart-cpu",Samples=s.History,Cpu=true,Height=115,Stroke=(Color)ColorConverter.ConvertFromString(Format.PortColor(s.Port))});
             Rule();
             bool hasSession=link!=null&&!String.IsNullOrEmpty(link.Session),hasPreview=link!=null&&!String.IsNullOrEmpty(link.Preview);
-            var actions=Columns(-1,40,hasSession?40:0,hasPreview?40:0);var open=Button(F("Open localhost:{0}",s.Port),delegate{RunAction("open");},"Open local server (O)");open.Background=B("#F5F5F7");open.Foreground=B("#111318");open.Margin=new Thickness(0,0,6,0);Cell(actions,open,0);
+            var actions=Columns(-1,40,hasSession?40:0,hasPreview?40:0,64);var open=Button(F("Open localhost:{0}",s.Port),delegate{RunAction("open");},"Open local server (O)");open.Background=B("#F5F5F7");open.Foreground=B("#111318");open.Margin=new Thickness(0,0,6,0);Cell(actions,open,0);
             string[] keys={"terminal","session","preview"},labels={">_","A","↗"},tips={"Open project in terminal (T)","Resume linked agent session (A)","Open Vercel preview (V)"};
-            for(int i=0;i<3;i++){if(i==1&&!hasSession||i==2&&!hasPreview)continue;string action=keys[i];var b=Button(labels[i],delegate{RunAction(action);},tips[i]);b.Padding=new Thickness(0);b.Margin=new Thickness(2,0,0,0);Cell(actions,b,i+1);}footer.Children.Add(actions);
-            var links=Button("Link session & preview   ·   Copy URL",delegate{Navigate("links");},"Manage project links and copy local URL");links.Background=Brushes.Transparent;links.Foreground=B("#A4A6AF");links.FontSize=10;links.MinHeight=25;links.Padding=new Thickness(0,5,0,0);footer.Children.Add(links);
+            for(int i=0;i<3;i++){if(i==1&&!hasSession||i==2&&!hasPreview)continue;string action=keys[i];var b=Button(labels[i],delegate{RunAction(action);},tips[i]);b.Padding=new Thickness(0);b.Margin=new Thickness(2,0,0,0);Cell(actions,b,i+1);}
+            var links=Button("Links",delegate{Navigate("links");},"Manage project links and copy local URL");links.ToolTip=null;links.Padding=new Thickness(0);links.Margin=new Thickness(2,0,0,0);Cell(actions,links,4);footer.Children.Add(actions);
         }
-        void MetricTitle(string label,string value,string color){var row=Columns(64,-1,45);row.Margin=new Thickness(3,4,3,2);Cell(row,Text(label,12,"#A4A6AF"),0);Cell(row,Mono(value,12,color),1);Cell(row,Mono(T("10 min"),10,"#A4A6AF"),2);body.Children.Add(row);}
-        void Property(string key,string value,Action action){var row=Columns(88,-1);row.Margin=new Thickness(3,4,3,4);Cell(row,Text(key,11,"#A4A6AF"),0);if(action==null){var t=Text(value,12,"#DADCE4",false);t.ToolTip=value;Cell(row,t,1);}else{var b=Button(value,action,value);b.HorizontalContentAlignment=HorizontalAlignment.Left;b.Background=Brushes.Transparent;b.MinHeight=24;b.Padding=new Thickness(0);var t=Text(value,12,"#DADCE4",false);b.Content=t;Cell(row,b,1);}body.Children.Add(row);}
+        void MetricTitle(string label,string value,string color){var row=Columns(64,-1);row.Margin=new Thickness(3,4,3,2);Cell(row,Text(label,12,"#A4A6AF"),0);Cell(row,Mono(value,12,color),1);body.Children.Add(row);}
+        void Property(string key,string value,Action action){var row=Columns(88,-1);row.Margin=new Thickness(3,4,3,4);Cell(row,Text(key,11,"#A4A6AF"),0);if(action==null){var t=Text(value,12,"#DADCE4",false);t.ToolTip=value;Cell(row,t,1);}else{var b=Button(value,action,value);b.Tag="property-"+key;b.HorizontalContentAlignment=HorizontalAlignment.Left;b.Background=Brushes.Transparent;b.MinHeight=24;b.Padding=new Thickness(0);var t=Text(value,12,"#DADCE4",false);b.Content=t;Cell(row,b,1);}body.Children.Add(row);}
         void EnterCleanup(){selected.Clear();foreach(var s in current.Servers.Where(s=>Policy.CleanupCandidate(s,settings,DateTime.UtcNow)))selected.Add(s.Key);Navigate("cleanup");}
         void ConfirmStop(Server s){
             acting=true;bool confirmed=false;
@@ -436,7 +465,6 @@ namespace WhatThePort.App {
             if(settingsDraft==null)settingsDraft=new SettingsDraft{Language=settings.Language,Scan=settings.ScanSeconds.ToString(),Memory=settings.MemoryGB.ToString(CultureInfo.InvariantCulture),Growth=settings.GrowthMB.ToString(),Cpu=settings.CpuPercent.ToString(),Idle=settings.IdleHours.ToString(CultureInfo.InvariantCulture),Notifications=settings.Notifications,Cleanup=settings.Cleanup,Terminal=settings.Terminal,AllListeners=settings.AllListeners,Startup=!demo&&StartupRegistration.IsEnabled(startupFolder),Opacity=settings.PanelOpacity??100};
             var draft=settingsDraft;
             title.Text=T("Settings");
-            var intro=Text("A quieter laptop, on your terms.",16,"#F5F5F7");intro.Margin=new Thickness(3,8,0,3);body.Children.Add(intro);
             var language=Select("LANGUAGE / 언어",draft.Language=="ko"?"한국어":"English","한국어","English");
             var fields=new UniformGrid{Columns=2};var cells=new StackPanel[4];for(int i=0;i<4;i++){cells[i]=new StackPanel();fields.Children.Add(cells[i]);}body.Children.Add(fields);
             var scan=Input("SAMPLE INTERVAL · seconds (1–30)",draft.Scan,cells[0]);
@@ -446,20 +474,17 @@ namespace WhatThePort.App {
             var notify=Check("Desktop notifications",draft.Notifications);
             string[] modes={"Off","Ask","Automatic"};var cleanup=Select("AUTOMATIC CLEAN UP",T(draft.Cleanup),modes.Select(T).ToArray());
             var idle=Input("IDLE THRESHOLD · hours (0.05–720)",draft.Idle);
-            var explanation=new TextBlock{Text=T("Only continuously observed idle servers are eligible. Protected and alerting servers are never stopped automatically."),FontSize=11,Foreground=B("#A4A6AF"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(3,9,3,0)};body.Children.Add(explanation);
+            AutomationProperties.SetHelpText(cleanup,T("Only continuously observed idle servers are eligible. Protected and alerting servers are never stopped automatically."));
             var terminal=Select("PREFERRED TERMINAL",draft.Terminal,"PowerShell","Windows Terminal");
             var all=Check("Show all user TCP listeners",draft.AllListeners);
             var startupRow=Columns(-1,46);startupRow.Margin=new Thickness(3,18,3,0);Cell(startupRow,Text("Start when I sign in to Windows",12,"#F5F5F7"),0);
             var startup=new ToggleButton{Tag="startup",Style=(Style)Window.FindResource("Switch"),IsChecked=draft.Startup};AutomationProperties.SetName(startup,T("Start when I sign in to Windows"));startup.ToolTip=T("Starts this EXE in the tray. Save again after moving the file.");Cell(startupRow,startup,1);body.Children.Add(startupRow);
             startup.Checked+=delegate{draft.Startup=true;};startup.Unchecked+=delegate{draft.Startup=false;};
             Caption("BACKGROUND OPACITY");var opacityCaption=(TextBlock)body.Children[body.Children.Count-1];opacityCaption.Text+=" · "+draft.Opacity+"%";
-            var opacity= new Slider{Minimum=40,Maximum=100,Value=draft.Opacity,TickFrequency=5,IsSnapToTickEnabled=true,Margin=new Thickness(3,0,3,0),Tag="opacity"};opacity.SetResourceReference(FrameworkElement.MinHeightProperty,"ControlHitSize");AutomationProperties.SetName(opacity,T("BACKGROUND OPACITY"));body.Children.Add(opacity);
+            var opacity= new Slider{Minimum=40,Maximum=100,Value=draft.Opacity,TickFrequency=5,IsSnapToTickEnabled=true,Margin=new Thickness(3,0,3,0),Tag="opacity"};opacity.SetResourceReference(FrameworkElement.MinHeightProperty,"ControlHitSize");AutomationProperties.SetName(opacity,T("BACKGROUND OPACITY"));AutomationProperties.SetAutomationId(opacity,(string)opacity.Tag);body.Children.Add(opacity);
             opacity.ToolTip=draft.Opacity+"%";opacity.ValueChanged+=delegate{draft.Opacity=(int)opacity.Value;opacityCaption.Text=T("BACKGROUND OPACITY")+" · "+draft.Opacity+"%";opacity.ToolTip=draft.Opacity+"%";ApplyOpacity(draft.Opacity);};
-            var snooze=Button(T(DateTime.UtcNow<snoozeUntil?"Resume alerts":"Snooze alerts for 1 hour"),ToggleSnooze,"Pause or resume resource notifications");snooze.Margin=new Thickness(3,18,3,4);body.Children.Add(snooze);
-            var snoozeState=Text(DateTime.UtcNow<snoozeUntil?F("Alerts paused until {0}",snoozeUntil.ToLocalTime().ToString("HH:mm")):T("Alerts active"),11,"#A4A6AF",false);snoozeState.Tag="snooze-state";snoozeState.Margin=new Thickness(3,3,3,0);body.Children.Add(snoozeState);
-            var position=Button("Reset panel position",delegate{resizeFromTop=null;settings.PanelLeft=null;settings.PanelBottom=null;if(!demo)store.SaveSettings(settings);Place(true);Notice("Position reset to the primary monitor. Drag the title to save a new position.");},"Reset panel position to primary monitor");position.Margin=new Thickness(3,8,3,4);body.Children.Add(position);
-            var positionHelp=new TextBlock{Text=T("Drag the title to move the panel. Position is saved automatically. Keyboard: Ctrl+Shift+arrow keys."),TextWrapping=TextWrapping.Wrap,FontSize=11,Foreground=B("#A4A6AF"),Margin=new Thickness(3,4,3,0)};body.Children.Add(positionHelp);
-            var help=new TextBlock{Text="Windows 10 / 11 · x64\nWhat the Port for Windows "+AppVersion.Current+"\nBased on WhatThePort by Tomjohn Design · MIT",FontSize=10,Foreground=B("#A4A6AF"),Margin=new Thickness(3,18,3,8),LineHeight=18};body.Children.Add(help);
+            var snooze=Button(SnoozeLabel(),ToggleSnooze,"Pause or resume resource notifications");snooze.Margin=new Thickness(3,18,3,4);body.Children.Add(snooze);
+            var position=Button("Reset panel position",delegate{FinishResize();resizeFromTop=null;settings.PanelLeft=null;settings.PanelBottom=null;if(!demo)store.SaveSettings(settings);Place(true);Notice("Panel position reset.");},"Reset panel position to primary monitor");position.Margin=new Thickness(3,8,3,4);body.Children.Add(position);
             var buttons=Columns(90,-1);var cancel=Button("Cancel",delegate{Navigate("list");},"Discard changes");cancel.Margin=new Thickness(0,0,8,0);Cell(buttons,cancel,0);
             var save=Button("Save preferences",delegate{
                 var next=new Settings{Language=(string)language.SelectedItem=="English"?"en":"ko",ScanSeconds=Int32.Parse(scan.Text,CultureInfo.InvariantCulture),MemoryGB=Double.Parse(memory.Text,CultureInfo.InvariantCulture),GrowthMB=Int32.Parse(growth.Text,CultureInfo.InvariantCulture),CpuPercent=Int32.Parse(cpu.Text,CultureInfo.InvariantCulture),IdleHours=Double.Parse(idle.Text,CultureInfo.InvariantCulture),Notifications=notify.IsChecked==true,Cleanup=modes[cleanup.SelectedIndex],Terminal=(string)terminal.SelectedItem,AllListeners=all.IsChecked==true};
@@ -484,18 +509,16 @@ namespace WhatThePort.App {
             UpdateSnoozeControls();
             UpdateTrayMenu();Notice(paused?"Alerts resumed.":"Alerts snoozed for one hour.");
         }
+        string SnoozeLabel(){return DateTime.UtcNow<snoozeUntil?F("Resume alerts · paused until {0}",snoozeUntil.ToLocalTime().ToString("HH:mm")):T("Snooze alerts for 1 hour");}
         void UpdateSnoozeControls(){
-            if(body==null)return;bool paused=DateTime.UtcNow<snoozeUntil;
-            var snooze=Descendants(body).OfType<Button>().FirstOrDefault(b=>(string)b.Tag=="action-Pause or resume resource notifications");if(snooze!=null)snooze.Content=T(paused?"Resume alerts":"Snooze alerts for 1 hour");
-            var state=Descendants(body).OfType<TextBlock>().FirstOrDefault(t=>(string)t.Tag=="snooze-state");if(state!=null)state.Text=paused?F("Alerts paused until {0}",snoozeUntil.ToLocalTime().ToString("HH:mm")):T("Alerts active");
+            if(body==null)return;
+            var snooze=Descendants(body).OfType<Button>().FirstOrDefault(b=>(string)b.Tag=="action-Pause or resume resource notifications");if(snooze!=null)snooze.Content=SnoozeLabel();
         }
         void LinksView(){
             var s=CurrentServer();if(s==null){Navigate("list");return;}title.Text=T("Project links");var link=demo?Demo.LinkFor(s):store.LinkFor(s);
-            var intro=new TextBlock{Text=T("Pick up where you left off."),FontSize=18,Margin=new Thickness(3,10,0,0)};body.Children.Add(intro);
-            var sub=new TextBlock{Text=F("Link the exact agent session and preview for :{0}. Your conversation history is never read.",s.Port),Foreground=B("#A4A6AF"),TextWrapping=TextWrapping.Wrap,FontSize=12,Margin=new Thickness(3,9,3,0),LineHeight=19};body.Children.Add(sub);
+            var context=Columns(-1,70);context.Margin=new Thickness(3,6,3,0);Cell(context,Text(s.Name,13,"#F5F5F7",false),0);var port=Mono(":"+s.Port,13,Format.PortColor(s.Port));port.HorizontalAlignment=HorizontalAlignment.Right;Cell(context,port,1);body.Children.Add(context);
             var folder=Input("PROJECT FOLDER",s.Folder);var agent=Select("AGENT",link==null?"Codex":link.Agent??"Codex","Codex","Claude Code");
-            var session=Input("SESSION ID",link==null?"":link.Session);var preview=Input("VERCEL PREVIEW · https://…vercel.app",link==null?"":link.Preview);
-            var note=new TextBlock{Text=T("Resume runs in your preferred terminal. Codex or Claude Code must already be installed and signed in."),Foreground=B("#A4A6AF"),TextWrapping=TextWrapping.Wrap,FontSize=11,Margin=new Thickness(3,16,3,0),LineHeight=18};body.Children.Add(note);
+            var session=Input("SESSION ID",link==null?"":link.Session);var preview=Input("VERCEL PREVIEW URL",link==null?"":link.Preview);
             var copy=Button(F("Copy {0}",s.Url),delegate{if(demo)Notice("Demo: URL copy simulated.");else{Clipboard.SetText(s.Url);Notice("Local URL copied.");}},"Copy local server URL");copy.Margin=new Thickness(3,22,3,0);body.Children.Add(copy);
             var buttons=Columns(90,-1);var cancel=Button("Cancel",delegate{Navigate("detail");},"Back to server");cancel.Margin=new Thickness(0,0,8,0);Cell(buttons,cancel,0);
             var save=Button("Save links",delegate{if(demo){Navigate("detail");Notice("Demo: project links simulated.");return;}var item=new ProjectLink{Folder=folder.Text.Trim(),Port=s.Port,Agent=(string)agent.SelectedItem,Session=session.Text.Trim(),Preview=preview.Text.Trim()};item.Validate();if(!String.IsNullOrEmpty(s.Folder)&&!String.Equals(s.Folder.TrimEnd('\\'),item.Folder.TrimEnd('\\'),StringComparison.OrdinalIgnoreCase))throw new ArgumentException("The folder must match this server's detected project folder.");store.SaveLink(item);Navigate("detail");Notice("Project links saved.");},"Save project links");save.Background=B("#F5F5F7");save.Foreground=B("#111318");Cell(buttons,save,1);footer.Children.Add(buttons);
@@ -503,7 +526,7 @@ namespace WhatThePort.App {
         void OnKey(object sender,KeyEventArgs e){
             awaitingLaunchInteraction=false;
             if(Keyboard.Modifiers==(ModifierKeys.Control|ModifierKeys.Shift)&&(e.Key==Key.Left||e.Key==Key.Right||e.Key==Key.Up||e.Key==Key.Down)){
-                Window.Left+=(e.Key==Key.Left?-20:e.Key==Key.Right?20:0);Window.Top+=(e.Key==Key.Up?-20:e.Key==Key.Down?20:0);Place(false);RememberPosition();e.Handled=true;return;
+                FinishResize();Window.Left+=(e.Key==Key.Left?-20:e.Key==Key.Right?20:0);Window.Top+=(e.Key==Key.Up?-20:e.Key==Key.Down?20:0);Place(false);RememberPosition();e.Handled=true;return;
             }
             var combo=Keyboard.FocusedElement as ComboBox;if(e.Key==Key.Escape&&combo!=null&&combo.IsDropDownOpen)return;
             if(e.Key==Key.Escape){if(view=="list")Window.Hide();else Back();e.Handled=true;return;}
@@ -531,7 +554,7 @@ namespace WhatThePort.App {
         }
         void UpdateTrayMenu(){
             if(tray==null)return;
-            tray.SetMenu(new[]{T("Open What the Port"),T("Clean up…"),T("Settings…"),T(DateTime.UtcNow<snoozeUntil?"Resume alerts":"Snooze alerts for 1 hour"),null,T("Quit")},delegate(int item){if(item==0)Show();else if(item==1){EnterCleanup();Show();}else if(item==2){Navigate("settings");Show();}else if(item==3){ToggleSnooze();if(IsVisible)return;if(settings.Notifications)tray.Notify(T("What the Port"),T(DateTime.UtcNow<snoozeUntil?"Alerts snoozed for one hour.":"Alerts resumed."));}else if(item==5)Quit();});UpdateTray();
+            tray.SetMenu(new[]{T("Open What the Port")+"\tCtrl+Alt+P",T("Clean up…"),T("Settings…"),T(DateTime.UtcNow<snoozeUntil?"Resume alerts":"Snooze alerts for 1 hour"),null,T("Quit")},delegate(int item){if(item==0)Show();else if(item==1){EnterCleanup();Show();}else if(item==2){Navigate("settings");Show();}else if(item==3){ToggleSnooze();if(IsVisible)return;if(settings.Notifications)tray.Notify(T("What the Port"),T(DateTime.UtcNow<snoozeUntil?"Alerts snoozed for one hour.":"Alerts resumed."));}else if(item==5)Quit();});UpdateTray();
         }
         static UIElement DotGrid(){var canvas=new Canvas{Width=19,Height=19};for(int y=0;y<4;y++)for(int x=0;x<4;x++){var dot=new System.Windows.Shapes.Ellipse{Width=3,Height=3,Fill=B("#FFB224")};Canvas.SetLeft(dot,x*5);Canvas.SetTop(dot,y*5);canvas.Children.Add(dot);}return canvas;}
         void UpdateTray(){if(tray==null)return;tray.Update("What the Port · "+F("{0} servers · monitoring",current.Servers.Count)+" · "+Format.Total(current.ServerMemory),current.Servers.Any(s=>s.Warning!=null));}
@@ -540,9 +563,9 @@ namespace WhatThePort.App {
             DateTime now=DateTime.UtcNow;
             foreach(var s in current.Servers.Where(s=>s.Warning!=null)){DateTime last;if(!alerted.TryGetValue(s.Key,out last)||(now-last).TotalMinutes>=15){Notify(":"+s.Port+" · "+s.Name,s.Warning);alerted[s.Key]=now;}}
             foreach(var key in alerted.Keys.Where(k=>!current.Servers.Any(s=>s.Key==k)).ToList())alerted.Remove(key);
-            int count=current.Servers.Count(s=>Policy.CleanupCandidate(s,settings,now));if(settings.Cleanup=="Ask"&&count>0&&(now-cleanupAsked).TotalHours>=1){Notify("A little breathing room?",F("{0} idle server(s) are ready to clean up. Open Clean up to review.",count));cleanupAsked=now;}
+            int count=current.Servers.Count(s=>Policy.CleanupCandidate(s,settings,now));if(settings.Cleanup=="Ask"&&count>0&&(now-cleanupAsked).TotalHours>=1){Notify("Clean up",F("{0} idle server(s) are ready to clean up. Open Clean up to review.",count));cleanupAsked=now;}
         }
-        public void Quit(){closing=true;timer.Stop();releaseTimer.Stop();if(handle!=IntPtr.Zero&&!demo)Native.UnregisterHotKey(handle,1);if(tray!=null)tray.Dispose();if(Window!=null)Window.Close();if(notificationWindow!=null)notificationWindow.Dispose();Application.Current.Shutdown();}
+        public void Quit(){FinishResize();closing=true;timer.Stop();releaseTimer.Stop();if(handle!=IntPtr.Zero&&!demo)Native.UnregisterHotKey(handle,1);if(tray!=null)tray.Dispose();if(Window!=null)Window.Close();if(notificationWindow!=null)notificationWindow.Dispose();Application.Current.Shutdown();}
         public async Task<bool> LiveSmoke(string report){
             settings=new Settings{Notifications=false,Cleanup="Off"};
             EnsureWindow();

@@ -18,149 +18,85 @@
     <nav id="main-nav" aria-label="주 메뉴"><a href="index.html#features">기능</a><a href="index.html#preview">화면 둘러보기</a><a href="guide.html" aria-current="page">사용 가이드</a><a class="nav-download" href="index.html#download">다운로드 ↗</a></nav>
   </header>
   <main id="main" tabindex="-1">
-    <div class="page-intro wrap">
-      <p class="eyebrow">GET STARTED / WINDOWS</p>
-      <h1>처음 실행부터,<br>작업 복귀까지.</h1>
-      <p class="lead">어떤 파일을 열어야 하는지, 숫자는 무엇을 뜻하는지.<br>실제 앱 화면을 보면서 하나씩 익혀 보세요.</p>
-      <p class="system-note">Windows 10/11 x64 · .NET Framework 4.8 · 관리자 권한 불필요</p>
-      <p class="small-note">최신 Windows 빌드의 데모 화면입니다. 이미지를 누르면 크게 볼 수 있습니다.</p>
-    </div>
+    <div class="page-intro wrap"><h1>사용 가이드</h1><p class="system-note">Windows 10/11 x64 · .NET Framework 4.8</p></div>
     <div class="guide-layout wrap">
-      <aside class="guide-toc" aria-label="가이드 목차"><h2>이 페이지에서</h2><nav>
-        <a href="#start">01 · 다운로드와 실행</a><a href="#window">02 · 창 표시와 숨김</a><a href="#servers">03 · 서버와 자원 읽기</a><a href="#links">04 · 프로젝트 연결</a><a href="#settings">05 · 언어와 설정</a><a href="#cleanup">06 · 정리와 보호</a><a href="#keyboard">07 · 키보드 조작</a><a href="#cli">08 · 터미널에서 조회</a><a href="#help">09 · 자주 막히는 부분</a>
+      <aside class="guide-toc" aria-label="가이드 목차"><h2>목차</h2><nav>
+        <a href="#start">실행</a><a href="#window">창 조작</a><a href="#servers">서버 확인</a><a href="#links">프로젝트 연결</a><a href="#settings">설정</a><a href="#cleanup">서버 정리</a><a href="#keyboard">단축키</a><a href="#cli">터미널 조회</a><a href="#help">문제 해결</a>
       </nav></aside>
       <div class="guide-content">
         <section class="guide-chapter" id="start" aria-labelledby="start-title">
-          <p class="chapter-number">01 / GET STARTED</p><h2 id="start-title">실행할 파일은 하나.</h2>
-          <ol><li><a href="downloads/WhatThePort.exe" download><strong>WhatThePort.exe</strong></a>를 Windows PC에 다운로드합니다.</li><li>내려받은 <strong><code>WhatThePort.exe</code></strong>를 더블클릭합니다. 압축 해제와 설치가 필요 없습니다.</li><li>개발 서버를 시작하면 포트와 프로젝트가 목록에 나타납니다.</li></ol>
-          <p>단일 EXE에는 앱 코드와 폰트가 포함되어 있습니다. 옆에 DLL·폰트 폴더·설정 파일을 둘 필요가 없으며, Windows의 .NET Framework 4.8은 필요합니다. 이미 실행 중이면 다시 열어도 기존 창이 표시됩니다.</p>
-          <details><summary>터미널용 wtp.exe가 필요하다면</summary>
-            <p><a href="downloads/WhatThePort-Windows-x64.zip" download>터미널 도구 포함 ZIP</a>을 받고 <strong>모두 압축 풀기</strong>를 선택하세요. ZIP의 앱은 다음 파일을 함께 사용합니다.</p>
-            <ul class="file-map" aria-label="선택 ZIP의 파일 안내">
-              <li class="file-primary"><span class="file-icon" aria-hidden="true">▶</span><div><code>WhatThePort.exe</code><small>더블클릭할 앱 본체</small></div></li>
-              <li><span class="file-icon" aria-hidden="true">›_</span><div><code>wtp.exe</code><small>터미널용 도구. 인수 없이 열면 본체를 표시하고 종료합니다.</small></div></li>
-              <li><span class="file-icon" aria-hidden="true">◇</span><div><code>WhatThePort.Core.dll · .exe.config · fonts/</code><small>ZIP 버전의 본체와 같은 폴더에 유지하세요.</small></div></li>
-              <li><span class="file-icon" aria-hidden="true">≡</span><div><code>README.md · docs/ · LICENSE</code><small>사용 설명과 라이선스</small></div></li>
-            </ul>
-          </details>
-          <details><summary>단일 EXE의 라이선스 확인</summary><p>다운로드한 폴더에서 PowerShell을 열고 아래 명령을 실행하면 앱의 MIT 라이선스와 폰트의 SIL Open Font License 전문을 볼 수 있습니다.</p><pre><code>.\WhatThePort.exe --licenses</code></pre></details>
-          <div class="note-card"><p><strong>새 버전으로 교체할 때</strong><br>기존 앱의 트레이 아이콘을 우클릭해 <strong>앱 종료 / Quit</strong>을 선택한 뒤 새 폴더의 EXE를 실행하세요.</p></div>
-          <p class="small-note">현재 빌드는 코드 서명이 없습니다. <a href="downloads/SHA256SUMS.txt">SHA-256 체크섬</a>으로 파일 일치를 확인할 수 있으며, 체크섬 자체가 배포자 신원을 보증하지는 않습니다.</p>
+          <h2 id="start-title">실행</h2>
+          <ol>
+            <li><a href="downloads/WhatThePort.exe" download><strong>WhatThePort.exe</strong></a>를 받아 실행합니다. 설치는 필요 없습니다.</li>
+            <li>개발 서버를 실행하고 트레이 아이콘을 누릅니다.</li>
+            <li>업데이트할 때는 기존 앱의 트레이 메뉴에서 <strong>앱 종료</strong>를 누른 뒤 새 EXE를 실행합니다.</li>
+          </ol>
+          <details><summary>라이선스 확인</summary><p>단일 EXE에 MIT·폰트 라이선스가 포함되어 있습니다.</p><pre><code>.\WhatThePort.exe --licenses</code></pre></details>
         </section>
         <section class="guide-chapter" id="window" aria-labelledby="window-title">
-          <p class="chapter-number">02 / TRAY &amp; WINDOW</p><h2 id="window-title">숨겨도, 감시는 계속.</h2>
-          <div class="guide-split"><div>
-            <p><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>P</kbd>는 <strong>창 표시/숨김</strong> 단축키입니다. 열려 있을 때 누르면 트레이로 숨고, 다시 누르면 나타납니다. 트레이의 점 격자 아이콘도 같은 동작을 합니다.</p>
-            <p><strong>×</strong>도 창을 숨깁니다. <strong>Esc</strong>는 프로젝트 연결에서 서버 상세로, 상세·설정에서는 목록으로 돌아가며 목록에서는 창을 숨깁니다. 감시를 끝내려면 트레이 메뉴의 <strong>앱 종료 / Quit</strong>을 선택하세요.</p>
-            <p><strong>◇ / ◆</strong>는 다른 창을 클릭해도 패널을 유지하는 핀입니다. 제목을 드래그하면 위치가 저장되며, <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + 방향키로도 옮길 수 있습니다.</p>
-            <p>하단의 <strong>3초마다 갱신</strong>은 서버 조회 간격입니다. 숨긴 동안에도 조회·알림은 계속되지만 목록과 차트는 다시 그리지 않습니다.</p>
-            <p>제목 표시줄의 <strong>− / +</strong>로 네 가지 창 크기를 선택합니다. 최소 344×460부터 최대 560×720까지 글자·행·차트도 함께 조절됩니다. 큰 창에서는 목록 그래프에 더 넓은 공간을 배정합니다.</p>
-            <p>창이 작업 영역의 위쪽에 있으면 상단, 아래쪽에 있으면 하단을 기준으로 크기가 바뀝니다. 연속 조절 중에는 같은 기준을 유지합니다. 크기는 저장되며 화면을 오가도 위치가 유지됩니다. 서버 행을 스크롤해도 메모리·CPU 요약은 상단에 고정됩니다.</p>
-          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/list.png"><img class="app-shot" src="assets/images/list.png" width="660" height="891" loading="lazy" alt="최신 앱의 서버 목록과 상단 핀·숨김 버튼"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>서버 목록 · 프로젝트 이름과 사용량을 한눈에</figcaption></figure></div>
-          <div class="guide-split"><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/list-small.png"><img class="app-shot" src="assets/images/list-small.png" width="516" height="690" loading="lazy" alt="글자와 행을 함께 줄인 최소 크기 서버 목록"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>최소 크기 · 344×460 DIP · 본문 85%</figcaption></figure><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/list-large.png"><img class="app-shot" src="assets/images/list-large.png" width="840" height="1080" loading="lazy" alt="글자를 키우고 목록 그래프 공간을 확대한 최대 크기 서버 목록"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>최대 크기 · 560×720 DIP · 본문 115%</figcaption></figure></div>
+          <h2 id="window-title">창 조작</h2>
+          <ul>
+            <li><kbd>Ctrl+Alt+P</kbd> 또는 트레이 아이콘: 창 표시·숨김.</li>
+            <li><strong>×</strong>: 트레이로 숨김. 감시까지 끝내려면 트레이 메뉴의 <strong>앱 종료</strong>를 선택합니다.</li>
+            <li><strong>− / +</strong>: 창·글자·그래프 크기 조절. 위쪽 창은 상단, 아래쪽 창은 하단을 유지합니다.</li>
+            <li><strong>◇ / ◆</strong>: 다른 앱을 선택해도 패널 유지.</li>
+          </ul>
+          <p>위치는 제목을 드래그해 바꿉니다. 애니메이션은 Windows 설정을 따릅니다.</p>
+          <details><summary>작은 창과 큰 창</summary><div class="guide-split">
+            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/list-small.png"><img class="app-shot" src="assets/images/list-small.png" width="516" height="690" loading="lazy" alt="최소 크기 344×460의 서버 목록"></a></figure>
+            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/list-large.png"><img class="app-shot" src="assets/images/list-large.png" width="840" height="1080" loading="lazy" alt="최대 크기 560×720의 서버 목록"></a></figure>
+          </div></details>
         </section>
         <section class="guide-chapter" id="servers" aria-labelledby="servers-title">
-          <p class="chapter-number">03 / READ YOUR SERVERS</p><h2 id="servers-title">숫자에서, 프로젝트로.</h2>
-          <div class="guide-split"><div>
-            <p>목록의 행을 누르면 서버 상세 화면이 열립니다. 포트, 실행 시간, 프로젝트 폴더와 브랜치, 최근 10분의 메모리·CPU 추이를 확인할 수 있습니다.</p>
-            <p>그래프의 세로축은 최근 측정 범위에 맞춰 자동 조절됩니다. 상세의 위·아래 축 값이 실제 범위입니다. 값이 일정하면 수평선으로 표시되며, 경고 기준선은 표시 범위에 들어올 때만 보입니다. 경고 판정 기준은 바뀌지 않습니다.</p>
-            <p>목록 상단의 큰 메모리 숫자는 <strong>감시하는 서버들의 합계</strong>입니다. 각 서버는 소유 하위 프로세스까지 집계하며, 공유 메모리는 중복될 수 있습니다.</p>
-            <p>What the Port 자체의 자원 사용량은 Windows 작업 관리자에서 <code>WhatThePort.exe</code>를 확인하세요. 앱 화면의 서버 합계와 다른 수치입니다.</p>
-            <p><strong>localhost 열기</strong>는 로컬 주소를 브라우저로 엽니다. wmux·에이전트·디버거의 내부 포트도 목록에 포함될 수 있어, 모든 포트가 웹 페이지를 제공하지는 않습니다.</p>
-            <p>전체 경로와 브랜치, 프로세스 더보기는 상세 상단에서 확인하세요. <strong>실행 출처</strong>와 <strong>등록 세션</strong>은 별도입니다. 목록의 중복 마우스오버 설명은 제거했습니다.</p>
-            <p><strong>연결 앱</strong>은 현재 TCP 연결 양쪽 끝점으로 확인한 같은 사용자의 로컬 프로세스입니다. 다른 감지 서버에 속하면 프로젝트 이름도 표시합니다. 연결 유지가 실제 요청 실행을 뜻하지 않으며 조회 사이에 끝난 짧은 호출은 놓칠 수 있습니다.</p>
-          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/detail.png"><img class="app-shot" src="assets/images/detail.png" width="660" height="891" loading="lazy" alt="프로젝트 폴더, 브랜치, 메모리와 CPU 차트를 보여 주는 서버 상세 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>상세 화면 · 최근 10분의 자원 추이</figcaption></figure></div>
+          <h2 id="servers-title">서버 확인</h2>
+          <p>목록에서 서버를 선택하면 폴더·브랜치·연결 앱과 최근 10분의 메모리·CPU 그래프가 나옵니다. <strong>프로세스</strong>를 펼치면 하위 프로세스도 확인할 수 있습니다.</p>
+          <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/detail.png"><img class="app-shot" src="assets/images/detail.png" width="660" height="891" loading="lazy" alt="서버 정보와 메모리·CPU 그래프, 하단 실행 버튼"></a></figure>
+          <p>하단에서 로컬 페이지를 열거나 프로젝트 폴더의 터미널을 실행합니다. 그래프를 키보드로 선택하면 좌우 방향키로 측정값을 읽습니다.</p>
         </section>
         <section class="guide-chapter" id="links" aria-labelledby="links-title">
-          <p class="chapter-number">04 / PICK UP YOUR WORK</p><h2 id="links-title">작업하던 곳으로 돌아가기.</h2>
-          <div class="guide-split"><div>
-            <p>상세의 <strong>세션·미리보기 연결 · URL 복사</strong>를 누르면 프로젝트 연결 화면이 열립니다. 필요한 항목을 입력하고 <strong>연결 저장</strong>을 누르세요.</p>
-            <ul><li><strong>&gt;_</strong> · 프로젝트 폴더에서 터미널 열기</li><li><strong>A</strong> · 직접 등록한 에이전트 세션 재개</li><li><strong>↗</strong> · 등록한 Vercel 미리보기 주소 열기</li></ul>
-            <p>세션 ID와 Vercel 주소는 <strong>각각 선택 사항</strong>입니다. 사용하지 않는 기능의 입력란은 비워 두어도 됩니다.</p>
-            <div class="note-card"><p><strong>등록 전에는 연결 관리 버튼 하나.</strong><br>A·↗는 해당 세션·주소가 등록된 경우에만 표시됩니다. 연결 화면의 뒤로 가기·취소·Esc는 해당 서버 상세로 돌아갑니다.</p></div>
-          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/links.png"><img class="app-shot" src="assets/images/links.png" width="660" height="891" loading="lazy" alt="프로젝트 폴더, 에이전트, 세션 ID, Vercel 주소와 저장·취소 버튼이 있는 프로젝트 연결 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>필요한 연결만 등록 · 대화 기록은 읽지 않음</figcaption></figure></div>
-          <table><caption class="sr-only">프로젝트 연결 입력란 설명</caption><thead><tr><th scope="col">입력란·버튼</th><th scope="col">무엇을 넣나요?</th></tr></thead><tbody>
-            <tr><td>프로젝트 폴더</td><td>감지된 서버 폴더와 일치하는, 실제로 존재하는 절대 경로.</td></tr>
-            <tr><td>에이전트</td><td>재개할 세션에 맞춰 Codex 또는 Claude Code 선택.</td></tr>
-            <tr><td>세션 ID</td><td>선택한 CLI에서 재개할 수 있는 실제 세션 ID. 사용하지 않으면 빈칸.</td></tr>
-            <tr><td>Vercel 미리보기</td><td>이미 있는 <code>https://프로젝트.vercel.app</code> 주소. 사용하지 않으면 빈칸.</td></tr>
-            <tr><td>로컬 URL 복사</td><td>주소만 클립보드에 복사. 입력 중인 설정은 저장하지 않음.</td></tr>
-            <tr><td>연결 저장 / 취소</td><td>폴더·포트별로 연결 저장 / 저장 없이 상세 화면으로 복귀.</td></tr>
-          </tbody></table>
-          <p>세션 재개에는 해당 CLI의 설치·로그인과 접근 가능한 세션이 필요합니다. <strong>세션</strong>에는 직접 등록한 ID만 표시합니다. 실행 출처의 Codex 표시는 부모 프로세스 기준 정보로 구분합니다. wmux 같은 일반 앱의 내부 포트에는 연결 정보가 없어도 됩니다.</p>
+          <h2 id="links-title">프로젝트 연결</h2>
+          <p>상세 하단의 <strong>연결</strong>에서 에이전트·세션 ID·Vercel 미리보기 URL을 저장합니다. 세션·미리보기가 등록되면 해당 실행 버튼이 나타납니다. 로컬 URL 복사도 이 화면에 있습니다.</p>
+          <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/links.png"><img class="app-shot" src="assets/images/links.png" width="660" height="891" loading="lazy" alt="프로젝트 폴더, 에이전트, 세션 ID와 미리보기 URL 입력"></a></figure>
+          <p>세션 재개에는 Codex 또는 Claude Code의 설치·로그인이 필요합니다. 미리보기에는 해당 프로젝트의 HTTPS URL을 입력합니다.</p>
         </section>
         <section class="guide-chapter" id="settings" aria-labelledby="settings-title">
-          <p class="chapter-number">05 / YOUR PREFERENCES</p><h2 id="settings-title">언어는 먼저 보고, 저장.</h2>
-          <p>톱니바퀴 또는 <kbd>Ctrl</kbd> + <kbd>,</kbd>로 설정을 엽니다. <strong>한국어 / English를 선택하는 순간</strong> 제목·설명·버튼이 바뀝니다. 다른 입력값은 유지됩니다.</p>
-          <ul><li><strong>설정 저장 / Save preferences</strong> · 언어와 설정을 확정하고 다음 실행에도 유지.</li><li><strong>취소 / Cancel · 뒤로 가기 · Esc</strong> · 저장 전 언어와 설정으로 복원.</li><li><strong>트레이로 숨겼다 다시 열기</strong> · 미리보기와 작성 중인 입력 유지.</li></ul>
-          <p>수치 입력은 한 줄에 두 개씩 배치합니다. <strong>Windows 로그인 시 자동 실행</strong>을 켜고 저장하면 현재 EXE가 로그인 시 트레이에서 시작됩니다. 끄고 저장하면 해제됩니다. EXE를 옮긴 뒤에는 새 위치에서 다시 저장하세요.</p>
-          <p><strong>배경 불투명도</strong>는 40–100%로 조절하고 즉시 미리 볼 수 있습니다. 글자와 버튼의 선명도는 유지됩니다. <strong>알림 1시간 쉬기</strong>는 설정·트레이에 같은 상태를 표시하며 쉬는 동안 다시 누르면 알림이 재개됩니다.</p>
-          <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings-startup.png"><img class="app-shot" src="assets/images/settings-startup.png" width="660" height="891" loading="lazy" alt="Windows 로그인 자동 실행 토글, 배경 불투명도 슬라이더, 알림 쉬기 상태가 있는 설정 하단"><span class="image-zoom">시작·배경 설정 크게 보기 ↗</span></a><figcaption>자동 실행과 불투명도는 설정 저장으로 확정</figcaption></figure>
-          <div class="language-comparison">
-            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings.png"><img class="app-shot" src="assets/images/settings.png" width="660" height="891" loading="lazy" alt="한국어 설정 화면: 언어 선택, 조회 간격, 자원 경고와 저장 버튼"><span class="image-zoom">한국어 화면 크게 보기 ↗</span></a><figcaption>기본 언어 · 한국어</figcaption></figure>
-            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings-en.png"><img class="app-shot" src="assets/images/settings-en.png" width="660" height="891" loading="lazy" alt="영어 설정 화면: Language, sample interval, memory alert, Cancel, Save preferences"><span class="image-zoom">English 화면 크게 보기 ↗</span></a><figcaption>언어 선택 시 즉시 전환 · English</figcaption></figure>
+          <h2 id="settings-title">설정</h2>
+          <p>언어·조회 간격·자원 경고·자동 정리·터미널·배경 불투명도·로그인 시 시작을 바꾸고 <strong>설정 저장</strong>을 누릅니다. 취소하면 미리보기를 되돌립니다.</p>
+          <div class="guide-split">
+            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings.png"><img class="app-shot" src="assets/images/settings.png" width="660" height="891" loading="lazy" alt="언어, 조회 간격과 자원 경고 설정"></a></figure>
+            <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings-startup.png"><img class="app-shot" src="assets/images/settings-startup.png" width="660" height="891" loading="lazy" alt="터미널, 배경 불투명도, 로그인 시 시작과 알림 설정"></a></figure>
           </div>
-          <table><caption class="sr-only">주요 설정의 기본값</caption><thead><tr><th scope="col">설정</th><th scope="col">기본값과 의미</th></tr></thead><tbody><tr><td>조회 간격</td><td>3초. 1–30초 범위. 길어지면 조회 횟수와 갱신 빈도가 함께 줄어듦.</td></tr><tr><td>메모리 경고</td><td>2 GB 초과.</td></tr><tr><td>증가량 경고</td><td>10분 동안 500 MB 증가. 0으로 설정하면 끄기.</td></tr><tr><td>CPU 경고</td><td>컴퓨터 전체 기준 80% 이상, 연속 3회 관측.</td></tr><tr><td>자동 정리</td><td>끄기 / Off. 유휴 기준 기본 4시간.</td></tr></tbody></table>
+          <p><strong>알림 1시간 쉬기</strong>는 다시 누르면 해제됩니다. 중지 중에는 재개 버튼에 만료 시각이 표시됩니다. 트레이 메뉴에서도 전환할 수 있습니다.</p>
+          <details><summary>기본값과 자동 정리</summary><p>조회 3초 · 메모리 2GB · 10분간 증가 500MB · CPU 80% · 유휴 4시간. 자동 정리는 기본 꺼짐이며, 확인 후 정리 또는 자동 모드를 선택할 수 있습니다. 보호되거나 경고 중인 서버는 자동 종료하지 않습니다.</p></details>
+          <details><summary>영어 화면</summary><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/settings-en.png"><img class="app-shot" src="assets/images/settings-en.png" width="660" height="891" loading="lazy" alt="English settings"></a></figure></details>
         </section>
         <section class="guide-chapter" id="cleanup" aria-labelledby="cleanup-title">
-          <p class="chapter-number">06 / CLEAN UP WITH CONTEXT</p><h2 id="cleanup-title">확인하고, 필요한 것만 정리.</h2>
-          <div class="guide-split"><div>
-            <p><strong>서버 정리</strong>에서 종료할 서버와 예상 회수량을 확인합니다. idle 후보가 미리 선택될 수 있으므로 체크 상태를 확인한 뒤 종료 버튼을 누르세요.</p>
-            <p>선택한 서버와 소유 하위 프로세스가 즉시 종료됩니다. 작업 저장이나 종료 훅 실행은 보장되지 않습니다. 다른 리스너를 가진 하위 트리는 별도로 다룹니다.</p>
-            <p><strong>보호됨 · 종료 불가</strong>인 항목은 선택할 수 없습니다. 이 앱·상위 프로세스, 터미널·에이전트·시스템·DB·컨테이너 등은 작업을 보호하기 위해 제외합니다.</p>
-            <img class="tooltip-example" src="assets/images/protection-tooltip.png" width="447" height="87" loading="lazy" alt="보호 사유 도움말: 터미널·에이전트·시스템·DB·컨테이너는 보호되며 해당 앱에서 직접 종료">
-            <p>보호 사유는 상세 화면의 안내 상자에서 확인할 수 있습니다. 보호 표시·체크박스는 포트 번호와 같은 줄에 정렬됩니다.</p>
-          </div><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/cleanup.png"><img class="app-shot" src="assets/images/cleanup.png" width="660" height="891" loading="lazy" alt="서버별 선택 체크박스와 예상 회수량, 종료 버튼이 있는 서버 정리 화면"><span class="image-zoom">화면 크게 보기 ↗</span></a><figcaption>선택한 서버만 정리 · 자동 정리는 기본 Off</figcaption></figure></div>
-          <p><strong>끄기 / Off</strong>는 자동 정리 중단, <strong>알림 후 직접 선택 / Ask</strong>는 후보 알림, <strong>자동 종료 / Automatic</strong>은 연속 관측된 idle 서버의 자동 정리입니다. 보호·경고 서버는 자동 종료하지 않으며, 조회 실패 시에도 자동 정리를 수행하지 않습니다.</p>
-          <p>서버 본체는 종료됐지만 일부 하위 프로세스가 남을 수 있습니다. <strong>일부 종료</strong> 안내가 보이면 <strong>종료 결과 상세</strong>에서 성공·실패와 제외 사유를 확인하세요.</p>
-          <p>정리 후에는 종료 완료를 확인하고 즉시 다시 조회합니다. 설정의 정기 갱신 간격을 기다리지 않습니다.</p>
-          <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/stop-result.png"><img class="app-shot" src="assets/images/stop-result.png" width="660" height="450" loading="lazy" alt="앱과 같은 어두운 테마를 사용한 종료 결과 상세 창과 닫기 버튼의 영어 예시"><span class="image-zoom">종료 결과 창 크게 보기 ↗</span></a><figcaption>종료 결과 상세 · 영어 예시</figcaption></figure>
+          <h2 id="cleanup-title">서버 정리</h2>
+          <ol><li><strong>서버 정리</strong>를 누릅니다.</li><li>대상을 확인하고 체크합니다. 보호 항목은 선택할 수 없습니다.</li><li>선택 개수·예상 회수량을 확인한 뒤 종료 버튼을 누릅니다.</li></ol>
+          <p class="note-card">종료는 선택한 프로세스 트리에 즉시 적용됩니다. 저장되지 않은 작업은 유실될 수 있으며 서버의 종료 훅은 보장하지 않습니다.</p>
+          <figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/cleanup.png"><img class="app-shot" src="assets/images/cleanup.png" width="660" height="891" loading="lazy" alt="정리 대상 체크박스와 선택 서버 종료 버튼"></a></figure>
+          <details><summary>일부만 종료됐을 때</summary><p>완료 후 목록은 즉시 다시 조회합니다. 실패·부분 완료 여부는 <strong>종료 결과 상세</strong>에서 확인합니다.</p><figure class="guide-figure"><a class="shot-link" data-lightbox href="assets/images/stop-result.png"><img class="app-shot" src="assets/images/stop-result.png" width="792" height="461" loading="lazy" alt="종료 결과 상세 창"></a></figure></details>
         </section>
         <section class="guide-chapter" id="keyboard" aria-labelledby="keyboard-title">
-          <p class="chapter-number">07 / KEYBOARD</p><h2 id="keyboard-title">손에 익으면, 더 빠르게.</h2>
-          <table><caption class="sr-only">키보드 단축키</caption><thead><tr><th scope="col">키·조작</th><th scope="col">동작</th></tr></thead><tbody><tr><td>Ctrl+Alt+P</td><td>창 표시·숨김. 감시는 계속됨.</td></tr><tr><td>Tab / Shift+Tab</td><td>다음·이전 컨트롤.</td></tr><tr><td>↑ / ↓ / Enter</td><td>목록 선택·서버 상세.</td></tr><tr><td>Esc</td><td>프로젝트 연결에서는 해당 상세, 그 외 하위 화면에서는 목록으로. 목록에서는 트레이로 숨김.</td></tr><tr><td>Ctrl+, / C</td><td>설정 / 정리 화면.</td></tr><tr><td>O / T / A / V</td><td>상세에서 로컬 URL / 터미널 / 등록 세션 / 등록 미리보기.</td></tr><tr><td>Ctrl+Shift+방향키</td><td>패널 이동·위치 저장.</td></tr><tr><td>차트의 ← / → / Home / End</td><td>이전·다음·첫·마지막 표본 값.</td></tr></tbody></table>
+          <h2 id="keyboard-title">단축키</h2>
+          <table><thead><tr><th>키</th><th>동작</th></tr></thead><tbody>
+            <tr><td><kbd>Ctrl+Alt+P</kbd></td><td>창 표시·숨김</td></tr><tr><td><kbd>Esc</kbd></td><td>이전 화면 / 목록에서 숨김</td></tr><tr><td><kbd>Ctrl+,</kbd></td><td>설정</td></tr><tr><td><kbd>Ctrl+Shift+방향키</kbd></td><td>창 이동</td></tr><tr><td><kbd>↑ / ↓ / Enter</kbd></td><td>목록 선택 / 상세 열기</td></tr><tr><td><kbd>C</kbd></td><td>서버 정리</td></tr><tr><td><kbd>O / T / A / V</kbd></td><td>로컬 페이지 / 터미널 / 연결된 세션 / 미리보기</td></tr>
+          </tbody></table>
         </section>
         <section class="guide-chapter" id="cli" aria-labelledby="cli-title">
-          <p class="chapter-number">08 / COMMAND LINE</p><h2 id="cli-title">터미널에서도 같은 목록.</h2>
-          <p>이 기능은 <a href="downloads/WhatThePort-Windows-x64.zip" download>터미널 도구 포함 ZIP</a>의 <code>wtp.exe</code>를 사용합니다. ZIP을 풀고 그 폴더에서 터미널을 열어 아래 명령을 하나씩 실행하세요. <strong>서버 목록을 보는 데 프로젝트 연결 등록은 필요하지 않습니다.</strong> 조회 명령은 PowerShell과 명령 프롬프트(CMD) 모두에서 사용할 수 있습니다.</p>
-          <pre tabindex="0" aria-label="서버 조회 명령"><code>.\wtp.exe list
+          <h2 id="cli-title">터미널 조회</h2>
+          <p><a href="downloads/WhatThePort-Windows-x64.zip" download>CLI 포함 ZIP</a>을 폴더째 풀고 PowerShell에서 실행합니다. EXE·DLL·폰트 파일을 분리하지 마세요.</p>
+          <pre><code>.\wtp.exe list
 .\wtp.exe list --json
-.\wtp.exe list --all</code></pre>
-          <h3>프로젝트 연결은 필요할 때만.</h3>
-          <p><code>link</code>는 에이전트 세션·Vercel 미리보기 정보를 저장합니다. 개발 서버를 실행하거나 목록에 추가하는 명령은 아닙니다. 처음에는 앱에서 <strong>서버 선택 → 프로젝트 연결</strong>을 여는 것이 편합니다. <a href="#links">입력란별 설명 보기</a>.</p>
-          <div class="note-card"><p><strong>다운로드 폴더와 프로젝트 폴더는 다릅니다.</strong> <code>WhatThePort-Windows-x64</code>는 이 도구가 들어 있는 폴더입니다. 연결할 프로젝트 폴더는 개발 서버를 실행한 소스 코드 폴더이며, 앱의 서버 상세에 표시되는 <strong>폴더</strong> 경로를 확인하세요.</p></div>
-          <table><caption class="sr-only">연결 명령에 입력할 실제 값</caption><thead><tr><th scope="col">항목</th><th scope="col">입력할 값</th></tr></thead><tbody><tr><td><code>--port</code></td><td>서버 목록에서 확인한 실제 포트. 3000은 예시입니다.</td></tr><tr><td><code>--folder</code></td><td>실제로 존재하는 프로젝트 폴더의 전체 경로. 직접 명령에 적을 때는 공백을 포함한 경로를 큰따옴표로 감싸세요.</td></tr><tr><td><code>--session</code></td><td>재개할 실제 세션 ID. 모르면 생략하세요. <code>YOUR_SESSION_ID</code>는 안내용 표시이며 실제 ID가 아닙니다.</td></tr><tr><td><code>--preview</code></td><td>직접 등록할 실제 Vercel HTTPS 주소. 사용하지 않으면 생략하세요.</td></tr></tbody></table>
-          <details><summary>고급: PowerShell에서 값을 입력하며 연결 등록하기</summary>
-            <p>아래 코드는 실행 중에 본인의 값을 묻습니다. <strong>같은 폴더·포트의 기존 연결을 교체합니다.</strong> 유지할 세션과 미리보기가 있다면 둘 다 입력하세요. 빈칸으로 두는 항목은 저장된 연결에서도 비워집니다.</p>
-            <p><code>C:\…&gt;</code>는 보통 CMD, <code>PS C:\…&gt;</code>는 PowerShell입니다. CMD를 사용 중이면 먼저 <code>powershell -NoProfile</code>을 실행하세요. 현재 폴더는 압축을 푼 폴더로 유지합니다.</p>
-            <pre tabindex="0" aria-label="PowerShell 대화형 프로젝트 연결 등록"><code>&amp; {
-    $projectFolder = Join-Path (Read-Host '서버 상세에 표시된 프로젝트 폴더 전체 경로 (따옴표 없이)') '.' -ErrorAction Stop
-    $serverPort = Read-Host '서버 목록에서 확인한 포트 번호'
-    $sessionId = Read-Host '실제 세션 ID (사용하지 않으면 Enter)'
-    $previewUrl = Read-Host '실제 Vercel HTTPS 주소 (사용하지 않으면 Enter)'
-    $linkArgs = @('link', '--port', $serverPort, '--folder', $projectFolder)
-    if ($sessionId) {
-        $agent = Read-Host '에이전트: codex 또는 claude'
-        $linkArgs += @('--agent', $agent, '--session', $sessionId)
-    }
-    if ($previewUrl) { $linkArgs += @('--preview', $previewUrl) }
-    .\wtp.exe @linkArgs
-}</code></pre>
-          </details>
-          <details><summary>Choose an existing absolute project folder. 오류가 나요.</summary><p>입력한 프로젝트 폴더가 존재하지 않는다는 뜻입니다. 이전 예시의 <code>C:\dev\my-app</code>을 그대로 입력하면 해당 폴더가 없는 PC에서 이 오류가 납니다. 예시 폴더를 새로 만들지 말고, 앱의 서버 상세에서 실제 프로젝트 폴더를 확인해 입력하세요. 포트와 세션 ID도 본인의 값이어야 합니다. 이 오류로 실패한 명령은 연결을 저장하지 않습니다.</p></details>
+.\wtp.exe list --all
+.\wtp.exe --help</code></pre>
         </section>
         <section class="guide-chapter" id="help" aria-labelledby="help-title">
-          <p class="chapter-number">09 / A LITTLE HELP</p><h2 id="help-title">여기서 막혔다면.</h2>
-          <details><summary>실행했는데 창이 보이지 않아요.</summary><p>트레이 아이콘이나 Ctrl+Alt+P로 열어 보세요. 창은 저장된 모니터·위치에서 열립니다. 새 버전으로 바꿀 때는 기존 트레이 메뉴에서 앱을 종료한 뒤 새 EXE를 실행해야 합니다. 설정의 창 위치 초기화로 주 모니터에 되돌릴 수 있습니다.</p></details>
-          <details><summary>서버가 목록에 없어요.</summary><p>기본 필터는 Node·Python·.NET 등 개발 런타임입니다. 설정의 모든 사용자 TCP 리스너 표시로 사용자 정의 실행 파일을 포함할 수 있습니다. 이때 wmux·디버거·에이전트 등의 내부 포트도 함께 보일 수 있습니다.</p></details>
-          <details id="download-warning"><summary>Chrome에서 의심스러운 다운로드로 차단돼요.</summary><p>“일반적으로 다운로드되지 않으며 위험할 수 있습니다”는 Google Safe Browsing이 아직 충분히 알지 못하는 파일에 대한 경고입니다. 현재 시험 빌드는 코드 서명이 없습니다. EXE 직접 다운로드에도 같은 경고가 표시될 수 있습니다. <a href="downloads/SHA256SUMS.txt">SHA-256</a>과 <a href="downloads/EXE-INFO.json">EXE 서명·파일 확인 정보</a>와 <a href="downloads/PACKAGE-INFO.json">ZIP 확인 정보</a>를 확인할 수 있지만, 파일 일치가 악성코드 검사 통과나 Google의 안전 판정을 뜻하지는 않습니다. 경고가 나오면 다운로드를 중단하고 확인 결과를 기다리세요. <a href="https://support.google.com/chrome/answer/6261569?hl=ko" rel="noreferrer">Google 안내</a>.</p></details>
-          <details><summary>SmartScreen 경고가 나와요.</summary><p>서명이 없는 파일의 실행 전 평판 확인 안내입니다. Windows 보호 기능을 끄기보다 파일 출처와 검사 결과를 확인하세요. 앱 실행 후 창이 숨겨지는 동작과는 별개입니다. <a href="https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation" rel="noreferrer">Microsoft 안내</a>.</p></details>
-          <details id="antivirus-warning"><summary>IObit에서 Suspicious.Startup으로 탐지됐어요.</summary><p>1.1.0 배포본에 대한 사용자 탐지 보고가 있습니다. 해당 파일은 공개 배포본과 SHA-256이 일치했지만, 오탐이나 안전 판정이 확인된 것은 아닙니다. 사용자가 저장할 때 등록하는 자동 실행 기능이 탐지와 관련됐을 가능성은 추정입니다. 백신 보호 해제·예외 추가 대신 실행을 보류하고, 탐지 결과 하단의 <strong>탐지 오류 보고</strong>로 제조사 검토를 요청할 수 있습니다. UI 새 버전은 이 탐지가 해결됐다는 뜻이 아닙니다. <a href="https://www.iobit.com/product-manuals/imf-help/" rel="noreferrer">IObit 공식 검토 절차</a>.</p></details>
-          <details><summary>휴대폰에서도 앱을 쓸 수 있나요?</summary><p>앱은 Windows 10/11 x64에서 실행됩니다. 이 웹사이트와 가이드는 휴대폰에서도 볼 수 있습니다. 내려받은 EXE는 Windows PC에서 실행하세요. 터미널용 ZIP은 압축을 풀어 사용합니다.</p></details>
-          <details><summary>어떤 환경을 지원하지 않나요?</summary><p>Windows 네이티브 TCP 프로세스가 대상입니다. UDP, WSL·Docker 내부 PID와 자원 귀속, 다른 사용자의 프로세스 상세는 지원하지 않습니다. 서버 재시작·자동 업데이트·대화형 TUI·PR 연결은 미구현입니다. Windows 알림은 집중 지원 등의 설정에 따라 보이지 않을 수 있습니다.</p></details>
-          <details><summary>데이터를 외부로 보내나요?</summary><p>로컬 TCP 테이블과 프로세스 정보로 동작하며 텔레메트리·자동 업데이트 요청이 없습니다. 대화 기록·인증 파일을 읽지 않습니다. 이 웹사이트도 계정·분석 스크립트·외부 글꼴 없이 동작합니다.</p></details>
-          <details><summary>키보드나 화면 읽기 프로그램을 지원하나요?</summary><p>앱의 입력란과 아이콘 버튼에는 UI Automation 이름이 있으며 차트의 키보드 탐색과 표본 설명을 제공합니다. 사이트는 건너뛰기 링크·키보드 메뉴·화면 선택 탭·이미지 대체 텍스트를 제공합니다. 실제 Narrator/NVDA 음성 출력을 포함한 완전한 적합성 인증은 하지 않았습니다.</p></details>
-          <div class="hero-actions"><a class="button button-dark" href="index.html#download">Windows 다운로드 <span aria-hidden="true">↗</span></a><a class="text-link" href="#start">처음으로 ↑</a></div>
+          <h2 id="help-title">문제 해결</h2>
+          <details id="download-warning"><summary>Windows·브라우저에서 다운로드를 경고해요</summary><p>현재는 코드 서명이 없는 시험 빌드입니다. 공식 다운로드 주소와 <a href="downloads/SHA256SUMS.txt">SHA-256</a>을 확인하고 <a href="https://github.com/seo-gali/what-the-port-win/blob/main/docs/download-security.md">검사 기록</a>을 참고하세요. 서명·백신 검사·다운로드 평판은 서로 다른 항목입니다.</p></details>
+          <details id="antivirus-warning"><summary>백신에서 탐지했어요</summary><p>보호를 끄거나 예외를 추가하지 말고 탐지명·파일 해시를 확인하세요. 1.1.0의 IObit 시작프로그램 탐지 보고가 있으며 제조사 판정은 확인되지 않았습니다. 새 버전의 파일 검사 결과가 기존 탐지의 오탐을 확정하지는 않습니다.</p></details>
+          <details><summary>서버가 안 보여요</summary><p>기본 조회 범위는 동일 사용자·로그인 세션의 Windows 네이티브 TCP 포트 1024–65535입니다. 설정에서 다른 로컬 앱 포함을 선택할 수 있습니다. UDP·WSL·Docker 내부 자원은 지원하지 않습니다.</p></details>
+          <details><summary>설정과 연결 정보는 어디에 저장돼요?</summary><p><code>%LOCALAPPDATA%\WhatThePort</code>의 로컬 JSON입니다. 앱 자체의 외부 네트워크 요청·텔레메트리·자동 업데이트는 없습니다.</p></details>
         </section>
       </div>
     </div>

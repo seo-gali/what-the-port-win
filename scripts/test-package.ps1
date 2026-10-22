@@ -23,6 +23,7 @@ function Hash($file) { (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash 
 function Package { & (Join-Path $testRoot 'scripts\package.ps1') }
 $zipPath = Join-Path $testRoot 'artifacts\WhatThePort-Windows-x64.zip'
 $binaryPaths = @('WhatThePort.exe','WhatThePort.Core.dll','wtp.exe') | ForEach-Object { Join-Path $testRoot ('dist\' + $_) }
+$completed = $false
 try {
     Package
     $firstZip = Hash $zipPath
@@ -77,8 +78,17 @@ try {
     }
     [IO.File]::WriteAllText((Join-Path $projectRoot 'artifacts\package-test-results.txt'), ($passed.ToString() + ' package checks passed'))
     Write-Output ($passed.ToString() + ' package checks passed')
-    Write-Output ('Fixture: ' + $testRoot)
+    $completed = $true
 } catch {
     Write-Output ('Fixture retained for diagnosis: ' + $testRoot)
     throw
+} finally {
+    if ($completed) {
+        $resolved = (Resolve-Path -LiteralPath $testRoot).ProviderPath
+        if ($resolved -ne $testRoot -or -not $resolved.StartsWith($artifactRoot + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Unexpected fixture cleanup path.' }
+        $items = @(Get-Item -LiteralPath $resolved -Force) + @(Get-ChildItem -LiteralPath $resolved -Recurse -Force)
+        if (@($items | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }).Count) { throw 'Fixture cleanup refuses reparse points.' }
+        Remove-Item -LiteralPath $resolved -Recurse -Force
+        Write-Output 'Temporary package fixture removed.'
+    }
 }
