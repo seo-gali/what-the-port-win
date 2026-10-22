@@ -1,6 +1,59 @@
-# 다운로드 경고·백신 탐지 확인
+# 다운로드·인증서 보안 점검
 
 현재 기본 다운로드는 단일 GUI EXE이며 터미널용 ZIP도 선택할 수 있다. 두 다운로드 모두 HTTPS로 제공하지만 Authenticode 서명은 없다. 단일 EXE는 압축 해제 없는 실행 편의를 위한 것으로, 확장자 변경만으로 Chrome 경고가 사라진다는 뜻은 아니다. SHA-256·ZIP 구성 검사와 악성코드 검사, Chrome 평판은 서로 다른 결과다. 무결성 검사를 통과했다고 안전 판정 또는 경고 해제를 주장하지 않는다.
+
+## 2026-10-22 인증서 보안 점검
+
+대상은 What the Port Windows **1.1.2**와 공개 배포 경로다. 아래 결과는 해당 날짜의 읽기 전용 점검 기록이며, 이후 인증서 갱신·OS 업데이트 상태는 다시 확인해야 한다. 인증서 검사와 악성코드 검사, 코드 서명, Secure Boot 상태를 구분한다.
+
+### eMudhra / emSign 중간 CA 개인 키 유출
+
+Cloudflare는 2026-10-20 공지에서 eMudhra 중간 인증서 8개의 키가 손상되어 공격자가 다른 도메인의 인증서를 위조할 수 있다고 설명했다. 실제 방어 여부는 OS·브라우저·런타임·자체 신뢰 저장소 중 어떤 검증 경로를 쓰는지에 따라 다르다. [Cloudflare 공식 공지와 개발자 조치](https://blog.cloudflare.com/emudhra-certificate-compromise/).
+
+| 대상 | 확인한 내용 | 판단 |
+|---|---|---|
+| 다운로드 사이트 `seo-gali.github.io` | `*.github.io` → Let's Encrypt YR1 → Root YR → ISRG Root X1. 당시 서버 인증서 만료일은 2026-12-29 UTC | 확인한 체인에 eMudhra/emSign 없음. HTTPS 기본 검증과 온라인 폐기 확인을 포함한 Windows 체인 검사 통과 |
+| 소스 저장소 `github.com` | Sectigo Public Server Authentication CA DV E36 → Root E46. 당시 서버 인증서 만료일은 2026-11-29 UTC | 확인한 체인에 eMudhra/emSign 없음. 같은 방식의 체인 검사 통과 |
+| 앱·빌드 의존성 | .NET Framework 4.8 / WPF. 앱 자체의 외부 HTTPS API 클라이언트·자체 CA 묶음 없음. Python `certifi`, Go, Electron, NSS를 앱에 포함하지 않음 | 해당 패키지의 프로젝트 내 교체 대상은 발견하지 못함. 브라우저·외부 CLI는 각 도구의 업데이트 상태를 따로 확인 |
+| 배포 EXE | 1.1.2, Authenticode `NotSigned` | 코드 서명은 미완료. 이번 CA 사고 점검을 게시자 신원 확인이나 백신 안전 판정으로 해석하지 않음 |
+
+점검한 EXE의 SHA-256은 `38f000df3c0f6888170b1a3e4d9484cfc8d12f16f40a026d7354f3d275ef6725`다. 현재 배포 파일 정보는 [EXE 확인 정보](downloads/EXE-INFO.json)와 [SHA-256 목록](downloads/SHA256SUMS.txt)을 참고한다.
+
+HTTPS는 인증서 검증을 끄지 않고 조회했다. 체인 검사는 `X509Chain.Build`, `RevocationMode=Online`으로 수행했고 두 호스트 모두 체인 오류가 없었다. 이는 **관측한 서버 인증서가 유효했다는 결과**다. 이 PC가 모든 eMudhra 위조 인증서를 차단하는지, 모든 사용자의 브라우저·백그라운드 도구가 패치됐는지는 검증하지 않았다. Windows와 브라우저 보안 업데이트, 별도로 사용하는 CLI·런타임의 공식 보안 업데이트를 확인해야 한다.
+
+### Windows Secure Boot 인증서 전환
+
+Secure Boot는 OS 부팅 단계의 신뢰 경로다. 일반 사용자 모드에서 실행하는 이 앱의 코드 서명·HTTPS와 별도로 관리한다. Microsoft는 2011년 인증서를 2023년 인증서로 전환하도록 안내한다. 미전환 장치가 즉시 부팅 불능이 된다는 뜻은 아니지만 이후 부팅 보안 업데이트·보호에 제약이 생길 수 있다. [Windows 클라이언트 공식 조치](https://learn.microsoft.com/en-us/troubleshoot/windows-client/windows-security/update-secure-boot-certificates).
+
+Microsoft가 명시한 인증서 만료일은 다음과 같다. 특히 **Microsoft UEFI CA 2011은 2027년이 아니라 2026년 6월 27일**이다. [Microsoft 공식 인증서 일정](https://learn.microsoft.com/en-us/azure-stack/operator/secure-boot-certificates?view=azs-2601).
+
+| 기존 인증서 | 만료일 |
+|---|---|
+| Microsoft Corporation KEK CA 2011 | 2026-06-24 |
+| Microsoft Windows Production PCA 2011 | 2026-10-19 |
+| Microsoft UEFI CA 2011 | 2026-06-27 |
+
+점검한 개발 PC의 레지스트리에는 `UEFISecureBootEnabled=0`, `UEFICA2023Status=NotStarted`가 표시됐다. 이는 **해당 개발 PC 한 대의 관측값**이며 사용자 PC 전체에 대한 결과가 아니다. `Confirm-SecureBootUEFI`와 `Get-SecureBootUEFI`는 권한 부족으로 실패했으므로 펌웨어의 실제 인증서 등록 상태나 전환 완료 여부를 확정하지 않는다.
+
+다음은 상태를 읽는 명령이다. 레지스트리 조회는 수행했으며, 펌웨어 명령은 관리자 권한으로 다시 확인할 필요가 있다.
+
+```powershell
+Get-ItemProperty -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\State' |
+    Select-Object UEFISecureBootEnabled
+Get-ItemProperty -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing' |
+    Select-Object UEFICA2023Status, UEFICA2023Error
+Confirm-SecureBootUEFI
+([Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI -Name db).Bytes)).Contains('Windows UEFI CA 2023')
+([Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI -Name KEK).Bytes)).Contains('Microsoft Corporation KEK 2K CA 2023')
+```
+
+필요한 조치는 제조사의 BIOS/UEFI 호환성·업데이트 안내와 Windows Update를 확인하고, 적용 후 공식 상태 지표를 다시 검사하는 것이다. 레지스트리의 상태값을 직접 바꿔 완료로 표시하거나 기존 부팅 인증서를 임의 삭제하지 않는다. 이번 점검에서는 펌웨어·신뢰 저장소·부팅 설정 변경이나 OS 업데이트 설치를 수행하지 않았다.
+
+### 미확인·후속 항목
+
+- 개발 PC와 사용자 환경의 eMudhra 차단 패치 적용 여부: 미확인. 정상 사이트의 HTTPS 접속 성공만으로 차단 완료를 판단하지 않는다.
+- 개발 PC의 Secure Boot 2023 인증서 등록·부트 매니저 전환: 관리자 권한으로 추가 확인 필요.
+- EXE 코드 서명과 기존 IObit 탐지의 제조사 판정·독립적인 악성코드 검사: 미완료. 이번 인증서 점검으로 해결됐다고 주장하지 않는다.
 
 ## 경고 구분
 
