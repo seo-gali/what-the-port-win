@@ -21,7 +21,10 @@ namespace WhatThePort {
         [DataMember] public string Language = "ko";
         [DataMember] public int? PanelLeft;
         [DataMember] public int? PanelBottom;
-        [DataMember] public int? PanelSize;
+        [DataMember(EmitDefaultValue=false)] public int? PanelSize;
+        [DataMember] public double? PanelWidth;
+        [DataMember] public double? PanelHeight;
+        [DataMember] public int? FontScale;
         [DataMember] public int? PanelOpacity;
         public void Validate() {
             if (String.IsNullOrEmpty(Language)) Language = "ko";
@@ -31,7 +34,13 @@ namespace WhatThePort {
             if (!new [] {"PowerShell", "Windows Terminal"}.Contains(Terminal)) throw new ArgumentException("Invalid terminal.");
             if (PanelLeft.HasValue != PanelBottom.HasValue || (PanelLeft.HasValue && (Math.Abs((long)PanelLeft.Value)>1000000 || Math.Abs((long)PanelBottom.Value)>1000000))) throw new ArgumentException("Invalid saved panel position.");
             if (PanelSize.HasValue && (PanelSize<0 || PanelSize>3)) throw new ArgumentException("Invalid panel size.");
+            if (PanelWidth.HasValue != PanelHeight.HasValue || (PanelWidth.HasValue && (Double.IsNaN(PanelWidth.Value) || Double.IsNaN(PanelHeight.Value) || PanelWidth<344 || PanelWidth>10000 || PanelHeight<460 || PanelHeight>10000))) throw new ArgumentException("Invalid panel dimensions.");
+            if (FontScale.HasValue && (FontScale<80 || FontScale>125)) throw new ArgumentException("Invalid font percentage.");
             if (PanelOpacity.HasValue && (PanelOpacity<40 || PanelOpacity>100)) throw new ArgumentException("Invalid background opacity.");
+            if (PanelSize.HasValue) {
+                if (!PanelWidth.HasValue) { PanelWidth=new double[]{344,440,500,560}[PanelSize.Value];PanelHeight=new double[]{460,594,660,720}[PanelSize.Value]; }
+                PanelSize=null;
+            }
         }
         public Settings Copy() { return (Settings)MemberwiseClone(); }
     }

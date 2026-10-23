@@ -4,5 +4,5 @@ using System.Reflection;
 [assembly: AssemblyFileVersion(WhatThePort.AppVersion.Current)]
 #endif
 namespace WhatThePort {
-    public static class AppVersion { public const string Current="1.1.3"; }
+    public static class AppVersion { public const string Current="1.1.4"; }
 }

@@ -21,7 +21,7 @@ namespace WhatThePort.App {
         }
         static readonly Dictionary<string,string> Korean=new Dictionary<string,string>{
             {"Close","닫기"},{"Process exit confirmation timed out.","종료 요청 후 완료 확인 시간이 초과되었습니다."},
-            {"Smaller panel","창 작게"},{"Larger panel","창 크게"},{"BACKGROUND OPACITY","배경 불투명도"},
+            {"FONT SIZE","글꼴 크기"},{"Invalid font percentage.","글꼴 크기는 80–125%로 설정해 주세요."},{"BACKGROUND OPACITY","배경 불투명도"},
             {"Start when I sign in to Windows","Windows 로그인 시 자동 실행"},{"Starts this EXE in the tray. Save again after moving the file.","현재 EXE를 트레이에서 시작합니다. 파일을 옮기면 다시 저장해 주세요."},
             {"Resume alerts","알림 재개"},{"Resume alerts · paused until {0}","알림 재개 · {0}까지 중지"},{"Pause or resume resource notifications","리소스 알림 일시 중지 또는 재개"},{"Alerts resumed.","알림을 재개했습니다."},
             {"Started via","실행 출처"},{"Connected apps","연결 앱"},{"No identified local apps","확인된 로컬 앱 없음"},{"Via {0}","{0}에서 실행"},{"Connected: {0}","연결: {0}"},
@@ -41,6 +41,7 @@ namespace WhatThePort.App {
             {"CPU (servers)  {0}","서버 CPU  {0}"},{"freed by stopping {0}","{0}개 종료 시 확보"},{"■ Servers {0}   ▪ Other {1}   ▪ Free {2}","■ 서버 {0}   ▪ 기타 {1}   ▪ 여유 {2}"},
             {"Resident working set; shared pages may appear in more than one process. System RAM: {0}","실제 사용 메모리. 공유 영역의 중복 집계 가능. 시스템 RAM: {0}"},
             {"No development servers","실행 중인 개발 서버 없음"},
+            {"No listening ports","열려 있는 포트 없음"},{"Scan unavailable","포트를 조회할 수 없음"},{"Listening ports will appear here automatically.","서버가 포트를 열면 여기에 자동으로 표시됩니다."},
             {"Show all user listeners","모든 사용자 리스너 표시"},{"Include custom executables and other local apps","사용자 정의 실행 파일과 다른 로컬 앱도 표시"},
             {"Stopping ends the selected process trees immediately.","선택한 서버와 하위 프로세스를 즉시 종료합니다."},
             {"Stop {0} servers · free {1}","서버 {0}개 종료 · {1} 확보"},{"Stop {0} server · free {1}","서버 {0}개 종료 · {1} 확보"},
@@ -50,7 +51,7 @@ namespace WhatThePort.App {
             {"That server has stopped.","이 서버가 더 이상 포트를 열고 있지 않습니다."},{"Running for {0}","실행 시간 {0}"},{"Stop server","서버 종료"},
             {"Session","세션"},{"Branch","브랜치"},{"Folder","폴더"},{"Ports","포트"},{"Not linked","연결 미등록"},{"No Git branch","Git 브랜치 없음"},{"Unavailable for this process","폴더 확인 불가"},
             {"{0}   ·   {1} connections","{0}   ·   연결 {1}개"},{"Memory","메모리"},{"Processes   ·   {0}   ·   {1}","프로세스   ·   {0}개   ·   {1}"},
-            {"Open localhost:{0}","localhost:{0} 열기"},{"Open local server (O)","로컬 서버 열기 (O)"},{"Open project in terminal (T)","터미널에서 프로젝트 열기 (T)"},
+            {"Open\n:{0}",":{0}\n열기"},{"Open local server (O)","로컬 서버 열기 (O)"},{"Open project in terminal (T)","터미널에서 프로젝트 열기 (T)"},
             {"Resume linked agent session (A)","연결된 에이전트 세션 재개 (A)"},{"Open Vercel preview (V)","Vercel 미리보기 열기 (V)"},
             {"Manage project links and copy local URL","프로젝트 연결 관리 및 로컬 URL 복사"},
             {"Stop :{0} and its {1} process(es)?\n\nThis ends the process tree immediately.",":{0} 서버와 관련 프로세스 {1}개를 종료할까요?\n\n프로세스를 즉시 종료합니다."},

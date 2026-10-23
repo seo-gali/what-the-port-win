@@ -33,6 +33,7 @@ public static class UiTests {
             HeaderTests();
             NavigationLayoutTests();
             ResponsiveSizingTests();
+            EmptyStateTests();
             ChartRangeTests();
             MotionTests();
             ToolTipTests();
@@ -106,69 +107,70 @@ public static class UiTests {
         server.History.Remove(sample);server.Memory=server.History.Last().Memory;server.Cpu=server.History.Last().Cpu;Invoke("Navigate","list");
     }
     static Rect Displayed(FrameworkElement element){return element.TransformToAncestor(window).TransformBounds(new Rect(new Point(),element.RenderSize));}
-    static void WaitForMotion(int milliseconds=350){var frame=new System.Windows.Threading.DispatcherFrame();var timer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromMilliseconds(milliseconds)};timer.Tick+=delegate{timer.Stop();frame.Continue=false;};timer.Start();System.Windows.Threading.Dispatcher.PushFrame(frame);Layout();}
-    static string ChartLine(Chart chart){
-        ChartVariation(chart);var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())typeof(Chart).GetMethod("OnRender",PrivateInstance).Invoke(chart,new object[]{drawing});
-        return visual.Drawing.Children.OfType<GeometryDrawing>().Single(d=>d.Pen!=null&&d.Geometry is StreamGeometry).Geometry.ToString(System.Globalization.CultureInfo.InvariantCulture);
-    }
     static void MotionTests(){
-        if(!SystemParameters.ClientAreaAnimation){Console.WriteLine("INFO Windows animations disabled; snapshot instant sizing remains covered.");return;}
-        var mode=typeof(WhatThePort.App.Panel).GetField("snapshotMode",PrivateInstance);var original=PanelPlacement.PhysicalBounds(window);var settings=(WhatThePort.Settings)Field("settings");
+        var mode=typeof(WhatThePort.App.Panel).GetField("snapshotMode",PrivateInstance);
         try{
             mode.SetValue(panel,false);Invoke("Navigate","list");
-            WaitForMotion(30);Check("navigation starts a short visual transition",Body().Opacity<1);WaitForMotion();
-            Check("navigation finishes fully visible",Math.Abs(Body().Opacity-1)<.001);
-            Click((Button)window.FindName("Larger"));var start=PanelPlacement.PhysicalBounds(window);
-            Check("resize begins at the current size",Math.Abs(start.Width-original.Width)<4);WaitForMotion();var larger=PanelPlacement.PhysicalBounds(window);
-            Check("resize reaches the requested size and keeps its anchor",larger.Width>original.Width&&Math.Min(Math.Abs(larger.Top-original.Top),Math.Abs(larger.Bottom-original.Bottom))<=1);
-            Click((Button)window.FindName("Smaller"));Click((Button)window.FindName("Larger"));WaitForMotion();
-            Check("rapid resize reversal reaches the last requested size",Math.Abs(PanelPlacement.PhysicalBounds(window).Width-larger.Width)<=1);
-            Invoke("Navigate","detail");WaitForMotion();var server=((WhatThePort.Snapshot)Field("current")).Servers.First();
+            Check("navigation is immediately visible without animation",Body().Opacity==1&&!Body().HasAnimatedProperties&&Body().RenderTransform.Value.IsIdentity);
+            Invoke("Navigate","detail");var server=((WhatThePort.Snapshot)Field("current")).Servers.First();
             var history=server.History;server.History=new List<WhatThePort.Sample>(history);var sample=new WhatThePort.Sample{At=server.History.Last().At.AddSeconds(3),Memory=server.Memory+50*WhatThePort.Format.MB,Cpu=20};server.History.Add(sample);Rerender();
-            var chart=All(Body()).OfType<Chart>().First();string first=ChartLine(chart);WaitForMotion();
-            Check("graph animates toward the newest sample without delaying data",chart.Samples.Last()==sample&&first!=ChartLine(chart));
-            server.History=history;Invoke("Navigate","list");Click((Button)window.FindName("Smaller"));window.Hide();
-            Check("hiding finishes resize without a background animation",Math.Abs(PanelPlacement.PhysicalBounds(window).Width-original.Width)<=1);
-            window.Show();Invoke("Navigate","settings");var input=All(Body()).OfType<TextBox>().First();input.Text="unfinished";Click((Button)window.FindName("Larger"));Click(ByName("Reset panel position to primary monitor"));
-            Check("position reset during resize keeps the form and clears the saved position",input.Text=="unfinished"&&!settings.PanelLeft.HasValue&&!settings.PanelBottom.HasValue);
-        }finally{mode.SetValue(panel,true);settings.PanelSize=1;window.Show();Invoke("Navigate","list");PanelPlacement.Place(window,594,new Point(original.Left,original.Bottom),true,false);Layout();}
+            var chart=All(Body()).OfType<Chart>().First();
+            Check("graph immediately shows new measurements without animation",chart.Samples.Last()==sample&&!chart.HasAnimatedProperties);
+            server.History=history;
+        }finally{mode.SetValue(panel,true);Invoke("Navigate","list");}
     }
+    static void ResizeWindow(double width,double height){window.Width=width;window.Height=height;Layout();SendMessage(new WindowInteropHelper(window).Handle,0x0232,IntPtr.Zero,IntPtr.Zero);Pump();Layout();}
     static void ResponsiveSizingTests(){
-        var original=PanelPlacement.PhysicalBounds(window);var work=System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(window).Handle).WorkingArea;
+        var original=PanelPlacement.PhysicalBounds(window);double originalWidth=window.Width,originalHeight=window.Height;
         double textHeight=Displayed(All(Rows().First()).OfType<TextBlock>().First(t=>t.Text=="menubar port monitor")).Height;
-        var spark=All(Rows().First()).OfType<Chart>().Single();double sparkWidth=Displayed(spark).Width;int samples=spark.Samples.Count;
-        double scale=original.Height/window.ActualHeight;
+        var spark=All(Rows().First()).OfType<Chart>().Single();int samples=spark.Samples.Count;
         try{
-            PanelPlacement.Place(window,594,new Point(work.Left+40,work.Top+24*scale+original.Height),true,false);Layout();Invoke("RememberPosition");
-            double top=PanelPlacement.PhysicalBounds(window).Top;
-            Click((Button)window.FindName("Larger"));Click((Button)window.FindName("Larger"));
-            Check("top-positioned panel keeps top during consecutive growth",Math.Abs(PanelPlacement.PhysicalBounds(window).Top-top)<=1);
-            var name=All(Rows().First()).OfType<TextBlock>().First(t=>t.Text=="menubar port monitor");spark=All(Rows().First()).OfType<Chart>().Single();
-            Check("large panel enlarges text and gives graphs more space",Displayed(name).Height>textHeight*1.08&&Displayed(spark).Width>sparkWidth*2&&spark.Samples.Count==samples);
+            Check("header has no size step buttons",window.FindName("Smaller")==null&&window.FindName("Larger")==null);
+            Check("window supports native resizing with safe minimum size",window.ResizeMode==ResizeMode.CanResize&&window.MinWidth==344&&window.MinHeight==460);
+            var handle=new WindowInteropHelper(window).Handle;var bounds=PanelPlacement.PhysicalBounds(window);
+            var points=new[]{new Point(bounds.Left+3,bounds.Top+3),new Point(bounds.Right-3,bounds.Top+3),new Point(bounds.Left+3,bounds.Bottom-3),new Point(bounds.Right-3,bounds.Bottom-3),new Point(bounds.Left+3,bounds.Top+bounds.Height/2),new Point(bounds.Right-3,bounds.Top+bounds.Height/2),new Point(bounds.Left+bounds.Width/2,bounds.Top+3),new Point(bounds.Left+bounds.Width/2,bounds.Bottom-3)};
+            int[] hits={13,14,16,17,10,11,12,15};
+            for(int i=0;i<points.Length;i++){int packed=(unchecked((ushort)(int)points[i].X))|(unchecked((ushort)(int)points[i].Y)<<16);Check("native resize hit target "+hits[i],SendMessage(handle,0x0084,IntPtr.Zero,new IntPtr(packed)).ToInt32()==hits[i]);}
+            ResizeWindow(560,720);double wideSpark=Displayed(All(Rows().First()).OfType<Chart>().Single()).Width;
             CaptureVisual((FrameworkElement)window.Content,"list-large");
-            for(int i=0;i<3;i++)Click((Button)window.FindName("Smaller"));
-            name=All(Rows().First()).OfType<TextBlock>().First(t=>t.Text=="menubar port monitor");
-            Check("minimum panel and text are smaller than previous minimum",window.Width<396&&window.Height<550&&Displayed(name).Height<textHeight*.95);
-            Check("top stays fixed when shrinking",Math.Abs(PanelPlacement.PhysicalBounds(window).Top-top)<=1);
+            ResizeWindow(344,460);var name=All(Rows().First()).OfType<TextBlock>().First(t=>t.Text=="menubar port monitor");spark=All(Rows().First()).OfType<Chart>().Single();
+            Check("resizing keeps font ratio and measured samples",Near(Displayed(name).Height,textHeight)&&spark.Samples.Count==samples&&Displayed(spark).Width<wideSpark);
             CaptureVisual((FrameworkElement)window.Content,"list-small");
             Click(ByName("Settings (Ctrl+,)"));var input=All(Body()).OfType<TextBox>().First();input.Text="unfinished";
-            for(int i=0;i<3;i++)Click((Button)window.FindName("Larger"));
+            ResizeWindow(520,640);
             Check("resizing preserves incomplete form input",All(Body()).OfType<TextBox>().First()==input&&input.Text=="unfinished");
-            CheckScaledPopup("large");
-            for(int i=0;i<3;i++)Click((Button)window.FindName("Smaller"));
+            var ratio=All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="font-scale");var before=PanelPlacement.PhysicalBounds(window);
+            ratio.Value=125;Layout();Check("font percentage previews without resizing or replacing inputs",((ScaleTransform)Body().LayoutTransform).ScaleX==1.25&&PanelPlacement.PhysicalBounds(window)==before&&input.Text=="unfinished");
+            CheckScaledPopup("large font");ratio.Value=80;Layout();
             Check("small form fields retain a 30 DIP hit area",All(Body()).OfType<TextBox>().All(t=>Displayed(t).Height>=29.5));
             Check("small settings switches and sliders retain a 30 DIP hit area",All(Body()).OfType<Control>().Where(c=>c is Slider||c is System.Windows.Controls.Primitives.ToggleButton).All(c=>Displayed(c).Height>=29.5));
-            CheckScaledPopup("small");
+            CheckScaledPopup("small font");ResizeWindow(344,460);ratio.Value=125;Layout();
             CaptureVisual((FrameworkElement)window.Content,"settings-small");
             var footer=(FrameworkElement)window.FindName("Footer");Check("small forms keep footer visible",Displayed(footer).Bottom<=window.ActualHeight&&Displayed(footer).Top>0);
-            Invoke("Navigate","list");Click((Button)window.FindName("Larger"));
-            PanelPlacement.Place(window,594,null,true,false);Layout();Invoke("RememberPosition");double bottom=PanelPlacement.PhysicalBounds(window).Bottom;
-            Click((Button)window.FindName("Larger"));Click((Button)window.FindName("Larger"));Click((Button)window.FindName("Smaller"));Click((Button)window.FindName("Smaller"));
-            Check("moving down reselects bottom anchoring",Math.Abs(PanelPlacement.PhysicalBounds(window).Bottom-bottom)<=1);
+            Click(ByName("Discard changes"));Check("cancel restores saved font percentage",((ScaleTransform)Body().LayoutTransform).ScaleX==1);
+            Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="font-scale").Value=125;Click(ByName("Save preferences"));
+            Check("save keeps selected font percentage",((ScaleTransform)Body().LayoutTransform).ScaleX==1.25);
+            Invoke("Navigate","detail");var port=All(Body()).OfType<TextBlock>().Single(t=>t.Text==":"+((WhatThePort.Snapshot)Field("current")).Servers.First().Port);var run=All(Body()).OfType<TextBlock>().Single(t=>t.Text.StartsWith("Running for "));
+            Check("small detail keeps port and runtime on separate lines",Displayed(run).Top>=Displayed(port).Bottom-1&&Displayed(port).Right<=window.ActualWidth);
+            var openLabel=(TextBlock)ByName("Open local server (O)").Content;Check("small open action keeps port digits together",openLabel.Text.Contains("\n:")&&openLabel.TextWrapping==TextWrapping.NoWrap&&Displayed(openLabel).Right<=window.ActualWidth);
+            CaptureVisual((FrameworkElement)window.Content,"detail-small");Invoke("Navigate","list");
+            Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="font-scale").Value=100;Click(ByName("Save preferences"));
+            var resized=PanelPlacement.PhysicalBounds(window);window.Hide();window.Show();Invoke("Place",true,false);Layout();Check("reopening keeps freely resized dimensions",Near(PanelPlacement.PhysicalBounds(window).Width,resized.Width)&&Near(PanelPlacement.PhysicalBounds(window).Height,resized.Height));
         }finally{
-            Invoke("Navigate","list");while(((WhatThePort.Settings)Field("settings")).PanelSize>1)Click((Button)window.FindName("Smaller"));while(((WhatThePort.Settings)Field("settings")).PanelSize<1)Click((Button)window.FindName("Larger"));
-            PanelPlacement.Place(window,594,new Point(original.Left,original.Bottom),true,false);Layout();Invoke("RememberPosition");
+            Invoke("Navigate","list");ResizeWindow(originalWidth,originalHeight);PanelPlacement.Place(window,originalHeight,new Point(original.Left,original.Bottom),true,false,originalWidth);Layout();Invoke("RememberPosition");
         }
+    }
+    static void EmptyStateTests(){
+        var snapshot=(WhatThePort.Snapshot)Field("current");var settings=(WhatThePort.Settings)Field("settings");double width=window.Width,height=window.Height;int? font=settings.FontScale;
+        try{
+            var empty=new WhatThePort.Snapshot{TotalMemory=snapshot.TotalMemory,FreeMemory=snapshot.FreeMemory};typeof(WhatThePort.App.Panel).GetField("current",PrivateInstance).SetValue(panel,empty);settings.FontScale=125;ResizeWindow(344,460);Rerender();
+            var state=All(Body()).OfType<StackPanel>().Single(p=>(string)p.Tag=="empty-state");
+            Check("empty state wraps without decorative glyph or active cleanup",All(state).OfType<TextBlock>().All(t=>t.Text!=":_"&&t.TextWrapping==TextWrapping.Wrap)&&!ByName("Select servers to stop (C)").IsEnabled&&Displayed(state).Right<=window.ActualWidth);
+            Check("empty discovery action fits above the footer at minimum size and maximum font",Displayed(ByName("Include custom executables and other local apps")).Bottom<=Displayed((FrameworkElement)window.FindName("Footer")).Top);
+            CaptureVisual((FrameworkElement)window.Content,"empty-small");Click(ByName("Include custom executables and other local apps"));
+            Check("all-listeners empty state hides redundant discovery action",settings.AllListeners&&All(Body()).OfType<TextBlock>().Any(t=>t.Text=="No listening ports")&&!All(Body()).OfType<Button>().Any(b=>AutomationProperties.GetName(b)=="Include custom executables and other local apps"));
+            empty.Error="Test scan failure";Rerender();Check("scan failure is distinct from a normal empty list",All(Body()).OfType<TextBlock>().Any(t=>t.Text=="Scan unavailable")&&!All(Body()).OfType<TextBlock>().Any(t=>t.Text=="No listening ports"));
+        }finally{settings.AllListeners=false;settings.FontScale=font;typeof(WhatThePort.App.Panel).GetField("current",PrivateInstance).SetValue(panel,snapshot);ResizeWindow(width,height);Invoke("Navigate","list");}
     }
     static void CheckScaledPopup(string size){
         var select=All(Body()).OfType<ComboBox>().First();select.IsDropDownOpen=true;Layout();Pump();
@@ -205,10 +207,9 @@ public static class UiTests {
         var c=inputs[2].TranslatePoint(new Point(),Body());var d=inputs[3].TranslatePoint(new Point(),Body());
         Check("numeric settings use two equal-width fields per row",Near(a.Y,second.Y)&&second.X>a.X&&Near(c.Y,d.Y)&&c.Y>a.Y&&Near(inputs[0].ActualWidth,inputs[1].ActualWidth));
         Check("settings offer Windows login startup toggle",All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Any(t=>(string)t.Tag=="startup"));
-        Check("header offers smaller and larger buttons",window.FindName("Smaller") is Button&&window.FindName("Larger") is Button);
         inputs[0].Text="9";
         var startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
-        var opacity=All(Body()).OfType<Slider>().Single();opacity.Value=60;Layout();
+        var opacity=All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="opacity");opacity.Value=60;Layout();
         Check("opacity preview affects only background",Near(((Border)window.FindName("PanelBackground")).Background.Opacity,.6)&&Near(window.Opacity,0)&&Near(inputs[0].Opacity,1));
         Invoke("ToggleSnooze");
         Check("snooze button exposes resume and expiry without losing draft input",(DateTime)Field("snoozeUntil")>DateTime.UtcNow&&Message().Contains("snoozed")&&inputs[0].Text=="9"&&ByName("Pause or resume resource notifications").Content.ToString().Contains("Resume alerts")&&ByName("Pause or resume resource notifications").Content.ToString().Contains(((DateTime)Field("snoozeUntil")).ToLocalTime().ToString("HH:mm")));
@@ -216,11 +217,11 @@ public static class UiTests {
         Click(ByName("Discard changes"));Click(ByName("Settings (Ctrl+,)"));
         Check("cancel discards startup and opacity previews",All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked==false&&Near(((Border)window.FindName("PanelBackground")).Background.Opacity,1));
         Invoke("Navigate","list");
-        Click((Button)window.FindName("Larger"));var larger=PanelPlacement.PhysicalBounds(window);
-        Check("plus enlarges panel while preserving bottom",larger.Width>initial.Width&&larger.Height>=initial.Height&&Near(larger.Bottom,initial.Bottom));
+        double initialWidth=window.Width,initialHeight=window.Height;ResizeWindow(500,660);var larger=PanelPlacement.PhysicalBounds(window);
+        Check("edge resize enlarges the panel",larger.Width>initial.Width&&larger.Height>=initial.Height);
         Click(Rows().First());Check("navigation preserves user-selected size",PanelPlacement.PhysicalBounds(window)==larger);
         Click(ByName("Manage project links and copy local URL"));Press(Key.Escape);Check("links Escape returns to server detail",Title()=="menubar port monitor");
-        Invoke("Navigate","list");Click((Button)window.FindName("Smaller"));var smaller=PanelPlacement.PhysicalBounds(window);Check("minus restores original size and keeps bottom",Near(smaller.Width,initial.Width)&&Near(smaller.Height,initial.Height)&&Near(smaller.Bottom,larger.Bottom));
+        Invoke("Navigate","list");ResizeWindow(initialWidth,initialHeight);PanelPlacement.Place(window,initialHeight,new Point(initial.Left,initial.Bottom),true,false,initialWidth);Layout();Invoke("RememberPosition");
         Rows().First().Focus();scroll.ScrollToBottom();Layout();double offset=scroll.VerticalOffset;Rerender();Check("refresh preserves scroll even when the focused row is outside the viewport",Near(scroll.VerticalOffset,offset));
         typeof(WhatThePort.App.Panel).GetField("stopDetails",PrivateInstance).SetValue(panel,"Test server stopped.");
         var dialog=(Window)typeof(WhatThePort.App.Panel).GetMethod("StopDetailsWindow",PrivateInstance).Invoke(panel,null);
@@ -315,7 +316,7 @@ public static class UiTests {
         var startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
         Click(ByName("Discard changes"));Check("cancel leaves actual isolated startup registration off",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup")));
         Click(ByName("Settings (Ctrl+,)"));startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
-        All(Body()).OfType<Slider>().Single().Value=70;Click(ByName("Save preferences"));
+        All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="opacity").Value=70;Click(ByName("Save preferences"));
         Check("save applies actual isolated startup registration and opacity",WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup"))&&new WhatThePort.Store(storage).LoadSettings().PanelOpacity==70);
         Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked=false;Click(ByName("Save preferences"));
         Check("startup toggle off removes isolated registration",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup")));

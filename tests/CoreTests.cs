@@ -35,6 +35,10 @@ public static class CoreTests {
         File.WriteAllText(Path.Combine(folder,"unrelated.txt"),"keep");StartupRegistration.Set(false,executable,folder);Check("startup off removes only app registration",!StartupRegistration.IsEnabled(folder)&&File.Exists(Path.Combine(folder,"unrelated.txt")));
         Throws("startup rejects nonexistent executable",()=>StartupRegistration.Set(true,Path.Combine(temp,"missing.exe"),folder));
         Throws("invalid opacity rejected",()=>new Settings{PanelOpacity=0}.Validate());Throws("invalid panel size rejected",()=>new Settings{PanelSize=4}.Validate());
+        foreach(int percentage in new[]{79,126})Throws("invalid font percentage rejected: "+percentage,()=>new Settings{FontScale=percentage}.Validate());
+        foreach(double width in new[]{Double.NaN,Double.PositiveInfinity,343.0})Throws("invalid resized dimensions rejected: "+width,()=>new Settings{PanelWidth=width,PanelHeight=594}.Validate());
+        Throws("incomplete resized dimensions rejected",()=>new Settings{PanelWidth=440}.Validate());
+        for(int i=0;i<4;i++){var legacy=new Settings{PanelSize=i};legacy.Validate();Check("legacy panel size migrates: "+i,legacy.PanelWidth==new double[]{344,440,500,560}[i]&&legacy.PanelHeight==new double[]{460,594,660,720}[i]&&!legacy.PanelSize.HasValue&&!legacy.FontScale.HasValue);}
     }
     static void ConnectionTests(){
         var server=new Server{Ports=new List<int>{8000},Processes=new List<ProcessNode>{new ProcessNode{Pid=10}}};
@@ -90,6 +94,7 @@ public static class CoreTests {
         var store=new Store(temp);store.SaveSettings(settings);Check("settings round-trip",store.LoadSettings().IdleHours==4&&store.LoadSettings().Notifications);
         settings.Language="en";store.SaveSettings(settings);Check("English preference survives restart",new Store(temp).LoadSettings().Language=="en");
         settings.Language="ko";store.SaveSettings(settings);Check("Korean preference survives restart",new Store(temp).LoadSettings().Language=="ko");
+        settings.PanelWidth=473;settings.PanelHeight=617;settings.FontScale=115;store.SaveSettings(settings);var resized=store.LoadSettings();Check("free dimensions and font percentage persist independently",resized.PanelWidth==473&&resized.PanelHeight==617&&resized.FontScale==115);
         settings.PanelLeft=-1500;settings.PanelBottom=920;store.SaveSettings(settings);var positioned=store.LoadSettings();Check("panel position persists across restart with negative monitor origin",positioned.PanelLeft==-1500&&positioned.PanelBottom==920);
         settings.PanelLeft=null;settings.PanelBottom=null;store.SaveSettings(settings);Check("panel position reset persists",!store.LoadSettings().PanelLeft.HasValue&&!store.LoadSettings().PanelBottom.HasValue);
         settings.Cleanup="Ask";store.SaveSettings(settings);Check("atomic settings replacement",store.LoadSettings().Cleanup=="Ask");
