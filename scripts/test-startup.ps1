@@ -19,7 +19,7 @@ function Visible-Window([int]$processId) {
 function Start-Fixture([string]$folder, [switch]$Background, [string]$InstanceId = $testId) {
     $arguments = @('--demo', '--language', 'en', '--test-instance', $InstanceId)
     if ($Background) { $arguments += '--background' }
-    $process = Start-Process -FilePath (Join-Path $fixtureRoot ($folder + '\WhatThePort.exe')) -ArgumentList $arguments -WorkingDirectory (Join-Path $fixtureRoot $folder) -WindowStyle Hidden -PassThru
+    $process = Start-Process -FilePath (Join-Path $fixtureRoot ($folder + '\WhatThePort.exe')) -ArgumentList $arguments -WorkingDirectory $fixtureRoot -WindowStyle Hidden -PassThru
     $ownedProcesses.Add($process)
     return $process
 }
@@ -72,7 +72,7 @@ try {
         $stdout = Join-Path $fixtureRoot ('real-' + $mode + '.out')
         $stderr = Join-Path $fixtureRoot ('real-' + $mode + '.err')
         $preferences = Join-Path $fixtureRoot ('preferences-' + $mode)
-        $probe = Start-Process -FilePath (Join-Path $RuntimeDirectory 'wtp-startup-tests.exe') -ArgumentList $mode, ('"' + $preferences + '"') -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+        $probe = Start-Process -FilePath (Join-Path $RuntimeDirectory 'wtp-startup-tests.exe') -ArgumentList $mode, ('"' + $preferences + '"') -WorkingDirectory $fixtureRoot -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
         $ownedProcesses.Add($probe)
         # Retain the process handle so Windows PowerShell can read its exit code
         # after a redirected child exits; then drain redirected output completely.

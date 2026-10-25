@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,34 +22,48 @@ public static class CoreTests {
         Console.WriteLine("\n"+passed+" passed, "+failed+" failed");return failed==0?0:1;
     }
     static void Check(string name,bool condition){if(condition){passed++;Console.WriteLine("PASS "+name);}else{failed++;Console.WriteLine("FAIL "+name);}}
+    [System.Runtime.InteropServices.DllImport("advapi32.dll",EntryPoint="RegQueryInfoKeyW")]
+    static extern int RegQueryInfoKey(Microsoft.Win32.SafeHandles.SafeRegistryHandle key,IntPtr cls,IntPtr clsLength,IntPtr reserved,IntPtr subKeys,IntPtr maxSubKey,IntPtr maxClass,IntPtr values,IntPtr maxValueName,IntPtr maxValueLength,IntPtr security,out long written);
+    static long RegistryWriteTime(string path){
+        using(var key=Registry.CurrentUser.OpenSubKey(path)){long written;if(key==null||RegQueryInfoKey(key.Handle,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,out written)!=0)throw new IOException("Cannot read test registry timestamp.");return written;}
+    }
     static void StartupTests(){
-        string folder=Path.Combine(temp,"startup"),executable=Path.Combine(temp,"portable app.exe");File.WriteAllText(executable,"fixture");
-        StartupRegistration.Set(false,executable,folder);Check("startup defaults to off without creating directories",!StartupRegistration.IsEnabled(folder)&&!Directory.Exists(folder));
-        StartupRegistration.Set(true,executable,folder);Check("startup creates only the app shortcut",StartupRegistration.IsEnabled(folder)&&Directory.GetFiles(folder).Length==1);
-        string shortcutPath=Path.Combine(folder,"What the Port.lnk");var savedAt=new DateTime(2025,1,2,3,4,5,DateTimeKind.Utc);byte[] original=File.ReadAllBytes(shortcutPath);File.SetLastWriteTimeUtc(shortcutPath,savedAt);
-        StartupRegistration.Set(true,executable,folder);Check("unchanged startup preserves shortcut bytes and modification time",File.GetLastWriteTimeUtc(shortcutPath)==savedAt&&File.ReadAllBytes(shortcutPath).SequenceEqual(original));
-        StartupRegistration.Set(true,executable.ToUpperInvariant(),folder);Check("Windows path casing alone does not rewrite startup",File.GetLastWriteTimeUtc(shortcutPath)==savedAt);
-        object shell=null,shortcut=null;
+        string folder=Path.Combine(temp,"startup"),executable=Path.Combine(temp,"portable app.exe"),registryPath=@"Software\WhatThePort.StartupTests."+Guid.NewGuid().ToString("N");File.WriteAllText(executable,"fixture");
+        string legacyShortcut=Path.Combine(folder,"What the Port.lnk"),command="\""+executable+"\" --background";
         try{
-            shell=Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell",true));shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{Path.Combine(folder,"What the Port.lnk")});
-            var type=shortcut.GetType();
-            Check("startup keeps path with spaces and launches in background",(string)type.InvokeMember("TargetPath",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==executable&&(string)type.InvokeMember("Arguments",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)=="--background");
-            string moved=Path.Combine(temp,"moved app.exe");File.WriteAllText(moved,"fixture");StartupRegistration.Set(true,moved,folder);
-            System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);shortcut=null;shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{shortcutPath});type=shortcut.GetType();
-            Check("moving the executable updates its startup target",(string)type.InvokeMember("TargetPath",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==moved);
-            type.InvokeMember("Arguments",System.Reflection.BindingFlags.SetProperty,null,shortcut,new object[]{"--unexpected"});type.InvokeMember("Save",System.Reflection.BindingFlags.InvokeMethod,null,shortcut,null);
-            StartupRegistration.Set(true,moved,folder);System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);shortcut=null;shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{shortcutPath});type=shortcut.GetType();
-            Check("changed startup arguments are restored to background launch",(string)type.InvokeMember("Arguments",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)=="--background");
-            type.InvokeMember("WorkingDirectory",System.Reflection.BindingFlags.SetProperty,null,shortcut,new object[]{folder});type.InvokeMember("Save",System.Reflection.BindingFlags.InvokeMethod,null,shortcut,null);
-            StartupRegistration.Set(true,moved,folder);System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);shortcut=null;shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{shortcutPath});type=shortcut.GetType();
-            Check("changed startup working directory is restored",(string)type.InvokeMember("WorkingDirectory",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==temp);
-            System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);shortcut=null;File.WriteAllText(shortcutPath,"not a shortcut");StartupRegistration.Set(true,executable,folder);
-            shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{shortcutPath});type=shortcut.GetType();
-            Check("invalid existing shortcut is replaced with valid startup metadata",(string)type.InvokeMember("TargetPath",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==executable&&(string)type.InvokeMember("Arguments",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)=="--background");
-        }finally{if(shortcut!=null)System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);if(shell!=null)System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);}
-        StartupRegistration.Set(true,executable,folder);Check("saving startup again replaces rather than duplicates shortcut",Directory.GetFiles(folder).Length==1);
-        File.WriteAllText(Path.Combine(folder,"unrelated.txt"),"keep");StartupRegistration.Set(false,executable,folder);Check("startup off removes only app registration",!StartupRegistration.IsEnabled(folder)&&File.Exists(Path.Combine(folder,"unrelated.txt")));
-        Throws("startup rejects nonexistent executable",()=>StartupRegistration.Set(true,Path.Combine(temp,"missing.exe"),folder));
+            StartupRegistration.Set(false,executable,folder,registryPath);
+            using(var absent=Registry.CurrentUser.OpenSubKey(registryPath))Check("startup defaults off without creating registry keys or folders",absent==null&&!Directory.Exists(folder)&&!StartupRegistration.IsEnabled(folder,registryPath));
+            StartupRegistration.Set(true,executable,folder,registryPath);
+            using(var key=Registry.CurrentUser.OpenSubKey(registryPath))Check("startup stores a quoted REG_SZ background command",(string)key.GetValue("What the Port")==command&&key.GetValueKind("What the Port")==RegistryValueKind.String);
+            Check("startup registration must not create an lnk file",StartupRegistration.IsEnabled(folder,registryPath)&&!Directory.Exists(folder));
+            long written=RegistryWriteTime(registryPath);Thread.Sleep(30);StartupRegistration.Set(true,executable,folder,registryPath);
+            Check("unchanged startup does not rewrite its registry value",RegistryWriteTime(registryPath)==written);
+            StartupRegistration.Set(true,executable.ToUpperInvariant(),folder,registryPath);Check("Windows path casing alone does not rewrite startup",RegistryWriteTime(registryPath)==written);
+            string moved=Path.Combine(temp,"moved app.exe");File.WriteAllText(moved,"fixture");StartupRegistration.Set(true,moved,folder,registryPath);
+            using(var key=Registry.CurrentUser.OpenSubKey(registryPath))Check("moving the executable updates its startup target",(string)key.GetValue("What the Port")=="\""+moved+"\" --background");
+            using(var key=Registry.CurrentUser.OpenSubKey(registryPath,true)){key.SetValue("What the Port","\""+executable+"\" --BACKGROUND");key.SetValue("Unrelated app","keep");}
+            StartupRegistration.Set(true,executable,folder,registryPath);
+            using(var key=Registry.CurrentUser.OpenSubKey(registryPath))Check("changed startup arguments are restored to background launch",(string)key.GetValue("What the Port")==command);
+            Throws("startup rejects nonexistent executable",()=>StartupRegistration.Set(true,Path.Combine(temp,"missing.exe"),folder,registryPath));
+            string longExecutable=Path.Combine(temp,new string('x',247-temp.Length-5)+".exe");File.WriteAllText(longExecutable,"fixture");
+            Throws("startup rejects a command beyond the Windows Run limit",()=>StartupRegistration.Set(true,longExecutable,folder,registryPath));
+            using(var key=Registry.CurrentUser.OpenSubKey(registryPath))Check("invalid startup requests preserve the registered command",(string)key.GetValue("What the Port")==command);
+            StartupRegistration.Set(false,executable,folder,registryPath);
+            using(var key=Registry.CurrentUser.OpenSubKey(registryPath))Check("startup off removes only the app registry value",!StartupRegistration.IsEnabled(folder,registryPath)&&key.GetValue("What the Port")==null&&(string)key.GetValue("Unrelated app")=="keep");
+            Directory.CreateDirectory(folder);File.WriteAllText(legacyShortcut,"legacy fixture");File.WriteAllText(Path.Combine(folder,"other.lnk"),"keep");
+            Check("legacy shortcut remains visible as enabled until preferences are saved",StartupRegistration.IsEnabled(folder,registryPath));StartupRegistration.Set(true,executable,folder,registryPath);
+            Check("saving legacy startup migrates to registry without recreating shortcuts",!File.Exists(legacyShortcut)&&File.Exists(Path.Combine(folder,"other.lnk"))&&StartupRegistration.IsEnabled(folder,registryPath));
+            File.WriteAllText(legacyShortcut,"legacy fixture");
+            using(var key=Registry.CurrentUser.OpenSubKey(registryPath,true))key.SetValue("What the Port",77,RegistryValueKind.DWord);
+            using(var locked=File.Open(legacyShortcut,FileMode.Open,FileAccess.Read,FileShare.Read)){
+                ThrowsIo("failed legacy cleanup aborts startup enable",()=>StartupRegistration.Set(true,moved,folder,registryPath));
+                using(var key=Registry.CurrentUser.OpenSubKey(registryPath))Check("failed migration restores the previous registry type and value",key.GetValueKind("What the Port")==RegistryValueKind.DWord&&(int)key.GetValue("What the Port")==77);
+                ThrowsIo("failed legacy cleanup aborts startup disable",()=>StartupRegistration.Set(false,executable,folder,registryPath));
+                using(var key=Registry.CurrentUser.OpenSubKey(registryPath))Check("failed disable restores the previous registry entry",(int)key.GetValue("What the Port")==77);
+            }
+            StartupRegistration.Set(false,executable,folder,registryPath);Check("startup off removes legacy and registry registrations together",!File.Exists(legacyShortcut)&&!StartupRegistration.IsEnabled(folder,registryPath)&&File.Exists(Path.Combine(folder,"other.lnk")));
+            Check("missing or quarantined startup is not automatically recreated",!StartupRegistration.IsEnabled(folder,registryPath)&&!File.Exists(legacyShortcut));
+        }finally{Registry.CurrentUser.DeleteSubKey(registryPath,false);}
         Throws("invalid opacity rejected",()=>new Settings{PanelOpacity=0}.Validate());Throws("invalid panel size rejected",()=>new Settings{PanelSize=4}.Validate());
         foreach(int percentage in new[]{79,126})Throws("invalid font percentage rejected: "+percentage,()=>new Settings{FontScale=percentage}.Validate());
         foreach(double width in new[]{Double.NaN,Double.PositiveInfinity,343.0})Throws("invalid resized dimensions rejected: "+width,()=>new Settings{PanelWidth=width,PanelHeight=594}.Validate());
@@ -68,6 +83,7 @@ public static class CoreTests {
         rows[0].Address="fe80::1%3";rows[0].RemoteAddress="fe80::2%3";rows[1].Address="fe80::2%4";rows[1].RemoteAddress="fe80::1%3";Check("different IPv6 scopes cannot identify a caller",new Connections(rows).ClientPids(server).Count==0);
         Check("unknown process tree gives no attribution",new Connections(rows).ClientPids(new Server()).Count==0);
     }
+    static void ThrowsIo(string name,Action action){try{action();Check(name,false);}catch(IOException){Check(name,true);}}
     static void Throws(string name,Action action){try{action();Check(name,false);}catch(ArgumentException){Check(name,true);}}
     static Server Idle(DateTime now){return new Server{Observed=now.AddHours(-5),LastActive=now.AddHours(-5),SampledAt=now,Memory=100*Format.MB};}
     static void Units(){

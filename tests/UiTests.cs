@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Microsoft.Win32;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -294,7 +295,7 @@ public static class UiTests {
         string storage=Path.Combine(Path.GetTempPath(),"wtp-ui-"+Guid.NewGuid().ToString("N"));
         try{
             new WhatThePort.Store(storage).SaveSettings(new WhatThePort.Settings{Notifications=false,Cleanup="Off"});
-            panel=new WhatThePort.App.Panel(false,false,storage,"en",Path.Combine(storage,"startup"));window=null;
+            panel=new WhatThePort.App.Panel(false,false,storage,"en",Path.Combine(storage,"startup"),StartupRegistry(storage));window=null;
             var tray=(TrayIcon)Field("tray");var owner=(IntPtr)Field("handle");
             Check("background startup creates tray without a WPF panel",panel.Window==null&&tray.Visible&&IsWindow(owner));
             SendMessage(owner,0x8002,IntPtr.Zero,new IntPtr((2<<16)|0x400));
@@ -339,23 +340,24 @@ public static class UiTests {
             Check("explicit activation still works after release",panel.IsVisible);
             LanguagePreviewTests(storage);
             tray.Dispose();tray.Dispose();Check("tray disposal is idempotent",!tray.Visible);
-        }finally{if(Directory.Exists(storage))Directory.Delete(storage,true);}
+        }finally{Registry.CurrentUser.DeleteSubKey(StartupRegistry(storage),false);if(Directory.Exists(storage))Directory.Delete(storage,true);}
     }
+    static string StartupRegistry(string storage){return @"Software\WhatThePort.UiStartup."+Path.GetFileName(storage);}
     static ComboBox LanguageChoice(){return All(Body()).OfType<ComboBox>().Single(c=>(string)c.Tag=="select-LANGUAGE / 언어");}
     static void ChooseLanguage(string choice){var language=LanguageChoice();language.Focus();language.IsDropDownOpen=true;language.SelectedItem=choice;Layout();Pump();}
     static void LanguagePreviewTests(string storage){
         Invoke("Navigate","list");
         Click(ByName("Settings (Ctrl+,)"));
         var startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
-        Click(ByName("Discard changes"));Check("cancel leaves actual isolated startup registration off",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup")));
+        Click(ByName("Discard changes"));Check("cancel leaves actual isolated startup registration off",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup"),StartupRegistry(storage)));
         Click(ByName("Settings (Ctrl+,)"));startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
         All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="opacity").Value=70;Click(ByName("Save preferences"));
-        Check("save applies actual isolated startup registration and opacity",WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup"))&&new WhatThePort.Store(storage).LoadSettings().PanelOpacity==70);
-        string savedShortcut=Path.Combine(storage,"startup","What the Port.lnk");var shortcutTime=new DateTime(2025,1,2,3,4,5,DateTimeKind.Utc);File.SetLastWriteTimeUtc(savedShortcut,shortcutTime);
+        Check("save applies actual isolated startup registration and opacity",WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup"),StartupRegistry(storage))&&new WhatThePort.Store(storage).LoadSettings().PanelOpacity==70);
+        string savedCommand;using(var key=Registry.CurrentUser.OpenSubKey(StartupRegistry(storage)))savedCommand=(string)key.GetValue("What the Port");
         Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="opacity").Value=75;Click(ByName("Save preferences"));
-        Check("saving unrelated preferences leaves startup shortcut untouched",new WhatThePort.Store(storage).LoadSettings().PanelOpacity==75&&File.GetLastWriteTimeUtc(savedShortcut)==shortcutTime);
+        using(var key=Registry.CurrentUser.OpenSubKey(StartupRegistry(storage)))Check("saving unrelated preferences preserves registry startup without lnk files",new WhatThePort.Store(storage).LoadSettings().PanelOpacity==75&&(string)key.GetValue("What the Port")==savedCommand&&!Directory.Exists(Path.Combine(storage,"startup")));
         Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked=false;Click(ByName("Save preferences"));
-        Check("startup toggle off removes isolated registration",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup")));
+        Check("startup toggle off removes isolated registration",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup"),StartupRegistry(storage)));
         string blockedShortcut=Path.Combine(storage,"startup","What the Port.lnk");Directory.CreateDirectory(blockedShortcut);
         Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked=true;All(Body()).OfType<TextBox>().First().Text="17";Click(ByName("Save preferences"));
         Check("failed startup registration rolls back persisted preferences",Title()=="Settings"&&new WhatThePort.Store(storage).LoadSettings().ScanSeconds==3&&!String.IsNullOrEmpty(Message()));

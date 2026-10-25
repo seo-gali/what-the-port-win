@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -24,7 +24,7 @@ namespace WhatThePort.App {
         Border messageBox;
         Button back,pin;
         readonly Store store;
-        readonly string startupFolder;
+        readonly string startupFolder,startupRegistryPath;
         readonly Scanner scanner=new Scanner();
         readonly DispatcherTimer timer=new DispatcherTimer();
         readonly DispatcherTimer releaseTimer=new DispatcherTimer{Interval=TimeSpan.FromSeconds(30)};
@@ -57,12 +57,12 @@ namespace WhatThePort.App {
         static readonly Dictionary<string,Brush> palette=new Dictionary<string,Brush>();
         sealed class ViewBookmark { public string Tag; public DateTime? ChartTime; public double Scroll; }
         ViewBookmark suspendedView;
-        public Panel(bool isDemo,bool snapshot,string storageRoot=null,string language=null,string startupDirectory=null) {
+        public Panel(bool isDemo,bool snapshot,string storageRoot=null,string language=null,string startupDirectory=null,string startupRegistryKey=null) {
             // This small, periodically updated panel does not need a GPU device
             // and its driver allocations. Set the preference before creating the window.
             RenderOptions.ProcessRenderMode=RenderMode.SoftwareOnly;
             demo=isDemo; snapshotMode=snapshot;
-            startupFolder=startupDirectory??Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            startupFolder=startupDirectory??Environment.GetFolderPath(Environment.SpecialFolder.Startup);startupRegistryPath=startupRegistryKey??StartupRegistration.RunKey;
             store=new Store(storageRoot ?? (demo ? Path.Combine(Path.GetTempPath(),"WhatThePort-demo") : null));
             settings=demo?new Settings():store.LoadSettings();
             if(language!=null)settings.Language=language;
@@ -451,7 +451,7 @@ namespace WhatThePort.App {
         ComboBox Select(string label,string value,params string[] choices){Caption(label);var combo=new ComboBox{Tag="select-"+label,ItemsSource=choices,SelectedItem=value,Margin=new Thickness(3,0,3,0)};AutomationProperties.SetName(combo,T(label));body.Children.Add(combo);return combo;}
         CheckBox Check(string label,bool value){var check=new CheckBox{Tag="check-"+label,Content=T(label),IsChecked=value,Margin=new Thickness(3,15,0,0)};AutomationProperties.SetName(check,T(label));body.Children.Add(check);return check;}
         void SettingsView(){
-            if(settingsDraft==null)settingsDraft=new SettingsDraft{Language=settings.Language,Scan=settings.ScanSeconds.ToString(),Memory=settings.MemoryGB.ToString(CultureInfo.InvariantCulture),Growth=settings.GrowthMB.ToString(),Cpu=settings.CpuPercent.ToString(),Idle=settings.IdleHours.ToString(CultureInfo.InvariantCulture),Notifications=settings.Notifications,Cleanup=settings.Cleanup,Terminal=settings.Terminal,AllListeners=settings.AllListeners,Startup=!demo&&StartupRegistration.IsEnabled(startupFolder),Opacity=settings.PanelOpacity??100,FontScale=settings.FontScale??100};
+            if(settingsDraft==null)settingsDraft=new SettingsDraft{Language=settings.Language,Scan=settings.ScanSeconds.ToString(),Memory=settings.MemoryGB.ToString(CultureInfo.InvariantCulture),Growth=settings.GrowthMB.ToString(),Cpu=settings.CpuPercent.ToString(),Idle=settings.IdleHours.ToString(CultureInfo.InvariantCulture),Notifications=settings.Notifications,Cleanup=settings.Cleanup,Terminal=settings.Terminal,AllListeners=settings.AllListeners,Startup=!demo&&StartupRegistration.IsEnabled(startupFolder,startupRegistryPath),Opacity=settings.PanelOpacity??100,FontScale=settings.FontScale??100};
             var draft=settingsDraft;
             title.Text=T("Settings");
             var language=Select("LANGUAGE / 언어",draft.Language=="ko"?"한국어":"English","한국어","English");
@@ -483,7 +483,7 @@ namespace WhatThePort.App {
                 next.PanelLeft=settings.PanelLeft;next.PanelBottom=settings.PanelBottom;next.PanelWidth=settings.PanelWidth;next.PanelHeight=settings.PanelHeight;next.PanelOpacity=draft.Opacity;next.FontScale=draft.FontScale;next.Validate();
                 if(!demo){
                     store.SaveSettings(next);
-                    try{StartupRegistration.Set(draft.Startup,System.Reflection.Assembly.GetEntryAssembly().Location,startupFolder);}
+                    try{StartupRegistration.Set(draft.Startup,System.Reflection.Assembly.GetEntryAssembly().Location,startupFolder,startupRegistryPath);}
                     catch{store.SaveSettings(settings);throw;}
                 }
                 settings=next;strings.Language=settings.Language;UpdateTrayMenu();timer.Interval=TimeSpan.FromSeconds(settings.ScanSeconds);Navigate("list");Notice(demo?"Demo preferences applied for this session.":"Preferences saved.");

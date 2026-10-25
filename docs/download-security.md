@@ -101,7 +101,7 @@ IObit 공식 설명서의 [Report False Positive](https://www.iobit.com/product-
 
 ### 2026-10-25 · 시작프로그램 재탐지 확인
 
-IObit의 2026-10-24 17:42:19 저장 보고서에서 `Suspicious.Startup` 재탐지를 확인했다. `AutoCare-Idle / Smart Scan`, DB 2638, 탐지 유형 `STARTUP`, 1건이며 처리 상태는 `제거됨`이다. 대상은 `artifacts/single-file/WhatThePort.exe`로, 파일 버전은 1.1.3이다. 보고서의 MD5 `5cc1159a82b6d2ae42aa8144d31214a0`가 현재 파일과 일치하고, SHA-256은 `c17c906d01b25f6ca400a914bd98e5ef9b978791b34489f27d148f981f15fe97`이다. 앞서 검사한 1.1.3 최종 배포본과는 다른 파일이다.
+IObit의 2026-10-24 17:42:19 저장 보고서에서 `Suspicious.Startup` 재탐지를 확인했다. `AutoCare-Idle / Smart Scan`, DB 2638, 탐지 유형 `STARTUP`, 1건이며 처리 상태는 `제거됨`이다. 대상은 `artifacts/single-file/WhatThePort.exe`로, 파일 버전은 1.1.3이다. 보고서의 MD5 `5cc1159a82b6d2ae42aa8144d31214a0`가 조사 당시 파일과 일치하고, SHA-256은 `c17c906d01b25f6ca400a914bd98e5ef9b978791b34489f27d148f981f15fe97`이다. 앞서 검사한 1.1.3 최종 배포본과는 다른 파일이다.
 
 확인 시 해당 EXE는 남아 있고 `What the Port.lnk`는 없었다. 보고서의 `제거됨`을 EXE 삭제나 감염 확정으로 해석하지 않는다. 현재 다운로드의 1.1.4 EXE와 미출시 강제 종료 빌드도 이번 탐지 대상과 해시가 다르다. 탐지된 파일은 여전히 미서명이며, 서명 부재가 이 규칙의 원인인지는 확인되지 않았다.
 
@@ -111,12 +111,21 @@ IObit의 2026-10-24 17:42:19 저장 보고서에서 `Suspicious.Startup` 재탐�
 
 시작프로그램 폴더의 바로가기는 [Microsoft가 안내하는 자동 실행 방식](https://support.microsoft.com/en-au/windows/experience/startup-boot/configure-startup-applications-in-windows)이다. 설치된 IObit의 `English.lng:802`는 고급 검사의 범위를 시작 항목·서비스·예약 작업으로 설명한다. `.lnk` 전용 검사라는 근거는 아니다. IObit은 [Startup Guard가 자동 실행 변경을 감시한다](https://www.iobit.com/en/features-real-time-pc-protection-%26-security-guard-26.php)고 설명한다. 이번에 확인한 공식 자료에는 `Suspicious.Startup`의 개별 판정 조건이 없었다. 실시간 Startup Guard 설명을 이번 예약 Smart Scan의 세부 규칙과 동일시하지 않는다.
 
-소스에서는 `Panel.SettingsView`의 설정 저장이 `StartupRegistration.Set`을 호출하고, 자동 실행이 켜져 있으면 설정 변경 여부와 관계없이 바로가기를 재작성하는 동작을 확인했다. 이번 수정에서는 대상 EXE·인자·작업 폴더가 같으면 다시 쓰지 않도록 수정했다. EXE 이동·다른 인자·손상된 바로가기는 갱신하고, 끄면 앱의 바로가기만 삭제한다. 일반·단일 EXE에서 Core 141개·UI 215개 검사가 통과했으며, 테스트 전용 폴더에서 파일 내용·수정 시각 유지와 실제 설정 저장 흐름을 검증했다. 실제 사용자 시작프로그램의 IObit 검사는 아니다. 재작성·미서명·개발 폴더 경로가 이번 탐지에 각각 영향을 줬는지는 미확인이다. `.lnk`를 레지스트리나 예약 작업으로 바꾸면 해결된다는 근거도 확보하지 못했다. 등록 형식 변경을 해결책으로 적용하지 않는다.
+초기 대응에서는 같은 바로가기의 재작성을 막고 기능 검사를 통과했다. 이후 사용자가 제공한 격리 목록에서 실제 격리 대상이 `What the Port.lnk`임을 다시 확인했고, 1.1.5에서는 아래와 같이 레지스트리 등록으로 변경했다. 격리된 객체가 바로가기라는 사실만으로 EXE의 안전성이나 IObit의 세부 판정 조건까지 확정하지 않는다.
 
 로그·해시·바로가기 대조 결과(`startup-cause-evidence.json`)와 로컬 검토 요청 자료는 `artifacts/security/antivirus-review-20261025-recurrence/`에 보관한다. 정확한 원인을 더 구분하려면 같은 EXE·같은 DB로 자동 실행 등록 유무 등을 비교하는 격리 환경 재현이나 제조사의 규칙 설명이 필요하다. 실제 시작프로그램 폴더의 `.lnk` 재등록, IObit Smart Scan 대조, 외부 제출은 하지 않았다. 파일 검사 0건이나 단순 재빌드만으로 해결됐다고 판단하지 않는다.
 
 후속 사용자 요청으로 레지스트리 등록도 확인했다. 사용자·시스템 및 32비트 호환 위치의 `Run`·`RunOnce` 여섯 경로에서 앱 이름에 해당하는 항목이 없었다. 같은 탐지 EXE를 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`의 `What the Port` 값에 `REG_SZ` 형식으로 잠시 등록했다. 명령은 `"<EXE 전체 경로>" --background`이며, 정확한 값 읽기와 약 5초 후 해당 값만 삭제해 원래 미등록 상태로 복원하는 검증이 통과했다. EXE를 실행하지 않았고 검사 전후 해시도 같았다. 관찰 중 새 앱 관련 IObit 보고서는 없었지만 Smart Scan을 실행하지 않았으므로 백신 통과나 레지스트리 방식의 탐지 해결을 의미하지 않는다. 근거는 같은 로컬 폴더의 `registry-registration-check.json`에 보관한다.
 
+### 1.1.5 · 자동 실행 등록 변경
+
+Windows 로그인 시 시작은 현재 사용자 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`의 `What the Port` 값에 `REG_SZ` 명령 `"<EXE 전체 경로>" --background`로 등록한다. 사용자 설정을 저장할 때만 변경하고, 같은 명령은 다시 쓰지 않는다. 새 `.lnk`를 만들거나 `WScript.Shell`을 사용하지 않는다.
+
+기존 시작프로그램 폴더의 앱 바로가기가 남아 있으면 설정에서 켜진 상태로 표시하고, 저장 시 레지스트리로 옮긴 뒤 해당 바로가기만 제거한다. 이전 도중 정리에 실패하면 기존 레지스트리 값과 형식을 복원한다. 끄면 앱의 레지스트리 값과 기존 앱 바로가기를 제거하며 다른 항목은 유지한다. 백신에 격리돼 현재 등록이 없는 경우에는 자동으로 재등록하거나 격리 파일을 복원하지 않는다.
+
+최종 단일 EXE의 SHA-256은 `323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99`다. IObit 13.5.0.1684 · DB 2638의 Manual / Right Scan에서 2개 개체 · 14초 · Completed · 탐지 0건을 확인했고 검사 전후 해시는 같았다. 일반·단일 EXE에서 Core 148개·UI 215개 검사가 통과했다.
+
+최종 다운로드와 ZIP 내부 파일의 검사 기록은 [1.1.5 백신 검사 정보](https://seo-gali.github.io/what-the-port-win/downloads/ANTIVIRUS-INFO.json)에 공개한다. 이 결과는 해당 파일의 수동 검사이며, 실제 로그인 후의 자동 실행·시작 항목 Smart Scan 통과·오탐 확정·코드 서명 완료를 의미하지 않는다. 원본 보고서와 해시는 로컬 `artifacts/security/antivirus-review-1.1.5-registry/`에 보존한다.
 ## 단일 EXE
 
 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-single-file.ps1`은 Core와 UI 코드를 하나의 일반 .NET 어셈블리로 컴파일한다. WPF 마크업·Geist 폰트·MIT/OFL 전문을 내장한다. 외부 DLL이나 폰트를 임시 폴더에 풀어내는 로더·압축기는 사용하지 않는다. `--licenses`로 라이선스를 열람할 수 있다. Windows의 .NET Framework 4.8은 필요하며, `wtp.exe` CLI는 선택 ZIP에 포함된다.
