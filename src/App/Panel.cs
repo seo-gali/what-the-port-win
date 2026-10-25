@@ -140,7 +140,7 @@ namespace WhatThePort.App {
         Grid Columns(params double[] widths){var g=new Grid();foreach(var width in widths)g.ColumnDefinitions.Add(new ColumnDefinition{Width=width<0?new GridLength(1,GridUnitType.Star):new GridLength(width)});return g;}
         string Protection(Server s){return T(s.ProtectionReason??"This process is protected by the safety policy.");}
         string State(Server s){
-            string state=s.Protected?T("Protected process"):!String.IsNullOrEmpty(s.Warning)?strings.Error(s.Warning):(DateTime.UtcNow-s.LastActive).TotalMinutes>=1&&s.Connections==0&&s.Cpu<2?F("Idle {0} · no connections",strings.Duration(DateTime.UtcNow-s.LastActive)):F("up {0}",strings.Duration(DateTime.UtcNow-s.Started));
+            string state=s.Protected?T(s.CanForceStop?"Protected · manual stop only":"Protected process"):!String.IsNullOrEmpty(s.Warning)?strings.Error(s.Warning):(DateTime.UtcNow-s.LastActive).TotalMinutes>=1&&s.Connections==0&&s.Cpu<2?F("Idle {0} · no connections",strings.Duration(DateTime.UtcNow-s.LastActive)):F("up {0}",strings.Duration(DateTime.UtcNow-s.Started));
             return (s.Agent==null?"":F("Via {0}",s.Agent)+" · ")+state;
         }
         string ClientName(ConnectedApp client){return (client.Project??client.Name)+(client.Agent==null||client.Agent==client.Name?"":" · "+client.Agent);}
@@ -325,8 +325,9 @@ namespace WhatThePort.App {
             var stop=Button("■",delegate{ConfirmStop(s);},s.Protected?"Protected server":"Stop server");stop.Background=B("#3B2528");stop.Foreground=B("#FF6961");stop.Padding=new Thickness(0);stop.Height=34;stop.VerticalAlignment=VerticalAlignment.Center;stop.IsEnabled=!s.Protected&&!acting&&current.Error==null;Cell(top,stop,1);body.Children.Add(top);Rule();
             if(s.Protected){
                 ToolTipService.SetShowOnDisabled(stop,true);stop.ToolTip=Protection(s);AutomationProperties.SetHelpText(stop,Protection(s));
-                var explanation=new StackPanel();var heading=Text("Protected process",12,"#FFCF83");heading.FontWeight=FontWeights.Medium;explanation.Children.Add(heading);
+                var explanation=new StackPanel();var heading=Text(s.CanForceStop?"Protected · manual stop only":"Protected process",12,"#FFCF83");heading.FontWeight=FontWeights.Medium;explanation.Children.Add(heading);
                 explanation.Children.Add(new TextBlock{Text=ToolTipTextConverter.Sentences(Protection(s)),FontSize=12,Foreground=B("#DADCE4"),TextWrapping=TextWrapping.Wrap,LineHeight=18,Margin=new Thickness(0,6,0,0)});
+                if(s.CanForceStop){var force=Button("Force stop…",delegate{ConfirmForceStop(s);},"Force stop protected listener");force.IsEnabled=!acting&&current.Error==null;force.HorizontalAlignment=HorizontalAlignment.Left;force.Background=B("#71343B");force.Margin=new Thickness(0,10,0,0);explanation.Children.Add(force);}
                 body.Children.Add(new Border{Tag="protection-reason",Background=B("#2C2C2D"),BorderBrush=B("#5C5140"),BorderThickness=new Thickness(1),CornerRadius=new CornerRadius(7),Padding=new Thickness(12,10,12,10),Margin=new Thickness(3,0,3,12),Child=explanation});
             }
             var link=demo?Demo.LinkFor(s):store.LinkFor(s);
@@ -361,14 +362,41 @@ namespace WhatThePort.App {
         void MetricTitle(string label,string value,string color){var row=Columns(64,-1);row.Margin=new Thickness(3,4,3,2);Cell(row,Text(label,12,"#A4A6AF"),0);Cell(row,Mono(value,12,color),1);body.Children.Add(row);}
         void Property(string key,string value,Action action){var row=Columns(88,-1);row.Margin=new Thickness(3,4,3,4);Cell(row,Text(key,11,"#A4A6AF"),0);if(action==null){var t=Text(value,12,"#DADCE4",false);t.ToolTip=value;Cell(row,t,1);}else{var b=Button(value,action,value);b.Tag="property-"+key;b.HorizontalContentAlignment=HorizontalAlignment.Left;b.Background=Brushes.Transparent;b.MinHeight=24;b.Padding=new Thickness(0);var t=Text(value,12,"#DADCE4",false);b.Content=t;Cell(row,b,1);}body.Children.Add(row);}
         void EnterCleanup(){selected.Clear();foreach(var s in current.Servers.Where(s=>Policy.CleanupCandidate(s,settings,DateTime.UtcNow)))selected.Add(s.Key);Navigate("cleanup");}
+        Window ForceStopWindow(Server s){
+            var node=s.Processes.OrderBy(p=>p.Depth).First();
+            var dialog=new Window{Owner=Window,Title=T("Force stop"),Width=Math.Min(Window.ActualWidth,460),MaxHeight=Math.Max(240,PanelPlacement.WorkArea(Window).Height-24),SizeToContent=SizeToContent.Height,WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,AllowsTransparency=true,Background=Brushes.Transparent,Foreground=B("#F5F5F7"),FontFamily=Window.FontFamily,WindowStartupLocation=WindowStartupLocation.CenterOwner,ShowInTaskbar=false};
+            dialog.Resources.MergedDictionaries.Add(Window.Resources);
+            var layout=new DockPanel{Margin=new Thickness(16),LayoutTransform=body.LayoutTransform};
+            var heading=Text("Force stop",17,"#F5F5F7");heading.Margin=new Thickness(0,0,0,12);DockPanel.SetDock(heading,Dock.Top);layout.Children.Add(heading);
+            var content=new StackPanel();
+            content.Children.Add(new TextBlock{Text=F("Process: {0} · PID {1}\nPorts: {2}",node.Name,node.Pid,String.Join(", ",s.Ports)),FontSize=12,Foreground=B("#DADCE4"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,12)});
+            content.Children.Add(new TextBlock{Text=T("This immediately stops only the listening process. Unsaved work or database writes may be lost, and its app may close. Child processes remain running."),FontSize=12,Foreground=B("#FFCF83"),TextWrapping=TextWrapping.Wrap,LineHeight=19});
+            var input=Input(F("Type port {0} to confirm",s.Port),"",content);input.Tag="force-port";input.Style=(Style)Window.FindResource(typeof(TextBox));AutomationProperties.SetAutomationId(input,"force-port");
+            var buttons=Columns(90,-1);buttons.Margin=new Thickness(0,14,0,0);DockPanel.SetDock(buttons,Dock.Bottom);
+            var cancel=Button("Cancel",dialog.Close,"Cancel force stop");cancel.IsCancel=true;cancel.Margin=new Thickness(0,0,8,0);Cell(buttons,cancel,0);
+            string port=s.Port.ToString(CultureInfo.InvariantCulture);
+            var confirm=Button("Force stop",delegate{if(input.Text.Trim()==port)dialog.DialogResult=true;},"Confirm force stop");confirm.IsEnabled=false;confirm.IsDefault=true;confirm.Background=B("#B63740");Cell(buttons,confirm,1);
+            foreach(var button in new[]{cancel,confirm})button.Style=(Style)Window.FindResource(typeof(Button));
+            input.TextChanged+=delegate{confirm.IsEnabled=input.Text.Trim()==port;};
+            layout.Children.Add(buttons);layout.Children.Add(new ScrollViewer{Content=content,VerticalScrollBarVisibility=ScrollBarVisibility.Auto});
+            dialog.Content=new Border{Background=B("#1C2029"),BorderBrush=B("#555B68"),BorderThickness=new Thickness(1),CornerRadius=new CornerRadius(14),Child=layout};
+            dialog.ContentRendered+=delegate{input.Focus();};return dialog;
+        }
+        void ConfirmForceStop(Server s){
+            if(acting||!s.CanForceStop)return;
+            acting=true;bool confirmed=false;Window dialog=null;
+            try{dialog=ForceStopWindow(s);confirmed=dialog.ShowDialog()==true;}finally{if(dialog!=null)dialog.Close();acting=false;}
+            if(confirmed){Task ignored=StopServers(new List<Server>{s},false,true);}
+        }
         void ConfirmStop(Server s){
             acting=true;bool confirmed=false;
             try { confirmed=MessageBox.Show(Window,F("Stop :{0} and its {1} process(es)?\n\nThis ends the process tree immediately.",s.Port,s.Processes.Count),T("Stop server"),MessageBoxButton.OKCancel,MessageBoxImage.Warning)==MessageBoxResult.OK; }
             finally{acting=false;}
             if(confirmed){Task ignored=StopServers(new List<Server>{s},false);}
         }
-        async Task StopServers(List<Server> targets,bool automatic){
+        async Task StopServers(List<Server> targets,bool automatic,bool force=false){
             if(acting)return;
+            if(force&&automatic){Notice("Force stop is manual only.");return;}
             if(demo){foreach(var s in targets)current.Servers.Remove(s);Navigate("list");Notice("Demo: selected servers removed. No processes were stopped.");return;}
             acting=true;
             try {
@@ -376,11 +404,13 @@ namespace WhatThePort.App {
                 var result=await Task.Run(()=>{lock(scanner){
                     // Re-scan immediately before every stop; no cached selection can authorize a new PID.
                     Snapshot fresh=scanner.Scan(config);var outcomes=new List<StopResult>();var notes=new List<string>();
-                    foreach(var target in targets){var live=fresh.Servers.FirstOrDefault(s=>s.Key==target.Key);if(live==null){notes.Add(F(":{0} · no longer listening (already stopped or changed).",target.Port));continue;}if(automatic&&!Policy.CleanupCandidate(live,config,DateTime.UtcNow)){notes.Add(F(":{0} · automatic cleanup skipped after recheck.",target.Port));continue;}outcomes.Add(ProcessControl.StopDetailed(live,Native.Stop));}
+                    foreach(var target in targets){var live=fresh.Servers.FirstOrDefault(s=>s.Key==target.Key);if(live==null||force&&!live.Ports.Contains(target.Port)){notes.Add(F(":{0} · no longer listening (already stopped or changed).",target.Port));continue;}if(automatic&&!Policy.CleanupCandidate(live,config,DateTime.UtcNow)){notes.Add(F(":{0} · automatic cleanup skipped after recheck.",target.Port));continue;}outcomes.Add(force?ProcessControl.ForceStopDetailed(live,Native.ForceStop):ProcessControl.StopDetailed(live,Native.Stop));}
                     return Tuple.Create(scanner.Scan(config),outcomes,notes);
                 }});
                 var summaries=result.Item2.Select(r=>strings.StopSummary(r)).Concat(result.Item3).ToList();
+                if(force&&result.Item2.Any(r=>r.ListenerStopped))summaries.Add(T("Only the listening process was stopped. Child processes remain running."));
                 var details=new List<string>();foreach(var outcome in result.Item2){details.Add(strings.StopSummary(outcome));foreach(var error in outcome.Errors){int split=error.IndexOf(": ",StringComparison.Ordinal);details.Add(split<0?strings.Error(error):error.Substring(0,split+2)+strings.Error(error.Substring(split+2)));}if(outcome.Skipped>0)details.Add(F("Protected processes skipped: {0}.",outcome.Skipped));}
+                if(force&&result.Item2.Any(r=>r.ListenerStopped))details.Add(T("Only the listening process was stopped. Child processes remain running."));
                 details.AddRange(result.Item3);if(result.Item2.Any(r=>r.ListenerStopped&&r.Errors.Count>0))details.Add(T("A server disappears when it stops listening, even if a child could not be stopped."));
                 stopDetails=String.Join("\n",details);
                 current=result.Item1;if(!automatic)Navigate("list");else Render();

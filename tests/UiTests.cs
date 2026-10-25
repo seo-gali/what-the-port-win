@@ -35,6 +35,7 @@ public static class UiTests {
             ResponsiveSizingTests();
             EmptyStateTests();
             ChartRangeTests();
+            ForceStopTests();
             MotionTests();
             ToolTipTests();
             KeyboardTests();
@@ -84,6 +85,38 @@ public static class UiTests {
         Console.WriteLine("\n"+passed+" UI passed, "+failed+" failed");return failed==0?0:1;
     }
     const BindingFlags PrivateInstance=BindingFlags.NonPublic|BindingFlags.Instance;
+    static void ForceStopTests(){
+        var snapshot=(WhatThePort.Snapshot)Field("current");var server=snapshot.Servers.First();string name=server.Processes[0].Name;bool protect=server.Protected,allowed=server.CanForceStop;string scanError=snapshot.Error;int count=snapshot.Servers.Count;var config=(WhatThePort.Settings)Field("settings");int? font=config.FontScale;
+        try{
+            server.Protected=true;server.Processes[0].Name="redis-server";server.CanForceStop=true;config.FontScale=80;Click(Rows().First());
+            Check("protected listener offers a separate manual force-stop action",All(Body()).OfType<Button>().Any(b=>AutomationProperties.GetName(b)=="Force stop protected listener"));
+            Check("ordinary stop remains disabled for a manually stoppable listener",!ByName("Protected server").IsEnabled);
+            snapshot.Error="Unavailable";Rerender();Check("scan failure disables manual force stop",!ByName("Force stop protected listener").IsEnabled);snapshot.Error=scanError;Rerender();
+            window.Dispatcher.BeginInvoke(new Action(delegate{
+                var dialog=window.OwnedWindows.Cast<Window>().Single(w=>w.Title=="Force stop");dialog.Opacity=0;
+                try{
+                    var input=All(dialog).OfType<TextBox>().Single();var confirm=All(dialog).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Confirm force stop");
+                    Check("force confirmation starts disabled with stable input identity",!confirm.IsEnabled&&AutomationProperties.GetAutomationId(input)=="force-port");
+                    dialog.UpdateLayout();Check("small-font force controls retain a 30 DIP hit area",confirm.TransformToAncestor(dialog).TransformBounds(new Rect(new Point(),confirm.RenderSize)).Height>=29.5&&input.TransformToAncestor(dialog).TransformBounds(new Rect(new Point(),input.RenderSize)).Height>=29.5);
+                    input.Text="wrong";Click(confirm);Check("wrong port cannot close the confirmation",dialog.IsVisible&&!confirm.IsEnabled);
+                    input.Text=server.Port.ToString();Check("exact port enables explicit confirmation",confirm.IsEnabled);
+                    Check("force dialog warns about data loss and retained children",All(dialog).OfType<TextBlock>().Any(t=>t.Text.Contains("database writes")&&t.Text.Contains("Child processes")));
+                    CaptureVisual((FrameworkElement)dialog.Content,"force-stop-confirmation");
+                    Click(All(dialog).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Cancel force stop"));
+                }finally{if(dialog.IsVisible)dialog.Close();}
+            }));
+            Click(ByName("Force stop protected listener"));Check("cancelling force stop preserves the server",snapshot.Servers.Count==count);
+            config.FontScale=125;Rerender();
+            window.Dispatcher.BeginInvoke(new Action(delegate{
+                var dialog=window.OwnedWindows.Cast<Window>().Single(w=>w.Title=="Force stop");dialog.Opacity=0;
+                try{dialog.UpdateLayout();var confirm=All(dialog).OfType<Button>().Single(b=>AutomationProperties.GetName(b)=="Confirm force stop");Check("large-font force dialog keeps its confirmation visible",confirm.TransformToAncestor(dialog).TransformBounds(new Rect(new Point(),confirm.RenderSize)).Bottom<=dialog.ActualHeight+1);All(dialog).OfType<TextBox>().Single().Text=server.Port.ToString();Click(confirm);}finally{if(dialog.IsVisible)dialog.Close();}
+            }));
+            Click(ByName("Force stop protected listener"));Check("confirmed demo force stop is simulated without native termination",snapshot.Servers.Count==count-1&&Message().Contains("No processes were stopped"));
+            snapshot.Servers.Insert(0,server);server.CanForceStop=false;server.Processes[0].Name="WhatThePort";Rerender();Click(Rows().First());
+            Check("critical server never offers the override",!ByName("Protected server").IsEnabled&&!All(Body()).OfType<Button>().Any(b=>AutomationProperties.GetName(b)=="Force stop protected listener"));
+            var ko=new Strings("ko");Check("force confirmation has Korean labels",ko.T("Force stop")=="강제 종료"&&ko.F("Type port {0} to confirm",3000).Contains("3000")&&ko.T("Force stop protected listener")=="보호 리스너 강제 종료");
+        }finally{if(!snapshot.Servers.Contains(server))snapshot.Servers.Insert(0,server);server.Protected=protect;server.Processes[0].Name=name;server.CanForceStop=allowed;snapshot.Error=scanError;config.FontScale=font;Invoke("Navigate","list");}
+    }
     static double ChartVariation(Chart chart){
         double width=chart.Spark?38:360;chart.Height=chart.Spark?20:112;chart.Measure(new Size(width,chart.Height));chart.Arrange(new Rect(0,0,width,chart.Height));
         var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())typeof(Chart).GetMethod("OnRender",PrivateInstance).Invoke(chart,new object[]{drawing});
@@ -318,6 +351,9 @@ public static class UiTests {
         Click(ByName("Settings (Ctrl+,)"));startup=All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup");startup.IsChecked=true;
         All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="opacity").Value=70;Click(ByName("Save preferences"));
         Check("save applies actual isolated startup registration and opacity",WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup"))&&new WhatThePort.Store(storage).LoadSettings().PanelOpacity==70);
+        string savedShortcut=Path.Combine(storage,"startup","What the Port.lnk");var shortcutTime=new DateTime(2025,1,2,3,4,5,DateTimeKind.Utc);File.SetLastWriteTimeUtc(savedShortcut,shortcutTime);
+        Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<Slider>().Single(s=>(string)s.Tag=="opacity").Value=75;Click(ByName("Save preferences"));
+        Check("saving unrelated preferences leaves startup shortcut untouched",new WhatThePort.Store(storage).LoadSettings().PanelOpacity==75&&File.GetLastWriteTimeUtc(savedShortcut)==shortcutTime);
         Click(ByName("Settings (Ctrl+,)"));All(Body()).OfType<System.Windows.Controls.Primitives.ToggleButton>().Single(t=>(string)t.Tag=="startup").IsChecked=false;Click(ByName("Save preferences"));
         Check("startup toggle off removes isolated registration",!WhatThePort.StartupRegistration.IsEnabled(Path.Combine(storage,"startup")));
         string blockedShortcut=Path.Combine(storage,"startup","What the Port.lnk");Directory.CreateDirectory(blockedShortcut);

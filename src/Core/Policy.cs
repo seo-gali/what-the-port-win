@@ -6,7 +6,9 @@ namespace WhatThePort {
     public static class Policy {
         static readonly HashSet<string> ProtectedNames = new HashSet<string>(new [] { "postgres", "postgresql", "redis", "redis-server", "mongod", "mongos", "mysql", "mysqld", "mariadbd", "sqlservr", "memcached", "cockroach", "influxd", "system", "registry", "svchost", "services", "lsass", "csrss", "wininit", "winlogon", "explorer", "dwm", "cmd", "powershell", "pwsh", "windowsterminal", "openconsole", "conhost", "bash", "wsl", "wslhost", "code", "codex", "claude", "whattheport", "wtp" }, StringComparer.OrdinalIgnoreCase);
         static readonly HashSet<string> InfrastructureNames = new HashSet<string>(new [] { "wmux", "cagent", "boiler-ops-agent", "docker", "dockerd", "docker desktop", "com.docker.backend", "com.docker.proxy", "containerd" }, StringComparer.OrdinalIgnoreCase);
-        public static bool IsProtectedName(string name) { string file=System.IO.Path.GetFileNameWithoutExtension(name ?? ""); return ProtectedNames.Contains(file) || InfrastructureNames.Contains(file); }
+        static readonly HashSet<string> CriticalNames = new HashSet<string>(new [] { "system", "registry", "smss", "svchost", "services", "lsass", "csrss", "wininit", "winlogon", "explorer", "dwm", "fontdrvhost", "sihost", "whattheport", "wtp" }, StringComparer.OrdinalIgnoreCase);
+        public static bool IsCriticalName(string name) { return CriticalNames.Contains(System.IO.Path.GetFileNameWithoutExtension(name ?? "")); }
+        public static bool IsProtectedName(string name) { string file=System.IO.Path.GetFileNameWithoutExtension(name ?? ""); return ProtectedNames.Contains(file) || InfrastructureNames.Contains(file) || CriticalNames.Contains(file); }
         public static HashSet<int> Ancestors(int pid, IDictionary<int, ProcessNode> all) {
             var result = new HashSet<int>(); ProcessNode node;
             while (pid > 0 && result.Add(pid) && all.TryGetValue(pid, out node)) pid = node.Parent;

@@ -16,6 +16,8 @@ namespace WhatThePort {
         [DllImport("kernel32.dll")] static extern int GetCurrentProcessId();
         [DllImport("psapi.dll", SetLastError=true)] static extern bool GetProcessMemoryInfo(IntPtr process,ref ProcessMemory memory,uint size);
         [DllImport("kernel32.dll", SetLastError=true)] static extern bool TerminateProcess(IntPtr handle, uint code);
+        [DllImport("kernel32.dll", SetLastError=true)] static extern bool IsProcessCritical(IntPtr handle,out bool critical);
+        [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true, ExactSpelling=true)] static extern bool QueryFullProcessImageNameW(IntPtr handle,uint flags,StringBuilder name,ref uint size);
         [DllImport("kernel32.dll", SetLastError=true)] static extern uint WaitForSingleObject(IntPtr handle,uint milliseconds);
         [DllImport("kernel32.dll")] static extern bool ProcessIdToSessionId(int pid, out int session);
         [DllImport("advapi32.dll", SetLastError=true)] static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
@@ -126,8 +128,14 @@ namespace WhatThePort {
         }
         public static bool SameStart(DateTime actual, DateTime expected) { return actual.ToUniversalTime().Ticks == expected.ToUniversalTime().Ticks; }
         public static bool Stop(ProcessNode node, out string error) {
+            return Stop(node,out error,false);
+        }
+        public static bool ForceStop(ProcessNode node,out string error) {
+            return Stop(node,out error,true);
+        }
+        static bool Stop(ProcessNode node,out string error,bool force) {
             error = null;
-            if (node.Pid <= 4 || Policy.IsProtectedName(node.Name) || Policy.Ancestors(Process.GetCurrentProcess().Id, Processes()).Contains(node.Pid)) { error="Protected process."; return false; }
+            if (node.Pid <= 4 || (force?Policy.IsCriticalName(node.Name):Policy.IsProtectedName(node.Name)) || Policy.Ancestors(Process.GetCurrentProcess().Id, Processes()).Contains(node.Pid)) { error="Protected process."; return false; }
             // A single handle pins the identity through validation and termination.
             IntPtr h = OpenProcess(0x101001, false, node.Pid);
             if (h == IntPtr.Zero) { error="Process exited or access denied."; return false; }
@@ -135,6 +143,10 @@ namespace WhatThePort {
                 long created, exited, kernel, user;
                 if (!GetProcessTimes(h, out created, out exited, out kernel, out user) || !SameStart(DateTime.FromFileTimeUtc(created), node.Started)) { error="Process identity changed; stop cancelled."; return false; }
                 if (!OwnedByCurrentUser(h, node.Pid)) { error="Process belongs to another user or session."; return false; }
+                var image=new StringBuilder(32768);uint length=(uint)image.Capacity;bool critical;
+                if(!QueryFullProcessImageNameW(h,0,image,ref length)||!IsProcessCritical(h,out critical)){error="Process identity unavailable; stop cancelled.";return false;}
+                string actualName=Path.GetFileNameWithoutExtension(image.ToString());
+                if(critical||(force?Policy.IsCriticalName(actualName):Policy.IsProtectedName(actualName))){error="Protected process.";return false;}
                 if (!TerminateProcess(h, 0)) { error=new Win32Exception().Message; return false; }
                 uint wait=WaitForSingleObject(h,2000);
                 if(wait!=0){error=wait==258?"Process exit confirmation timed out.":new Win32Exception().Message;return false;}

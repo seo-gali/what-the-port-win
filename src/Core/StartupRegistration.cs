@@ -11,11 +11,20 @@ namespace WhatThePort {
             string target=Path.Combine(folder,Name);
             if(!enabled){if(File.Exists(target))File.Delete(target);return;}
             if(!Path.IsPathRooted(executable)||!File.Exists(executable))throw new ArgumentException("Choose an existing executable for startup.");
+            executable=Path.GetFullPath(executable);
             Directory.CreateDirectory(folder);
             string temporary=Path.Combine(folder,"WhatThePort-"+Guid.NewGuid().ToString("N")+".lnk");
             object shell=null,shortcut=null;
             try {
                 shell=Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell",true));
+                if(File.Exists(target)){
+                    shortcut=shell.GetType().InvokeMember("CreateShortcut",BindingFlags.InvokeMethod,null,shell,new object[]{target});
+                    var existing=shortcut.GetType();
+                    if(String.Equals((string)existing.InvokeMember("TargetPath",BindingFlags.GetProperty,null,shortcut,null),executable,StringComparison.OrdinalIgnoreCase)
+                        &&(string)existing.InvokeMember("Arguments",BindingFlags.GetProperty,null,shortcut,null)=="--background"
+                        &&String.Equals((string)existing.InvokeMember("WorkingDirectory",BindingFlags.GetProperty,null,shortcut,null),Path.GetDirectoryName(executable),StringComparison.OrdinalIgnoreCase))return;
+                    Marshal.FinalReleaseComObject(shortcut);shortcut=null;
+                }
                 shortcut=shell.GetType().InvokeMember("CreateShortcut",BindingFlags.InvokeMethod,null,shell,new object[]{temporary});
                 var type=shortcut.GetType();
                 type.InvokeMember("TargetPath",BindingFlags.SetProperty,null,shortcut,new object[]{executable});

@@ -48,6 +48,7 @@ namespace WhatThePort {
         [DataMember] public int Connections;
         [DataMember] public List<ConnectedApp> Clients = new List<ConnectedApp>();
         [DataMember] public bool Protected;
+        [DataMember] public bool CanForceStop;
         [DataMember] public string ProtectionReason;
         [DataMember] public string Warning;
         [DataMember] public List<ProcessNode> Processes = new List<ProcessNode>();

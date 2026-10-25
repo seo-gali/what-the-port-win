@@ -16,7 +16,7 @@ public static class CoreTests {
     public static int Main(string[] args) {
         if(args.Length>0&&args[0]=="--fixture")return Fixture();
         temp=Path.Combine(Path.GetTempPath(),"wtp-tests-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(temp);
-        try{Units();ConnectionTests();StartupTests();Integration();}catch(Exception e){failed++;Console.WriteLine("FAIL unexpected: "+e);}
+        try{Units();ConnectionTests();StartupTests();Integration();ForceIntegration();}catch(Exception e){failed++;Console.WriteLine("FAIL unexpected: "+e);}
         finally{if(Directory.Exists(temp))Directory.Delete(temp,true);}
         Console.WriteLine("\n"+passed+" passed, "+failed+" failed");return failed==0?0:1;
     }
@@ -25,11 +25,26 @@ public static class CoreTests {
         string folder=Path.Combine(temp,"startup"),executable=Path.Combine(temp,"portable app.exe");File.WriteAllText(executable,"fixture");
         StartupRegistration.Set(false,executable,folder);Check("startup defaults to off without creating directories",!StartupRegistration.IsEnabled(folder)&&!Directory.Exists(folder));
         StartupRegistration.Set(true,executable,folder);Check("startup creates only the app shortcut",StartupRegistration.IsEnabled(folder)&&Directory.GetFiles(folder).Length==1);
+        string shortcutPath=Path.Combine(folder,"What the Port.lnk");var savedAt=new DateTime(2025,1,2,3,4,5,DateTimeKind.Utc);byte[] original=File.ReadAllBytes(shortcutPath);File.SetLastWriteTimeUtc(shortcutPath,savedAt);
+        StartupRegistration.Set(true,executable,folder);Check("unchanged startup preserves shortcut bytes and modification time",File.GetLastWriteTimeUtc(shortcutPath)==savedAt&&File.ReadAllBytes(shortcutPath).SequenceEqual(original));
+        StartupRegistration.Set(true,executable.ToUpperInvariant(),folder);Check("Windows path casing alone does not rewrite startup",File.GetLastWriteTimeUtc(shortcutPath)==savedAt);
         object shell=null,shortcut=null;
         try{
             shell=Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell",true));shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{Path.Combine(folder,"What the Port.lnk")});
             var type=shortcut.GetType();
             Check("startup keeps path with spaces and launches in background",(string)type.InvokeMember("TargetPath",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==executable&&(string)type.InvokeMember("Arguments",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)=="--background");
+            string moved=Path.Combine(temp,"moved app.exe");File.WriteAllText(moved,"fixture");StartupRegistration.Set(true,moved,folder);
+            System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);shortcut=null;shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{shortcutPath});type=shortcut.GetType();
+            Check("moving the executable updates its startup target",(string)type.InvokeMember("TargetPath",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==moved);
+            type.InvokeMember("Arguments",System.Reflection.BindingFlags.SetProperty,null,shortcut,new object[]{"--unexpected"});type.InvokeMember("Save",System.Reflection.BindingFlags.InvokeMethod,null,shortcut,null);
+            StartupRegistration.Set(true,moved,folder);System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);shortcut=null;shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{shortcutPath});type=shortcut.GetType();
+            Check("changed startup arguments are restored to background launch",(string)type.InvokeMember("Arguments",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)=="--background");
+            type.InvokeMember("WorkingDirectory",System.Reflection.BindingFlags.SetProperty,null,shortcut,new object[]{folder});type.InvokeMember("Save",System.Reflection.BindingFlags.InvokeMethod,null,shortcut,null);
+            StartupRegistration.Set(true,moved,folder);System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);shortcut=null;shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{shortcutPath});type=shortcut.GetType();
+            Check("changed startup working directory is restored",(string)type.InvokeMember("WorkingDirectory",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==temp);
+            System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);shortcut=null;File.WriteAllText(shortcutPath,"not a shortcut");StartupRegistration.Set(true,executable,folder);
+            shortcut=shell.GetType().InvokeMember("CreateShortcut",System.Reflection.BindingFlags.InvokeMethod,null,shell,new object[]{shortcutPath});type=shortcut.GetType();
+            Check("invalid existing shortcut is replaced with valid startup metadata",(string)type.InvokeMember("TargetPath",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)==executable&&(string)type.InvokeMember("Arguments",System.Reflection.BindingFlags.GetProperty,null,shortcut,null)=="--background");
         }finally{if(shortcut!=null)System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);if(shell!=null)System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);}
         StartupRegistration.Set(true,executable,folder);Check("saving startup again replaces rather than duplicates shortcut",Directory.GetFiles(folder).Length==1);
         File.WriteAllText(Path.Combine(folder,"unrelated.txt"),"keep");StartupRegistration.Set(false,executable,folder);Check("startup off removes only app registration",!StartupRegistration.IsEnabled(folder)&&File.Exists(Path.Combine(folder,"unrelated.txt")));
@@ -116,6 +131,13 @@ public static class CoreTests {
         Check("protected child is skipped with a recorded reason count",result.ListenerStopped&&result.Skipped==1&&result.Errors.Count==0&&called.SequenceEqual(new[]{10}));
         server.Processes[0].Name="wmux";called.Clear();result=ProcessControl.StopDetailed(server,partial);
         Check("protected root is refused even with incorrect server flag",!result.ListenerStopped&&result.Errors.Count==1&&called.Count==0);
+        server.Protected=true;server.CanForceStop=true;server.Processes[0].Name="redis-server";
+        called.Clear();result=ProcessControl.StopDetailed(server,partial);Check("manual permission never unlocks ordinary cleanup",!result.ListenerStopped&&called.Count==0);
+        result=ProcessControl.ForceStopDetailed(server,partial);Check("explicit force stop targets only the protected listener",result.ListenerStopped&&result.Stopped==1&&called.SequenceEqual(new[]{10}));
+        server.CanForceStop=false;called.Clear();result=ProcessControl.ForceStopDetailed(server,partial);Check("force stop requires freshly granted eligibility",!result.ListenerStopped&&called.Count==0);server.CanForceStop=true;
+        foreach(var name in new[]{"system","svchost.exe","explorer","WhatThePort","wtp"}){server.Processes[0].Name=name;result=ProcessControl.ForceStopDetailed(server,partial);Check("force stop never overrides critical name: "+name,!result.ListenerStopped&&called.Count==0);}
+        server.Processes[0].Name="redis-server";server.SampledAt=now.AddMinutes(-1);result=ProcessControl.ForceStopDetailed(server,partial);Check("force stop rejects stale identities",!result.ListenerStopped&&called.Count==0);
+        server.SampledAt=now;result=ProcessControl.ForceStopDetailed(server,delegate(ProcessNode node,out string error){called.Add(node.Pid);error="Denied";return false;});Check("force stop failure never attempts children",!result.ListenerStopped&&result.Errors.Count==1&&called.SequenceEqual(new[]{10}));
     }
     static Process StartFixture(){
         var p=Process.Start(new ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location,"--fixture"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=temp});
@@ -162,6 +184,26 @@ public static class CoreTests {
                 Check("scanner removes exited server",!scanner.Scan(config).Servers.Any(s=>s.Key==server.Key));
                 var timer=Stopwatch.StartNew();for(int i=0;i<5;i++)scanner.Scan(config);timer.Stop();Console.WriteLine("INFO 5 native scans: "+timer.ElapsedMilliseconds+" ms");Check("native scan cycle under 3 seconds",timer.ElapsedMilliseconds<3000);
             }finally{foreach(var p in new[]{first,second})if(!p.HasExited){p.Kill();p.WaitForExit(3000);}}
+        }
+    }
+    static void ForceIntegration(){
+        string folder=Path.Combine(temp,"manual-force-fixture");Directory.CreateDirectory(folder);
+        string executable=Path.Combine(folder,"redis-server.exe");File.Copy(System.Reflection.Assembly.GetExecutingAssembly().Location,executable);
+        string core=typeof(Server).Assembly.Location;File.Copy(core,Path.Combine(folder,Path.GetFileName(core)));
+        using(var fixture=Process.Start(new ProcessStartInfo(executable,"--fixture"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=folder}))using(var other=StartFixture()){
+            try{
+                Ready(fixture);Ready(other);var scanner=new Scanner();var server=scanner.Scan(new Settings{AllListeners=true}).Servers.Single(s=>s.Processes[0].Pid==fixture.Id);
+                Check("named protected fixture offers manual force stop",server.Protected&&server.CanForceStop);
+                var node=server.Processes[0];string error;
+                Check("ordinary stop still refuses the protected fixture",!Native.Stop(node,out error)&&!fixture.HasExited);
+                var spoof=new ProcessNode{Pid=node.Pid,Name="node",Started=node.Started};Check("stop checks the executable name from its handle",!Native.Stop(spoof,out error)&&!fixture.HasExited);
+                var stale=new ProcessNode{Pid=node.Pid,Name=node.Name,Started=node.Started.AddTicks(-1)};Check("force stop refuses a reused or mismatched PID",!Native.ForceStop(stale,out error)&&!fixture.HasExited);
+                var self=new ProcessNode{Pid=Process.GetCurrentProcess().Id,Name="redis-server",Started=Process.GetCurrentProcess().StartTime.ToUniversalTime()};Check("force stop cannot terminate its own caller",!Native.ForceStop(self,out error));
+                server.Processes.Add(new ProcessNode{Pid=other.Id,Name="worker",Started=other.StartTime.ToUniversalTime(),Depth=1});
+                var result=ProcessControl.ForceStopDetailed(server,Native.ForceStop);fixture.WaitForExit(3000);
+                Check("manual force releases the protected fixture listener",result.ListenerStopped&&result.Stopped==1&&fixture.HasExited&&!Native.Sockets().Any(s=>s.State==2&&s.Pid==fixture.Id));
+                Check("manual force leaves descendants and other fixtures running",!other.HasExited);
+            }finally{foreach(var process in new[]{fixture,other})if(!process.HasExited){process.Kill();process.WaitForExit(3000);}}
         }
     }
     static int Fixture(){

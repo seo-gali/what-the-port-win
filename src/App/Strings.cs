@@ -20,6 +20,11 @@ namespace WhatThePort.App {
             return value;
         }
         static readonly Dictionary<string,string> Korean=new Dictionary<string,string>{
+            {"Protected · manual stop only","보호됨 · 수동 강제 종료 가능"},{"Excluded from bulk and automatic cleanup. Manual force stop is available.","일괄·자동 정리에서 제외됩니다. 상세에서 직접 강제 종료할 수 있습니다."},
+            {"Force stop…","강제 종료…"},{"Force stop","강제 종료"},{"Force stop protected listener","보호 리스너 강제 종료"},{"Confirm force stop","강제 종료 확인"},{"Cancel force stop","강제 종료 취소"},
+            {"Process: {0} · PID {1}\nPorts: {2}","프로세스: {0} · PID {1}\n포트: {2}"},{"Type port {0} to confirm","확인하려면 포트 {0} 입력"},
+            {"This immediately stops only the listening process. Unsaved work or database writes may be lost, and its app may close. Child processes remain running.","포트를 사용 중인 프로세스 하나만 즉시 종료합니다. 저장하지 않은 작업이나 DB 쓰기 작업이 유실되고 해당 앱이 닫힐 수 있습니다. 하위 프로세스는 계속 실행됩니다."},
+            {"Only the listening process was stopped. Child processes remain running.","포트를 사용 중인 프로세스 하나만 종료했습니다. 하위 프로세스는 계속 실행됩니다."},{"Force stop is manual only.","강제 종료는 직접 확인한 경우에만 가능합니다."},{"Process identity unavailable; stop cancelled.","프로세스 식별 정보를 확인할 수 없어 종료를 취소했습니다."},
             {"Close","닫기"},{"Process exit confirmation timed out.","종료 요청 후 완료 확인 시간이 초과되었습니다."},
             {"FONT SIZE","글꼴 크기"},{"Invalid font percentage.","글꼴 크기는 80–125%로 설정해 주세요."},{"BACKGROUND OPACITY","배경 불투명도"},
             {"Start when I sign in to Windows","Windows 로그인 시 자동 실행"},{"Starts this EXE in the tray. Save again after moving the file.","현재 EXE를 트레이에서 시작합니다. 파일을 옮기면 다시 저장해 주세요."},

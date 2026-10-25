@@ -47,9 +47,11 @@ namespace WhatThePort {
                     Started=rootValue.Started, Observed=continuous ? oldServer.Observed : now, LastActive=continuous ? oldServer.LastActive : now, SampledAt=now,
                     Memory=measured.Sum(p => p.Memory), Cpu=measured.Sum(p => p.Cpu), Processes=measured,
                     Protected=Policy.IsProtectedName(root.Name) || protectedIds.Contains(root.Pid),
+                    CanForceStop=Policy.IsProtectedName(root.Name) && !Policy.IsCriticalName(root.Name) && !protectedIds.Contains(root.Pid),
                     ProtectionReason=protectedIds.Contains(root.Pid) ? "This app or a parent process. Stopping it could close your working session." : Policy.IsProtectedName(root.Name) ? "Terminal, agent, system, database or container process. Stop it in its own app." : null,
                     Connections=sockets.Count(s => s.State == 5 && s.Pid == root.Pid && ports.Contains(s.Port)),
                     History=oldServer == null ? new List<Sample>() : new List<Sample>(oldServer.History) };
+                if(server.CanForceStop)server.ProtectionReason="Excluded from bulk and automatic cleanup. Manual force stop is available.";
                 if (server.Connections > 0 || server.Cpu >= 2) server.LastActive=now;
                 ResolveProject(server,root.Pid,now);
                 server.History.Add(new Sample { At=now, Memory=server.Memory, Cpu=server.Cpu }); Policy.PruneHistory(server.History,now);
@@ -125,16 +127,23 @@ namespace WhatThePort {
             return StopDetailed(server,Native.Stop).Errors;
         }
         public static StopResult StopDetailed(Server server,StopNode stop) {
+            return StopDetailed(server,stop,false);
+        }
+        public static StopResult ForceStopDetailed(Server server,StopNode stop) {
+            return StopDetailed(server,stop,true);
+        }
+        static StopResult StopDetailed(Server server,StopNode stop,bool force) {
             var result=new StopResult{Port=server.Port};
-            if (server.Protected) {result.Errors.Add("This server is protected.");return result;}
+            if (force?(!server.Protected||!server.CanForceStop):server.Protected) {result.Errors.Add("This server is protected.");return result;}
             if ((DateTime.UtcNow-server.SampledAt).TotalSeconds > 30) {result.Errors.Add("Server data is stale. Refresh before stopping.");return result;}
             var nodes=server.Processes.OrderBy(p=>p.Depth).ToList();
             if(nodes.Count==0 || nodes[0].Depth!=0){result.Errors.Add("Server identity unavailable. Refresh before stopping.");return result;}
-            if(Policy.IsProtectedName(nodes[0].Name)){result.Errors.Add("This server is protected.");return result;}
+            if(force?Policy.IsCriticalName(nodes[0].Name):Policy.IsProtectedName(nodes[0].Name)){result.Errors.Add("This server is protected.");return result;}
+            if(force)nodes=nodes.Take(1).ToList();
             // A root failure cancels descendant stops. A later failure cannot undo a successful root stop.
             foreach(var node in nodes){
                 string error;
-                if(Policy.IsProtectedName(node.Name)){result.Skipped++;continue;}
+                if(force?Policy.IsCriticalName(node.Name):Policy.IsProtectedName(node.Name)){result.Skipped++;continue;}
                 if(stop(node,out error)){result.Stopped++;if(node.Depth==0)result.ListenerStopped=true;}
                 else {result.Errors.Add(node.Name+" ("+node.Pid+"): "+error);if(node.Depth==0)break;}
             }
