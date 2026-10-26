@@ -18,7 +18,7 @@ http.createServer((req,res) => {
   let file=target,status=200;
   try {if (!fs.statSync(file).isFile()) throw new Error('Not a file');} catch {file=path.join(root,'404.html');status=404;}
   const extension=path.extname(file).toLowerCase();
-  if (extension === '.zip' || extension === '.exe') headers['Content-Disposition']='attachment; filename="'+path.basename(file)+'"';
+  if (extension === '.zip' || extension === '.exe') headers['Content-Disposition']='attachment';
   res.writeHead(status,{...headers,'Content-Type':types[extension]||'application/octet-stream','Content-Length':fs.statSync(file).size});
   if (req.method === 'HEAD') {res.end();return;}
   const stream=fs.createReadStream(file);stream.on('error',()=>res.destroy());stream.pipe(res);

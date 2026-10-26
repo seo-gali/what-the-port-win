@@ -1,2 +1,2 @@
-a5c1adc9c5c5cc37ca9f6eb646694aaaf765f2007670c99f8efc26ecaec46579  WhatThePort-Windows-x64.zip
-323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99  WhatThePort.exe
+a5c1adc9c5c5cc37ca9f6eb646694aaaf765f2007670c99f8efc26ecaec46579  WhatThePort-v1.1.5-Windows-x64.zip
+323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99  WhatThePort-v1.1.5.exe

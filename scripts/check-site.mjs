@@ -21,6 +21,16 @@ async function evaluate(expression){const r=await call('Runtime.evaluate',{expre
 async function navigate(route,width,height){await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<=430});await call('Emulation.setTouchEmulationEnabled',{enabled:width<=430});await call('Page.navigate',{url:base+route});for(let i=0;i<30;i++){await new Promise(r=>setTimeout(r,100));if(await evaluate('document.readyState === "complete" && !!document.querySelector("main")'))break;}await evaluate('document.fonts.ready');await evaluate('Promise.all([...document.images].filter(i=>i.hasAttribute("src")).map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>true)');}
 async function key(key,code,vk){await call('Input.dispatchKeyEvent',{type:'keyDown',key,code,windowsVirtualKeyCode:vk,text:key==='Enter'?'\r':undefined});await call('Input.dispatchKeyEvent',{type:'keyUp',key,code,windowsVirtualKeyCode:vk});}
 async function captureViewport(name){const screenshot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await fs.mkdir(path.join(project,'artifacts/site-screenshots'),{recursive:true});await fs.writeFile(path.join(project,'artifacts/site-screenshots',name+'.png'),Buffer.from(screenshot.data,'base64'));}
+async function downloadedFile(selector,filename){
+ const folder=path.join(profile,'downloads');await fs.mkdir(folder,{recursive:true});
+ await call('Page.setDownloadBehavior',{behavior:'allow',downloadPath:folder});
+ await evaluate(`document.querySelector(${JSON.stringify(selector)}).focus()`);await key('Enter','Enter',13);
+ for(let attempt=0;attempt<50;attempt++){
+  try{return await fs.readFile(path.join(folder,filename));}catch(error){if(error.code!=='ENOENT')throw error;}
+  await new Promise(resolve=>setTimeout(resolve,100));
+ }
+ throw new Error('Expected download '+filename+'; found '+(await fs.readdir(folder)).join(', '));
+}
 let passed=0;const results=[];
 function check(name,ok){results.push({name,passed:!!ok});if(!ok)throw new Error('FAIL '+name);passed++;console.log('PASS '+name);}
 try{
@@ -126,12 +136,18 @@ check('download matches published SHA-256',checksum.startsWith(createHash('sha25
 const exeResponse=await fetch(base+'/downloads/WhatThePort.exe');
 const executable=Buffer.from(await exeResponse.arrayBuffer());
 const exeInfo=await(await fetch(base+'/downloads/EXE-INFO.json')).json();
-check('EXE endpoint returns an executable attachment',exeResponse.ok&&exeResponse.headers.get('content-disposition')?.includes('WhatThePort.exe')&&exeResponse.headers.get('content-type')==='application/octet-stream'&&executable.subarray(0,2).toString()==='MZ');
-check('standalone EXE matches checksum and published information',exeInfo.executable.sha256===createHash('sha256').update(executable).digest('hex')&&exeInfo.executable.bytes===executable.length&&checksum.includes(exeInfo.executable.sha256+'  WhatThePort.exe'));
+const exeDownloadName=`WhatThePort-v${exeInfo.executable.version}.exe`,zipDownloadName=`WhatThePort-v${exeInfo.executable.version}-Windows-x64.zip`;
+check('EXE endpoint returns an executable attachment',exeResponse.ok&&exeResponse.headers.get('content-disposition')?.includes('attachment')&&exeResponse.headers.get('content-type')==='application/octet-stream'&&executable.subarray(0,2).toString()==='MZ');
+check('standalone EXE matches checksum and published information',exeInfo.executable.sha256===createHash('sha256').update(executable).digest('hex')&&exeInfo.executable.bytes===executable.length&&checksum.includes(exeInfo.executable.sha256+'  '+exeDownloadName));
 await navigate('/',390,844);
 check('homepage primary downloads use standalone EXE',await evaluate('[...document.querySelectorAll("main a.button[download]")].length===2 && [...document.querySelectorAll("main a.button[download]")].every(a=>a.getAttribute("href")==="downloads/WhatThePort.exe")'));
+check('homepage EXE download names include the release version',await evaluate(`[...document.querySelectorAll('main a.button[download]')].every(a=>a.download===${JSON.stringify(exeDownloadName)})`));
+check('ZIP checksum uses the saved release filename',checksum.includes(createHash('sha256').update(archive).digest('hex')+'  '+zipDownloadName));
+check('Chrome saves the release-named EXE with unchanged bytes',(await downloadedFile('main a.button[download]',exeDownloadName)).equals(executable));
 await navigate('/guide.html',390,844);
 check('guide separates standalone GUI from optional CLI ZIP',await evaluate('document.querySelector("#start ol a").getAttribute("href")==="downloads/WhatThePort.exe" && !!document.querySelector("#cli a[download]")'));
+check('guide download names include the release version',await evaluate(`document.querySelector('#start a[download]').download===${JSON.stringify(exeDownloadName)}&&document.querySelector('#cli a[download]').download===${JSON.stringify(zipDownloadName)}`));
+check('Chrome saves the release-named ZIP with unchanged bytes',(await downloadedFile('#cli a[download]',zipDownloadName)).equals(archive));
 const packageInfo=await(await fetch(base+'/downloads/PACKAGE-INFO.json')).json();
 check('published package information matches ZIP',packageInfo.archive.sha256===createHash('sha256').update(archive).digest('hex')&&packageInfo.archive.bytes===archive.length);
 check('package information uses JSON content type',(await fetch(base+'/downloads/PACKAGE-INFO.json',{method:'HEAD'})).headers.get('content-type')?.includes('application/json'));

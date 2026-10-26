@@ -5,6 +5,7 @@
 - 준비: 정식 배포는 `scripts/prepare-site.ps1`에서 신뢰된 서명·타임스탬프 확인. 미서명 시험 배포만 `-AllowUnsigned` 명시
 - 로컬 미리보기: `node scripts/serve-site.mjs` → `http://127.0.0.1:4173`
 - 다운로드: 기본 `docs/downloads/WhatThePort.exe`, 선택 CLI `docs/downloads/WhatThePort-Windows-x64.zip` — 실제 다운로드를 위해 Git 추적 대상 포함
+- 다운로드 URL은 고정하고 사이트의 저장 이름은 `WhatThePort-v1.1.5.exe`, `WhatThePort-v1.1.5-Windows-x64.zip`처럼 실제 버전을 포함한다. `prepare-site.ps1`이 EXE·ZIP 버전 일치를 확인한 뒤 홈·가이드의 저장 이름과 체크섬 파일명을 함께 갱신한다.
 - 내용: 홈, 기능·화면 소개, 이미지 사용 가이드, 라이선스, 404, 고정 헤더·모바일 메뉴, 단일 EXE·선택 ZIP·체크섬
 - 배포: GitHub Pages의 main / docs. 외부 쓰기·퍼블리싱은 [작업 순서와 승인](../CODING_STANDARDS.md#작업-순서와-승인)을 따르며, 이미 승인된 범위는 다시 묻지 않음
 

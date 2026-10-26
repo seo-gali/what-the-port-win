@@ -52,6 +52,11 @@ try {
     $beforePublic = Hash $publicZip
     Reject 'default site preparation rejects unsigned package' { & (Join-Path $testRoot 'scripts\prepare-site.ps1') }
     Check 'rejected preparation preserves published ZIP' ((Hash $publicZip) -eq $beforePublic)
+    foreach ($pageName in @('index.html','guide.html')) {
+        $page = Join-Path $testRoot ('docs\' + $pageName)
+        $stale = [regex]::Replace([IO.File]::ReadAllText($page), '\bdownload="[^"]*"', 'download="stale-download.bin"')
+        [IO.File]::WriteAllText($page, $stale, (New-Object Text.UTF8Encoding($false)))
+    }
     & (Join-Path $testRoot 'scripts\prepare-site.ps1') -AllowUnsigned
     Check 'explicit test distribution publishes verified ZIP' ((Hash $publicZip) -eq (Hash $zipPath))
     Check 'test distribution publishes integrity report' (Test-Path -LiteralPath (Join-Path $testRoot 'docs\downloads\PACKAGE-INFO.json'))
@@ -61,6 +66,17 @@ try {
     Check 'test distribution publishes standalone EXE' ((Hash $singleExecutable) -eq (Hash $publicExecutable))
     $singleInfo = [IO.File]::ReadAllText((Join-Path $testRoot 'docs\downloads\EXE-INFO.json')) | ConvertFrom-Json
     Check 'standalone report matches published bytes and unsigned status' ($singleInfo.executable.sha256 -eq (Hash $publicExecutable).ToLowerInvariant() -and $singleInfo.executable.bytes -eq (Get-Item -LiteralPath $publicExecutable).Length -and $singleInfo.executable.signature -eq 'NotSigned')
+    $releaseVersion = $singleInfo.executable.version
+    $exeDownloadName = "WhatThePort-v${releaseVersion}.exe"
+    $zipDownloadName = "WhatThePort-v${releaseVersion}-Windows-x64.zip"
+    $namesUpdated = $true
+    foreach ($pageName in @('index.html','guide.html')) {
+        $prepared = [IO.File]::ReadAllText((Join-Path $testRoot ('docs\' + $pageName)))
+        $namesUpdated = $namesUpdated -and $prepared.Contains('download="' + $exeDownloadName + '"') -and $prepared.Contains('download="' + $zipDownloadName + '"') -and -not $prepared.Contains('stale-download.bin')
+    }
+    Check 'preparation refreshes stale saved filenames from actual release metadata' $namesUpdated
+    $checksums = [IO.File]::ReadAllText((Join-Path $testRoot 'docs\downloads\SHA256SUMS.txt'))
+    Check 'checksums use release filenames without changing their bytes' ($checksums.Contains((Hash $publicExecutable).ToLowerInvariant() + '  ' + $exeDownloadName) -and $checksums.Contains((Hash $publicZip).ToLowerInvariant() + '  ' + $zipDownloadName))
     Reject 'standalone wrong checksum is rejected' { & $singleVerify -ExecutablePath $singleExecutable -ExpectedHash ('0' * 64) }
     Reject 'unsigned standalone fails signature requirement' { & $singleVerify -ExecutablePath $singleExecutable -RequireSignature }
     Reject 'separate Core DLL app cannot be published as standalone' { & $singleVerify -ExecutablePath $binaryPaths[0] }
@@ -76,6 +92,20 @@ try {
         } finally { $archive.Dispose() }
         Reject ('invalid package entry ' + $entryName) { & $verify -PackagePath $invalidZip }
     }
+    $beforeMismatchExe = Hash $publicExecutable
+    $beforeMismatchZip = Hash $publicZip
+    $beforeMismatchPage = Hash (Join-Path $testRoot 'docs\index.html')
+    $versionFile = Join-Path $testRoot 'src\Core\AppVersion.cs'
+    $versionSource = [IO.File]::ReadAllText($versionFile)
+    $parsedVersion = [Version]$releaseVersion
+    $nextVersion = '{0}.{1}.{2}' -f $parsedVersion.Major, $parsedVersion.Minor, ($parsedVersion.Build + 1)
+    $versionSource = $versionSource.Replace('Current="' + $releaseVersion + '"', 'Current="' + $nextVersion + '"')
+    [IO.File]::WriteAllText($versionFile, $versionSource, (New-Object Text.UTF8Encoding($false)))
+    $versionRejected = $false
+    try { & (Join-Path $testRoot 'scripts\prepare-site.ps1') -AllowUnsigned | Out-Null }
+    catch { if ($_.Exception.Message -ne 'Standalone EXE and ZIP must have the same release version.') { throw }; $versionRejected = $true }
+    Check 'mixed EXE and ZIP versions fail before publication' $versionRejected
+    Check 'version mismatch preserves existing downloads and page' ((Hash $publicExecutable) -eq $beforeMismatchExe -and (Hash $publicZip) -eq $beforeMismatchZip -and (Hash (Join-Path $testRoot 'docs\index.html')) -eq $beforeMismatchPage)
     [IO.File]::WriteAllText((Join-Path $projectRoot 'artifacts\package-test-results.txt'), ($passed.ToString() + ' package checks passed'))
     Write-Output ($passed.ToString() + ' package checks passed')
     $completed = $true
