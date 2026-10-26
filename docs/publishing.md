@@ -22,6 +22,18 @@ GitHub 저장소의 `blob/main/docs/index.html` 링크는 소스 보기 주소�
 
 기준: [GitHub 공식 게시 소스 설정 안내](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
 
+## 검색 노출
+
+- 본문·탐색·다운로드 링크는 정적 HTML로 제공한다. JavaScript는 메뉴·탭·이미지 확대에만 사용하므로 별도 SSR 서버가 필요하지 않다.
+- 홈의 대표 주소는 `https://seo-gali.github.io/what-the-port-win/`이며 가이드·라이선스는 각 HTML 주소를 canonical로 사용한다. 사이트맵에는 이 대표 주소만 넣는다.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-sitemap.ps1`로 공개 HTML에서 `docs/sitemap.xml`을 생성한다. 페이지를 추가·삭제하면 다시 실행하고 결과를 함께 커밋한다. 앱 배포 준비에서도 자동 실행한다. 정확하지 않은 `lastmod`는 넣지 않는다.
+- 크롤러가 읽는 robots.txt는 **도메인 루트** `https://seo-gali.github.io/robots.txt`다. 프로젝트 하위의 robots.txt는 적용되지 않아 만들지 않는다. 루트가 404이면 크롤링 제한이 없는 상태다. 루트 사이트를 별도로 운영하게 되면 Googlebot을 차단하지 않고 사이트맵 주소를 등록한다.
+- 정상 페이지에는 `noindex`·`nofollow`를 넣지 않는다. `404.html`의 `noindex`는 유지하고 사이트맵에서 제외한다. Google 소유권 확인 파일도 사이트맵에서 제외하며 내용을 바꾸지 않는다.
+- Search Console에서 이 사이트의 URL 접두어 속성 → **Sitemaps** → `https://seo-gali.github.io/what-the-port-win/sitemap.xml`을 제출한다. 공개 반영 후 가져오기 성공 여부를 확인한다. 로그인된 소유자·전체 사용자 권한이 필요하며, 폐기된 Google sitemap ping은 사용하지 않는다. 제출은 색인 등록을 보장하지 않는다.
+- 깨진 주소는 홈으로 자동 전환하지 않고 HTTP 404와 홈·다운로드·가이드 링크를 제공한다. 정상 링크는 HTTPS 최종 주소를 직접 사용한다.
+
+기준: [Google의 JavaScript 검색 안내](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics), [사이트맵 생성·제출](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap), [robots.txt 위치·응답 처리](https://developers.google.com/crawling/docs/robots-txt/robots-txt-spec).
+
 ## 준비·검증
 
 버전은 `src/Core/AppVersion.cs`, 변경 기록은 루트 `CHANGELOG.md`에서 관리한다. 추가·개선·수정을 구분하고, 테스트 후 동일 버전의 단일 EXE·ZIP·검증 보고서·체크섬을 함께 게시한다. ZIP에는 `docs/CHANGELOG.md`를 포함한다. 검증된 커밋에 `v1.1.0` 형식의 태그를 붙인다. 버전 태그와 GitHub Releases 게시물은 별개이며, Releases에 게시할 때는 같은 변경 기록과 검증된 파일을 사용한다.
@@ -29,6 +41,7 @@ GitHub 저장소의 `blob/main/docs/index.html` 링크는 소스 보기 주소�
 사이트의 HTML·CSS·JavaScript만 변경하면 기존 다운로드 파일을 유지하고 아래 검사만 실행한다. Markdown 문서만 변경하면 상대 경로·앵커·명령과 설명의 정합성을 확인한다.
 
 ```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-sitemap.ps1
 node scripts/serve-site.mjs
 # 다른 터미널
 node scripts/check-site.mjs

@@ -35,6 +35,28 @@ let passed=0;const results=[];
 function check(name,ok){results.push({name,passed:!!ok});if(!ok)throw new Error('FAIL '+name);passed++;console.log('PASS '+name);}
 try{
 await call('Page.enable');await call('Runtime.enable');await call('Accessibility.enable');
+const publicBase='https://seo-gali.github.io/what-the-port-win/';
+await call('Emulation.setScriptExecutionDisabled',{value:true});
+for(const route of ['/','/guide.html','/license.html']){
+ const response=await fetch(base+route,{redirect:'manual'}),html=await response.text();
+ check(route+' returns complete HTML without redirects or index-blocking headers',response.status===200&&/<main\b/.test(html)&&/<h1\b/.test(html)&&!/(?:noindex|none)/i.test(response.headers.get('x-robots-tag')||''));
+ await navigate(route,390,844);
+ check(route+' is readable without JavaScript',await evaluate('document.querySelector("main").innerText.trim().length>300 && document.querySelectorAll("h1").length===1 && !!document.querySelector("main a[href]")'));
+ const expected=publicBase+(route==='/'?'':route.slice(1));
+ check(route+' has one canonical URL',await evaluate(`[...document.querySelectorAll('link[rel="canonical"]')].length===1 && document.querySelector('link[rel="canonical"]').href===${JSON.stringify(expected)}`));
+ check(route+' permits indexing and link following',await evaluate(`![...document.querySelectorAll('meta[name]')].some(m=>/^(robots|googlebot)$/i.test(m.name)&&/(?:noindex|nofollow|none)/i.test(m.content))`));
+}
+await call('Emulation.setScriptExecutionDisabled',{value:false});
+const sitemapResponse=await fetch(base+'/sitemap.xml',{redirect:'manual'}),sitemap=await sitemapResponse.text();
+check('sitemap returns XML without redirects',sitemapResponse.status===200&&sitemapResponse.headers.get('content-type')?.includes('xml'));
+const sitemapUrls=await evaluate(`(()=>{const xml=new DOMParser().parseFromString(${JSON.stringify(sitemap)},'application/xml');if(xml.querySelector('parsererror'))throw new Error('Invalid sitemap XML');return [...xml.querySelectorAll('url > loc')].map(n=>n.textContent);})()`);
+check('sitemap contains exactly the canonical public pages',JSON.stringify(sitemapUrls.slice().sort())===JSON.stringify([publicBase,publicBase+'guide.html',publicBase+'license.html'].sort()));
+for(const file of (await fs.readdir(path.join(project,'docs'),{recursive:true})).filter(file=>file.endsWith('.html'))){
+ const html=await fs.readFile(path.join(project,'docs',file),'utf8');
+ check(file+' has no accidental noindex',file==='404.html'||!/<meta\b[^>]*\bcontent=["'][^"']*\b(?:noindex|none)\b/i.test(html));
+}
+const missingResponse=await fetch(base+'/missing/deep/page',{redirect:'manual'}),missingHtml=await missingResponse.text();
+check('nested 404 keeps status, noindex and working recovery links',missingResponse.status===404&&missingHtml.includes('content="noindex"')&&missingHtml.includes('/what-the-port-win/index.html#download')&&!/http-equiv=["']refresh/i.test(missingHtml));
 await navigate('/',390,1000);
 const hero=await evaluate('(()=>{const i=document.querySelector(".server-art");return {src:i.currentSrc,width:i.naturalWidth,height:i.naturalHeight,loading:i.loading,priority:i.fetchPriority};})()');
 const heroResponse=await fetch(hero.src);const heroBytes=(await heroResponse.arrayBuffer()).byteLength;

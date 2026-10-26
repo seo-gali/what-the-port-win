@@ -25,6 +25,23 @@ $zipPath = Join-Path $testRoot 'artifacts\WhatThePort-Windows-x64.zip'
 $binaryPaths = @('WhatThePort.exe','WhatThePort.Core.dll','wtp.exe') | ForEach-Object { Join-Path $testRoot ('dist\' + $_) }
 $completed = $false
 try {
+    $sitemapUpdater = Join-Path $testRoot 'scripts\update-sitemap.ps1'
+    $sitemapPath = Join-Path $testRoot 'docs\sitemap.xml'
+    & $sitemapUpdater
+    $sitemap = [xml][IO.File]::ReadAllText($sitemapPath)
+    Check 'sitemap includes canonical pages and excludes errors and ownership files' (@($sitemap.urlset.url).Count -eq 3 -and $sitemap.OuterXml -notmatch '404\.html|google[0-9a-f]+\.html')
+    $extraPage = Join-Path $testRoot 'docs\seo-fixture.html'
+    [IO.File]::WriteAllText($extraPage, '<html><head><link rel="canonical" href="https://seo-gali.github.io/what-the-port-win/seo-fixture.html"></head><body><main>Fixture page</main></body></html>')
+    & $sitemapUpdater
+    Check 'sitemap discovers new public HTML pages automatically' ([IO.File]::ReadAllText($sitemapPath).Contains('/seo-fixture.html</loc>'))
+    [IO.File]::WriteAllText($extraPage, '<html><head><meta name="robots" content="noindex"></head><body><main>Excluded fixture</main></body></html>')
+    & $sitemapUpdater
+    Check 'sitemap excludes noindex pages automatically' (-not [IO.File]::ReadAllText($sitemapPath).Contains('seo-fixture.html'))
+    $beforeInvalidCanonical = Hash $sitemapPath
+    [IO.File]::WriteAllText($extraPage, '<html><head><link rel="canonical" href="https://example.com/"></head><body><main>Invalid fixture</main></body></html>')
+    Reject 'sitemap rejects a canonical URL outside the published route' { & $sitemapUpdater }
+    Check 'invalid canonical preserves the existing sitemap' ((Hash $sitemapPath) -eq $beforeInvalidCanonical)
+    Remove-Item -LiteralPath $extraPage -Force
     Package
     $firstZip = Hash $zipPath
     $firstBinaries = @($binaryPaths | ForEach-Object { Hash $_ })

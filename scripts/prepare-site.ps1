@@ -15,6 +15,7 @@ $exeInfo = [IO.File]::ReadAllText($standaloneReport) | ConvertFrom-Json
 $packageInfo = [IO.File]::ReadAllText($report) | ConvertFrom-Json
 $version = [string]$exeInfo.executable.version
 if ($version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$' -or @($packageInfo.binaries | Where-Object { $_.version -ne $version }).Count) { throw 'Standalone EXE and ZIP must have the same release version.' }
+& (Join-Path $PSScriptRoot 'update-sitemap.ps1')
 $exeDownloadName = "WhatThePort-v${version}.exe"
 $zipDownloadName = "WhatThePort-v${version}-Windows-x64.zip"
 foreach ($folder in @('assets\images','assets\fonts','downloads')) { New-Item -ItemType Directory -Force -Path (Join-Path $siteRoot $folder) | Out-Null }
