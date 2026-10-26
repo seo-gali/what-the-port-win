@@ -24,13 +24,16 @@ GitHub 저장소의 `blob/main/docs/index.html` 링크는 소스 보기 주소�
 
 ## 검색 노출
 
-- 본문·탐색·다운로드 링크는 정적 HTML로 제공한다. JavaScript는 메뉴·탭·이미지 확대에만 사용하므로 별도 SSR 서버가 필요하지 않다.
-- 홈의 대표 주소는 `https://seo-gali.github.io/what-the-port-win/`이며 가이드·라이선스는 각 HTML 주소를 canonical로 사용한다. 사이트맵에는 이 대표 주소만 넣는다.
-- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-sitemap.ps1`로 공개 HTML에서 `docs/sitemap.xml`을 생성한다. 페이지를 추가·삭제하면 다시 실행하고 결과를 함께 커밋한다. 앱 배포 준비에서도 자동 실행한다. 정확하지 않은 `lastmod`는 넣지 않는다.
-- 크롤러가 읽는 robots.txt는 **도메인 루트** `https://seo-gali.github.io/robots.txt`다. 프로젝트 하위의 robots.txt는 적용되지 않아 만들지 않는다. 루트가 404이면 크롤링 제한이 없는 상태다. 루트 사이트를 별도로 운영하게 되면 Googlebot을 차단하지 않고 사이트맵 주소를 등록한다.
-- 정상 페이지에는 `noindex`·`nofollow`를 넣지 않는다. `404.html`의 `noindex`는 유지하고 사이트맵에서 제외한다. Google 소유권 확인 파일도 사이트맵에서 제외하며 내용을 바꾸지 않는다.
-- Search Console에서 이 사이트의 URL 접두어 속성 → **Sitemaps** → `https://seo-gali.github.io/what-the-port-win/sitemap.xml`을 제출한다. 공개 반영 후 가져오기 성공 여부를 확인한다. 로그인된 소유자·전체 사용자 권한이 필요하며, 폐기된 Google sitemap ping은 사용하지 않는다. 제출은 색인 등록을 보장하지 않는다.
-- 깨진 주소는 홈으로 자동 전환하지 않고 HTTP 404와 홈·다운로드·가이드 링크를 제공한다. 정상 링크는 HTTPS 최종 주소를 직접 사용한다.
+| 항목 | 기준 |
+|---|---|
+| HTML | 본문·탐색·다운로드 링크를 정적 HTML로 제공한다. JavaScript는 화면 조작을 보조하며 별도 SSR 서버는 필요하지 않다. |
+| 대표 주소 | 홈은 공개 루트 `/what-the-port-win/`, 가이드·라이선스는 각 HTML 주소를 canonical로 사용한다. |
+| 사이트맵 | `scripts/update-sitemap.ps1`이 공개 HTML에서 `docs/sitemap.xml`을 생성한다. 페이지 추가·삭제 후 재생성해 함께 커밋한다. 앱 배포 준비에서도 자동 실행하며 부정확한 `lastmod`는 넣지 않는다. |
+| robots.txt | 도메인 루트 `https://seo-gali.github.io/robots.txt`만 적용된다. 404이면 크롤링 제한이 없다. 프로젝트 하위에는 만들지 않는다. 루트 사이트 운영 시 Googlebot을 허용하고 사이트맵 주소를 등록한다. |
+| 색인 제외 | 정상 페이지에는 `noindex`·`nofollow`를 넣지 않는다. 404의 `noindex`는 유지한다. 404·Google 소유권 확인 파일은 사이트맵에서 제외하고 소유권 확인 파일 내용은 보존한다. |
+| 링크·404 | HTTPS 최종 주소로 직접 연결한다. 없는 주소는 자동 리디렉션 없이 HTTP 404와 홈·다운로드·가이드 링크를 제공한다. |
+
+Search Console 제출은 사용자가 직접 진행한다. 로그인된 소유자·전체 사용자로 이 사이트의 URL 접두어 속성 → **Sitemaps**에서 `https://seo-gali.github.io/what-the-port-win/sitemap.xml`을 제출하고 가져오기 결과를 확인한다. 폐기된 Google sitemap ping은 사용하지 않으며 제출이 색인 등록을 보장하지는 않는다.
 
 기준: [Google의 JavaScript 검색 안내](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics), [사이트맵 생성·제출](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap), [robots.txt 위치·응답 처리](https://developers.google.com/crawling/docs/robots-txt/robots-txt-spec).
 
