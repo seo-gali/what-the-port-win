@@ -1,0 +1,28 @@
+{
+  "releaseVersion": "1.1.5",
+  "product": "VirusTotal",
+  "file": {
+    "name": "WhatThePort-v1.1.5.exe",
+    "bytes": 717824,
+    "sha256": "323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99"
+  },
+  "reportUrl": "https://www.virustotal.com/gui/file/323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99/detection",
+  "analysisAtUtc": "2026-11-05T11:23:31Z",
+  "status": "Completed",
+  "source": "Manually submitted public release file; results observed in the public VirusTotal report UI, not an API export.",
+  "stats": {
+    "malicious": 5,
+    "undetected": 66,
+    "typeUnsupported": 4
+  },
+  "detections": [
+    { "engine": "Bkav Pro", "result": "W32.Malware.EF63D6B5" },
+    { "engine": "CrowdStrike Falcon", "result": "Win/malicious_confidence_70% (D)" },
+    { "engine": "Elastic", "result": "Malicious (moderate Confidence)" },
+    { "engine": "McAfee Scanner", "result": "Ti!323400C20142" },
+    { "engine": "SecureAge", "result": "Malicious" }
+  ],
+  "authenticode": "NotSigned",
+  "manufacturerVerdictObtained": false,
+  "scope": "Snapshot for the standalone GUI EXE only. Detections are unresolved; this is not a safety certification or a false-positive determination. ZIP contents were not submitted to VirusTotal."
+}

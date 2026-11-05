@@ -2,6 +2,24 @@
 
 현재 기본 다운로드는 단일 GUI EXE이며 터미널용 ZIP도 선택할 수 있다. 두 다운로드 모두 HTTPS로 제공하지만 Authenticode 서명은 없다. 단일 EXE는 압축 해제 없는 실행 편의를 위한 것으로, 확장자 변경만으로 Chrome 경고가 사라진다는 뜻은 아니다. SHA-256·ZIP 구성 검사와 악성코드 검사, Chrome 평판은 서로 다른 결과다. 무결성 검사를 통과했다고 안전 판정 또는 경고 해제를 주장하지 않는다.
 
+## 2026-11-05 · v1.1.5 공개 배포 점검
+
+현재 공개 EXE와 동일한 파일을 VirusTotal에 제출했다. SHA-256은 `323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99`이며, 분석 시각은 2026-11-05 11:23:31 UTC다. **71개 엔진 중 5개 탐지**, 66개 미탐지이며 추가 4개 엔진은 파일 형식을 처리하지 못했다.
+
+| 엔진 | 탐지명 |
+|---|---|
+| Bkav Pro | `W32.Malware.EF63D6B5` |
+| CrowdStrike Falcon | `Win/malicious_confidence_70% (D)` |
+| Elastic | `Malicious (moderate Confidence)` |
+| McAfee Scanner | `Ti!323400C20142` |
+| SecureAge | `Malicious` |
+
+[SHA-256으로 조회하는 VirusTotal 보고서](https://www.virustotal.com/gui/file/323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99/detection) · [검사 당시 기록](downloads/VIRUSTOTAL-1.1.5.json) · [배포 파일 체크섬](downloads/SHA256SUMS.txt).
+
+오탐 여부와 탐지 원인은 미확정이다. 이전 IObit 수동 검사 0건과 이번 VirusTotal 결과는 서로 다른 검사 기록이며, 한쪽 결과로 다른 쪽을 무효화하지 않는다. 제조사 검토는 제출하지 않았다. 이 보고서는 단일 GUI EXE에 대한 결과이며 ZIP과 내부 실행 파일의 VirusTotal 결과를 대신하지 않는다. 보고서는 이후 재분석으로 달라질 수 있고, 파일을 재빌드하거나 서명해 해시가 바뀌면 새 파일을 검사해야 한다.
+
+GitHub에는 `v1.1.5` 태그가 있지만 Release 게시물은 없다. 버전이 붙은 EXE·ZIP과 `SHA256SUMS.txt`, 검사 기록·설명을 로컬에 준비했으며 GitHub 로그인 부재로 게시하지 못했다. 코드 서명이 없는 시험 빌드 상태를 유지하며 안전 확인 완료로 안내하지 않는다.
+
 ## 2026-10-22 인증서 보안 점검
 
 대상은 What the Port Windows **1.1.2**와 공개 배포 경로다. 아래 결과는 해당 날짜의 읽기 전용 점검 기록이며, 이후 인증서 갱신·OS 업데이트 상태는 다시 확인해야 한다. 인증서 검사와 악성코드 검사, 코드 서명, Secure Boot 상태를 구분한다.

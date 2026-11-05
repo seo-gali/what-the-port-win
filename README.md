@@ -47,6 +47,8 @@ Windows 트레이에서 개발 서버의 포트·메모리·CPU를 확인하고,
 
 현재는 **코드 서명이 없는 시험 빌드**입니다. 다운로드 경고와 검사 결과는 [보안 안내](docs/download-security.md)에 기록되어 있습니다. 서버 종료는 즉시 적용되며 저장되지 않은 작업은 유실될 수 있습니다.
 
+[SHA-256 목록](docs/downloads/SHA256SUMS.txt) · [v1.1.5 EXE의 VirusTotal 보고서](https://www.virustotal.com/gui/file/323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99/detection): **2026-11-05 검사에서 5/71 탐지**. 오탐 여부는 미확정이며 안전 판정을 의미하지 않습니다. GitHub Release 첨부용 파일은 준비했으며 게시 전입니다.
+
 업데이트할 때는 트레이 메뉴의 **앱 종료**로 기존 앱을 닫고 새 EXE를 실행합니다. 터미널 조회가 필요하면 [CLI 포함 ZIP](https://seo-gali.github.io/what-the-port-win/downloads/WhatThePort-Windows-x64.zip)을 폴더째 풀어 사용하세요. [자세한 사용법 →](https://seo-gali.github.io/what-the-port-win/guide.html)
 
 ## 개발 및 기여
