@@ -1,0 +1,257 @@
+{
+  "checkedAtUtc": "2026-11-05T12:33:55.335Z",
+  "sourceCommit": "44001326de73e459892a3df2a23eacb79e49106f",
+  "appTag": "v1.1.5",
+  "sourceInputs": [
+    {
+      "path": "src/Core/AppVersion.cs",
+      "sha256": "4a01dc298a6d6e2b2b3eb38759706ce97e6539a0cfdb89e29909ea94cbeffb2c"
+    },
+    {
+      "path": "src/Core/Connections.cs",
+      "sha256": "96ccb636bdf9f2b31d4d5134a2bab0ff811387d7addc07f2ec9d8158e54fec0b"
+    },
+    {
+      "path": "src/Core/Launchers.cs",
+      "sha256": "54d0df3ee49b2fefa187f40e218c22fe004c929be083a85889e97942cf9bfd50"
+    },
+    {
+      "path": "src/Core/Models.cs",
+      "sha256": "ed38a46bf87dbaabd7f4edcd60fc5f4431bbb9e97b6ffb2166532614911eae7b"
+    },
+    {
+      "path": "src/Core/Native.cs",
+      "sha256": "be2c1e687b8706b7bfed299d611b28dbd4c93f014d04533e638683613f620348"
+    },
+    {
+      "path": "src/Core/Policy.cs",
+      "sha256": "5abba808c369cc739980f435cc388c99e892ed00902f4c958dad6b1931fe2c1f"
+    },
+    {
+      "path": "src/Core/Scanner.cs",
+      "sha256": "59e5e660b77d46c6dec2ffdfd30a573e5e5c5fa1284c4d9e047b3a310b04a1a7"
+    },
+    {
+      "path": "src/Core/StartupRegistration.cs",
+      "sha256": "ee1e940fb07197837462a5d684409dd7d9aa62c288cbaa06f38f56be4f0d71ce"
+    },
+    {
+      "path": "src/Core/Storage.cs",
+      "sha256": "d43cd871e2635c2947e056445a5e3f3c43df6f9b87abe1f43a3d8483d663d042"
+    },
+    {
+      "path": "src/App/AssemblyInfo.cs",
+      "sha256": "e055e72d19a472a03ae6adbd043565f039c9e02bb5826ddbea336440cfafa538"
+    },
+    {
+      "path": "src/App/Chart.cs",
+      "sha256": "3c332a4e2d02c3c27e4c8b62b0e7f157317d8bd7836273d11162f42515c2c293"
+    },
+    {
+      "path": "src/App/Demo.cs",
+      "sha256": "4156a112afad412f770d8a7535c306895d848b9c1783fc5f8246009f6d575f4b"
+    },
+    {
+      "path": "src/App/InstanceActivation.cs",
+      "sha256": "aa72ac95d02eb9497ae499fdbf8c416cd04782484b20afd525611079a878d1db"
+    },
+    {
+      "path": "src/App/LicenseViewer.cs",
+      "sha256": "6fcdb2a85e627c6f1b1bdede5e984d97cc4ec225dafe14e2c4ce9985550db64d"
+    },
+    {
+      "path": "src/App/Panel.cs",
+      "sha256": "4173f5fdb2875012211019a550b8db804f945eca8d005df0f4c1c6df528e09f2"
+    },
+    {
+      "path": "src/App/PanelPlacement.cs",
+      "sha256": "a1f9f85c8ed3542d373baac48760beed6574fefecf27a4c477938c5dc9012254"
+    },
+    {
+      "path": "src/App/Program.cs",
+      "sha256": "f55d6f11683b24ebbc31ead5f7847209174545dae74dddd0c9a5d9cee802fe0d"
+    },
+    {
+      "path": "src/App/Strings.cs",
+      "sha256": "d3796dff68f4918e43d8f5d4e2afa73a819e07ea16c7490a10bb3030f2e6fa75"
+    },
+    {
+      "path": "src/App/ToolTipTextConverter.cs",
+      "sha256": "d3c6d8f50cdf73c90754ac68fa3afa2549ccaa046ec3b23bf73dfcaa591c0683"
+    },
+    {
+      "path": "src/App/TrayIcon.cs",
+      "sha256": "74b9403447348d9b7df34910f3eed1b973ba808913aa0c46db72b6b6a585fcdf"
+    },
+    {
+      "path": "assets/fonts/Geist-Medium.ttf",
+      "sha256": "0090e004725f6f64b841715b4167920580f883fcf9b67fc6d744089103fec101"
+    },
+    {
+      "path": "assets/fonts/Geist-Regular.ttf",
+      "sha256": "5c8968eafb98a4c4f47033daf29e38e284a6f2a82eb017d171ab040fe7c4b615"
+    },
+    {
+      "path": "assets/fonts/GeistMono-Medium.ttf",
+      "sha256": "90b15711dc3779b2e64e8aff5228154dd019a90bce4947549c4a8a8a43f2ac25"
+    },
+    {
+      "path": "assets/fonts/GeistMono-Regular.ttf",
+      "sha256": "42d8ad2e610238e64e8abfcde3037c63f7850a73928742b7ab7229d897bcb155"
+    },
+    {
+      "path": "src/App/Shell.xaml",
+      "sha256": "3fdfce516e2bb2e76ff60741f426fd7f930104517d0d10e5a034c336c72badf9"
+    },
+    {
+      "path": "src/app.manifest",
+      "sha256": "56aba3275c3b20edb879a3c44a3c4d31927db037b37f5c5e7f0b3e92a4db7c82"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "a4b7f04a19dd4563299c7a1924fbb60e1d85a5f5f1e7998a181f9cbaded767a0"
+    },
+    {
+      "path": "assets/fonts/OFL.txt",
+      "sha256": "930853ee1daa68554d9e35c8a9175affb74f699fad9a5da6ee5ebe76379d9137"
+    },
+    {
+      "path": "scripts/build-single-file.ps1",
+      "sha256": "79db8238c4f53d150a0d2cae486a769ae121dc3e67db11175c132d42c494bef2"
+    },
+    {
+      "path": "scripts/compile-markup.proj",
+      "sha256": "8e950dbc608dea004e96e2caaf5261392fce4bf39f9562178ff0f4b8e7ea225f"
+    },
+    {
+      "path": "scripts/verify-single-file.ps1",
+      "sha256": "8bd594af7bde0eb92cec7b6c3d17af31a9ad621dca1ef6411a7b2e98892fc859"
+    }
+  ],
+  "published": {
+    "file": "published/WhatThePort.exe",
+    "bytes": 717824,
+    "sha256": "323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99",
+    "mvid": "29db655f-f566-4aef-8b77-cf93fece5899",
+    "resources": [
+      "WhatThePort.g.resources",
+      "WhatThePort.LICENSE.txt",
+      "WhatThePort.OFL.txt"
+    ],
+    "version": "1.1.5.0",
+    "references": [
+      "mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+      "PresentationFramework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+      "System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+      "PresentationCore, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+      "WindowsBase, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+      "System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+      "System.Runtime.Serialization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    ]
+  },
+  "rebuilt": {
+    "file": "rebuilt/WhatThePort.exe",
+    "bytes": 717824,
+    "sha256": "a59d612e8b152f84ed9d40cb70d7c86c454bee8c96cff5f1611f6740e14400d6",
+    "mvid": "cd99e5e3-9f00-4989-9088-8b9287188603",
+    "resources": [
+      "WhatThePort.g.resources",
+      "WhatThePort.LICENSE.txt",
+      "WhatThePort.OFL.txt"
+    ],
+    "version": "1.1.5.0",
+    "references": [
+      "mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+      "PresentationFramework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+      "System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+      "PresentationCore, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+      "WindowsBase, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+      "System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+      "System.Runtime.Serialization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    ],
+    "distribution": "Verification-only local rebuild; not a replacement download and not VirusTotal-scanned"
+  },
+  "rawByteIdentical": false,
+  "onlyBuildGeneratedFieldsDiffer": true,
+  "excludedBuildFields": [
+    {
+      "kind": "PE COFF build timestamp",
+      "offset": 136,
+      "length": 4
+    },
+    {
+      "kind": ".NET module version ID (MVID)",
+      "offset": 706304,
+      "length": 16
+    },
+    {
+      "kind": "MVID in compiler-generated PrivateImplementationDetails type name",
+      "offset": 669500,
+      "length": 36
+    }
+  ],
+  "differentBytes": 48,
+  "differentOffsets": [
+    136,
+    137,
+    138,
+    669500,
+    669501,
+    669502,
+    669503,
+    669504,
+    669506,
+    669507,
+    669509,
+    669510,
+    669511,
+    669512,
+    669515,
+    669516,
+    669517,
+    669519,
+    669520,
+    669521,
+    669522,
+    669524,
+    669525,
+    669527,
+    669528,
+    669529,
+    669530,
+    669531,
+    669532,
+    669533,
+    669534,
+    669535,
+    706304,
+    706305,
+    706306,
+    706307,
+    706308,
+    706309,
+    706310,
+    706311,
+    706312,
+    706313,
+    706314,
+    706315,
+    706316,
+    706317,
+    706318,
+    706319
+  ],
+  "normalizedSha256": "9c5006435326cdf40ab3136b8eb7163538e8dbe46b8142a84dd86aacae5ec8bb",
+  "rebuiltNormalizedSha256": "9c5006435326cdf40ab3136b8eb7163538e8dbe46b8142a84dd86aacae5ec8bb",
+  "selfChecks": [
+    "Changed code byte is detected",
+    "Timestamp-only difference is excluded",
+    "Changed compiler-generated type-name prefix is detected"
+  ],
+  "method": "Entire file byte comparison excluding only PE COFF timestamp, binary MVID and the same MVID in the compiler-generated PrivateImplementationDetails type name. MVID values came from .NET reflection-only metadata in separate processes; both representations were uniquely matched. No binaries were altered.",
+  "limits": [
+    "Same machine and installed compiler; not an independent clean-machine build",
+    "No decompiler or REA engine was available; metadata and raw-byte comparison only",
+    "Does not establish malware absence or the reason for vendor verdicts"
+  ]
+}

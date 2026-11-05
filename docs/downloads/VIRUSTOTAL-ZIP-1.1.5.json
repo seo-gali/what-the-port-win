@@ -1,0 +1,186 @@
+{
+  "releaseVersion": "1.1.5",
+  "checkedAtUtc": "2026-11-05T12:39:54.559Z",
+  "product": "VirusTotal",
+  "source": "Public report UI snapshots after manual submission of the unchanged public ZIP and its three exact runtime entries; not an API export.",
+  "standaloneReference": {
+    "file": {
+      "name": "WhatThePort-v1.1.5.exe",
+      "bytes": 717824,
+      "sha256": "323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99"
+    },
+    "analysisAtUtc": "2026-11-05T11:23:31Z",
+    "reportUrl": "https://www.virustotal.com/gui/file/323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99/detection",
+    "summary": {
+      "flagged": 5,
+      "analyzed": 71,
+      "undetected": 66,
+      "typeUnsupported": 4,
+      "failure": 0
+    },
+    "reusedExistingReport": true
+  },
+  "files": [
+    {
+      "kind": "archive",
+      "file": {
+        "name": "WhatThePort-v1.1.5-Windows-x64.zip",
+        "bytes": 1332653,
+        "sha256": "a5c1adc9c5c5cc37ca9f6eb646694aaaf765f2007670c99f8efc26ecaec46579"
+      },
+      "analysisAtUtc": "2026-11-05T12:35:28.000Z",
+      "status": "Completed",
+      "reportUrl": "https://www.virustotal.com/gui/file/a5c1adc9c5c5cc37ca9f6eb646694aaaf765f2007670c99f8efc26ecaec46579/detection",
+      "summary": {
+        "flagged": 5,
+        "analyzed": 67,
+        "undetected": 62,
+        "typeUnsupported": 7,
+        "failure": 1
+      },
+      "detections": [
+        {
+          "engine": "Bkav Pro",
+          "result": "W32.Malware.B9C533D2"
+        },
+        {
+          "engine": "DeepInstinct",
+          "result": "MALICIOUS"
+        },
+        {
+          "engine": "Elastic",
+          "result": "Malicious (moderate Confidence)"
+        },
+        {
+          "engine": "Google",
+          "result": "Detected"
+        },
+        {
+          "engine": "Varist",
+          "result": "W64/MSIL_Tiny.AF.gen!Eldorado"
+        }
+      ]
+    },
+    {
+      "kind": "zip-gui",
+      "file": {
+        "name": "WhatThePort.exe",
+        "bytes": 129024,
+        "sha256": "609debb9845e6e5e98a737de6f84d24a7fe00265323ce878e9d85bcca75dd236"
+      },
+      "analysisAtUtc": "2026-11-05T12:31:14.000Z",
+      "status": "Completed",
+      "reportUrl": "https://www.virustotal.com/gui/file/609debb9845e6e5e98a737de6f84d24a7fe00265323ce878e9d85bcca75dd236/detection",
+      "summary": {
+        "flagged": 3,
+        "analyzed": 71,
+        "undetected": 68,
+        "typeUnsupported": 4,
+        "failure": 0
+      },
+      "detections": [
+        {
+          "engine": "Bkav Pro",
+          "result": "W32.Malware.31F27E5C"
+        },
+        {
+          "engine": "McAfee Scanner",
+          "result": "Ti!609DEBB9845E"
+        },
+        {
+          "engine": "SecureAge",
+          "result": "Malicious"
+        }
+      ]
+    },
+    {
+      "kind": "zip-core",
+      "file": {
+        "name": "WhatThePort.Core.dll",
+        "bytes": 42496,
+        "sha256": "7df692cf184e5e568de1cbf4da12f9da66d2f333583b82f412e70947f528583a"
+      },
+      "analysisAtUtc": "2026-11-05T12:33:49.000Z",
+      "status": "Completed",
+      "reportUrl": "https://www.virustotal.com/gui/file/7df692cf184e5e568de1cbf4da12f9da66d2f333583b82f412e70947f528583a/detection",
+      "summary": {
+        "flagged": 3,
+        "analyzed": 71,
+        "undetected": 68,
+        "typeUnsupported": 4,
+        "failure": 0
+      },
+      "detections": [
+        {
+          "engine": "Bkav Pro",
+          "result": "W32.Malware.B9C533D2"
+        },
+        {
+          "engine": "Cynet",
+          "result": "Malicious (score: 100)"
+        },
+        {
+          "engine": "DeepInstinct",
+          "result": "MALICIOUS"
+        }
+      ]
+    },
+    {
+      "kind": "zip-cli",
+      "file": {
+        "name": "wtp.exe",
+        "bytes": 8192,
+        "sha256": "afd1d107ebe78356bb2570da2f7004b3c2b8af35b405741d61c89bfad87379fd"
+      },
+      "analysisAtUtc": "2026-11-05T12:34:56.000Z",
+      "status": "Completed",
+      "reportUrl": "https://www.virustotal.com/gui/file/afd1d107ebe78356bb2570da2f7004b3c2b8af35b405741d61c89bfad87379fd/detection",
+      "summary": {
+        "flagged": 7,
+        "analyzed": 70,
+        "undetected": 63,
+        "typeUnsupported": 4,
+        "failure": 1
+      },
+      "detections": [
+        {
+          "engine": "Bkav Pro",
+          "result": "W32.Malware.8E3180E4"
+        },
+        {
+          "engine": "Elastic",
+          "result": "Malicious (moderate Confidence)"
+        },
+        {
+          "engine": "Google",
+          "result": "Detected"
+        },
+        {
+          "engine": "McAfee Scanner",
+          "result": "Ti!AFD1D107EBE7"
+        },
+        {
+          "engine": "SecureAge",
+          "result": "Malicious"
+        },
+        {
+          "engine": "Trapmine",
+          "result": "Suspicious.low.ml.score"
+        },
+        {
+          "engine": "Varist",
+          "result": "W64/MSIL_Tiny.AF.gen!Eldorado"
+        }
+      ]
+    }
+  ],
+  "interpretation": "Detections occur in the archive and all three ZIP runtime files, so the evidence does not isolate the issue to standalone EXE packaging. Exact vendor detection causes and false-positive status remain unknown.",
+  "limits": [
+    "Reports are time-specific observations and may change",
+    "Engine coverage and analysis times differ across files; score differences do not prove a packaging cause",
+    "Type-unsupported and failure outcomes are excluded from the displayed analyzed denominator",
+    "No safety certification or manufacturer verdict is claimed",
+    "Memory-reading and server-termination functionality were preserved; no code changed",
+    "The verification-only rebuilt EXE was not published or uploaded"
+  ]
+}

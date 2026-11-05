@@ -20,6 +20,30 @@
 
 GitHub에는 `v1.1.5` 태그가 있지만 Release 게시물은 없다. 버전이 붙은 EXE·ZIP과 `SHA256SUMS.txt`, 검사 기록·설명을 로컬에 준비했으며 GitHub 로그인 부재로 게시하지 못했다. 코드 서명이 없는 시험 빌드 상태를 유지하며 안전 확인 완료로 안내하지 않는다.
 
+## 2026-11-05 · 새 빌드와 ZIP판 비교
+
+현재 앱 소스와 빌드 입력은 `v1.1.5` 태그 이후 변경되지 않았다. 같은 PC의 Windows 내장 빌드 도구로 입력 파일 31개를 별도 폴더에 복사해 새 EXE를 만들었다. 기존 배포 EXE·ZIP과 메모리 읽기·서버 종료 기능은 변경하지 않았다.
+
+두 EXE의 크기는 717,824바이트로 같고 48바이트가 다르다. 차이는 PE 빌드 시각, .NET 모듈 ID(MVID), 같은 ID가 들어간 컴파일러 생성 타입 이름에만 있었다. 이 세 필드를 제외한 **파일 전체가 바이트 단위로 일치**했다. 코드 위치의 바이트와 타입 이름 접두사를 바꾸는 자체 검증에서는 비교가 실패하는 것도 확인했다. 독립된 PC에서 재현한 결과나 악성코드 부재 증명은 아니다. [입력 해시·제외 범위·비교 기록](downloads/BUILD-COMPARISON-1.1.5.json).
+
+새 EXE의 SHA-256은 `a59d612e8b152f84ed9d40cb70d7c86c454bee8c96cff5f1611f6740e14400d6`이다. 이 파일은 대조용으로만 보관하며 공개 다운로드를 교체하거나 VirusTotal에 제출하지 않았다.
+
+공개 ZIP 자체와 내부 GUI·Core DLL·CLI를 각각 VirusTotal에 제출했다. 내부 파일은 배포 메타데이터의 SHA-256과 일치함을 확인한 뒤 제출했다. 아래 시각은 UTC이며 단일 EXE는 같은 날의 기존 보고서를 사용했다.
+
+| 파일 | 검사 시각 | 탐지 / 판정 엔진 | 보고서 |
+|---|---|---|---|
+| 단일 GUI EXE | 11:23:31 | **5/71** | [조회](https://www.virustotal.com/gui/file/323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99/detection) |
+| ZIP 내부 GUI EXE | 12:31:14 | **3/71** | [조회](https://www.virustotal.com/gui/file/609debb9845e6e5e98a737de6f84d24a7fe00265323ce878e9d85bcca75dd236/detection) |
+| ZIP 내부 Core DLL | 12:33:49 | **3/71** | [조회](https://www.virustotal.com/gui/file/7df692cf184e5e568de1cbf4da12f9da66d2f333583b82f412e70947f528583a/detection) |
+| ZIP 내부 CLI EXE | 12:34:56 | **7/70** | [조회](https://www.virustotal.com/gui/file/afd1d107ebe78356bb2570da2f7004b3c2b8af35b405741d61c89bfad87379fd/detection) |
+| ZIP 전체 | 12:35:28 | **5/67** | [조회](https://www.virustotal.com/gui/file/a5c1adc9c5c5cc37ca9f6eb646694aaaf765f2007670c99f8efc26ecaec46579/detection) |
+
+GUI는 Bkav·McAfee·SecureAge, Core DLL은 Bkav·Cynet·DeepInstinct, CLI는 Bkav·Elastic·Google·McAfee·SecureAge·Trapmine·Varist가 탐지했다. ZIP은 Bkav·DeepInstinct·Elastic·Google·Varist가 탐지했다. [파일별 해시·탐지명·엔진 상태 기록](downloads/VIRUSTOTAL-ZIP-1.1.5.json).
+
+파일 형식을 처리하지 못한 엔진은 GUI·Core·CLI에서 각 4개, ZIP에서 7개다. CLI와 ZIP은 엔진 실패도 각 1개이며 위 분모에서 제외된다. 기록은 공개 UI 관측값이며 VirusTotal API 원본 응답은 아니다.
+
+**ZIP판에서도 탐지가 있으므로 단일 EXE 구성만의 문제로 한정할 근거는 없다.** 검사 시각과 엔진 구성이 달라 점수 차이로 특정 기능의 원인을 확정할 수도 없다. 메모리 읽기·서버 종료는 필수 기능으로 유지한다. 업체별 재검토 요청은 보내지 않았으며 오탐 여부·정확한 탐지 원인·코드 서명은 여전히 해결되지 않았다.
+
 ## 2026-10-22 인증서 보안 점검
 
 대상은 What the Port Windows **1.1.2**와 공개 배포 경로다. 아래 결과는 해당 날짜의 읽기 전용 점검 기록이며, 이후 인증서 갱신·OS 업데이트 상태는 다시 확인해야 한다. 인증서 검사와 악성코드 검사, 코드 서명, Secure Boot 상태를 구분한다.
