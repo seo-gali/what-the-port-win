@@ -1,0 +1,108 @@
+{
+    "releaseVersion":  "1.1.5",
+    "checkedAtUtc":  "2026-11-05T13:53:04.4110913Z",
+    "sourceCommit":  "3a1eb50e3c23b961c76cfb533d5b2ec48cd3354b",
+    "startedAtUtc":  "2026-11-05T13:48:09.9338019Z",
+    "scope":  "Functional regression testing of freshly generated standard and standalone builds from unchanged v1.1.5 application source",
+    "runs":  [
+                 {
+                     "format":  "standard",
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1",
+                     "exitCode":  0,
+                     "completedAtUtc":  "2026-11-05T13:48:44.5641102Z",
+                     "core":  {
+                                  "passed":  148,
+                                  "failed":  0
+                              },
+                     "ui":  {
+                                "passed":  215,
+                                "failed":  0
+                            },
+                     "additionalChecks":  [
+                                              "PASS CLI JSON snapshot",
+                                              "PASS CLI error exit code",
+                                              "PASS live app: tray, window handle and native scanning",
+                                              "PASS startup: WhatThePort.exe opens directly without the CLI",
+                                              "PASS startup: repeated background launch stays in tray",
+                                              "PASS startup: a second executable copy opens the original instance",
+                                              "PASS startup: relaunch reopens an explicitly hidden panel",
+                                              "PASS live charts: visible; timer adds changing listener measurements to both visible charts",
+                                              "PASS live charts: background; timer adds changing listener measurements to both visible charts",
+                                              "PASS real startup: visible; initial and periodic scans succeeded; panel remains visible",
+                                              "PASS real startup: background; initial and periodic scans succeeded; panel remains visible"
+                                          ],
+                     "logSha256":  "3590768d0dc5c4d4118e02f71323c9b8c925fe516d284347b2ae2f98222d4997"
+                 },
+                 {
+                     "format":  "standalone",
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-single-file.ps1",
+                     "exitCode":  0,
+                     "completedAtUtc":  "2026-11-05T13:49:42.6120189Z",
+                     "core":  {
+                                  "passed":  148,
+                                  "failed":  0
+                              },
+                     "ui":  {
+                                "passed":  215,
+                                "failed":  0
+                            },
+                     "additionalChecks":  [
+                                              "PASS standalone: repeated build preserves executable hash",
+                                              "PASS standalone: no external Core DLL reference",
+                                              "PASS standalone: complete embedded LICENSE",
+                                              "PASS standalone: complete embedded OFL",
+                                              "PASS standalone: standalone WPF panel loads embedded markup",
+                                              "PASS standalone: live tray, native scan and window work with only one EXE, without runtime extraction",
+                                              "PASS standalone: MIT and font licenses are readable from the downloaded EXE",
+                                              "PASS startup: WhatThePort.exe opens directly without the CLI",
+                                              "PASS startup: repeated background launch stays in tray",
+                                              "PASS startup: a second executable copy opens the original instance",
+                                              "PASS startup: relaunch reopens an explicitly hidden panel",
+                                              "PASS live charts: visible; timer adds changing listener measurements to both visible charts",
+                                              "PASS live charts: background; timer adds changing listener measurements to both visible charts",
+                                              "PASS real startup: visible; initial and periodic scans succeeded; panel remains visible",
+                                              "PASS real startup: background; initial and periodic scans succeeded; panel remains visible"
+                                          ],
+                     "logSha256":  "b0674b63753b13869d4c55f8f42f5421d6a948ba2eed3f989f2f6b0a62a44e30"
+                 }
+             ],
+    "testedBinaries":  [
+                           {
+                               "path":  "dist/WhatThePort.exe",
+                               "version":  "1.1.5",
+                               "bytes":  129024,
+                               "sha256":  "9ff058edfbd9554c40db7197303eadbe82b6b275858c57a66de03e41743c6c93"
+                           },
+                           {
+                               "path":  "dist/WhatThePort.Core.dll",
+                               "version":  "1.1.5",
+                               "bytes":  42496,
+                               "sha256":  "111ccdd6964f9480c42ff2afc89cb5de7b6752a44a3de237397b11d8673e548c"
+                           },
+                           {
+                               "path":  "dist/wtp.exe",
+                               "version":  "1.1.5",
+                               "bytes":  8192,
+                               "sha256":  "8dd994f99ece5d816998cb63a9b47c43fb0d1c2e84e057fb80a7d9e6e9de6f2c"
+                           },
+                           {
+                               "path":  "artifacts/single-file/WhatThePort.exe",
+                               "version":  "1.1.5",
+                               "bytes":  717824,
+                               "sha256":  "86540dada90c1bfc826531759869b46a18a98e0d3d330cf5b5ed01eb79af7d82"
+                           }
+                       ],
+    "publicDownloads":  {
+                            "unchanged":  true,
+                            "exeSha256":  "323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99",
+                            "zipSha256":  "a5c1adc9c5c5cc37ca9f6eb646694aaaf765f2007670c99f8efc26ecaec46579",
+                            "replaced":  false
+                        },
+    "newTestFixtureDirectoriesRemaining":  0,
+    "limitations":  [
+                        "Tests ran against generated build outputs whose hashes are listed, not a replacement of the published EXE/ZIP",
+                        "Existing VirusTotal detections and their causes remain unresolved; functional success is not malware clearance",
+                        "Startup tests cover application launch and isolated instances, not a real Windows re-login or IObit Startup Smart Scan",
+                        "Packaging and browser layout tests were not repeated because neither packaging logic nor site HTML/CSS/JavaScript changed"
+                    ]
+}

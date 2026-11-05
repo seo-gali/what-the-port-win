@@ -49,7 +49,7 @@ Windows 트레이에서 개발 서버의 포트·메모리·CPU를 확인하고,
 
 [SHA-256 목록](docs/downloads/SHA256SUMS.txt) · [v1.1.5 EXE의 VirusTotal 보고서](https://www.virustotal.com/gui/file/323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99/detection): **2026-11-05 검사에서 5/71 탐지**. 오탐 여부는 미확정이며 안전 판정을 의미하지 않습니다. GitHub Release 첨부용 파일은 준비했으며 게시 전입니다.
 
-ZIP과 내부 실행 파일에서도 탐지를 확인했습니다. 별도 폴더에서 새로 빌드한 EXE는 빌드 시각·자동 생성 ID를 제외하면 배포본과 일치합니다. [배포판 비교 결과와 한계](docs/download-security.md#2026-11-05--새-빌드와-zip판-비교)를 확인하세요.
+ZIP과 내부 실행 파일에서도 탐지를 확인했습니다. 별도 폴더에서 새로 빌드한 EXE는 빌드 시각·자동 생성 ID를 제외하면 배포본과 일치합니다. [배포판 비교 결과와 한계](docs/download-security.md#2026-11-05--새-빌드와-zip판-비교) · [기능 테스트 기록](docs/downloads/FUNCTIONAL-TESTS-1.1.5.json).
 
 업데이트할 때는 트레이 메뉴의 **앱 종료**로 기존 앱을 닫고 새 EXE를 실행합니다. 터미널 조회가 필요하면 [CLI 포함 ZIP](https://seo-gali.github.io/what-the-port-win/downloads/WhatThePort-Windows-x64.zip)을 폴더째 풀어 사용하세요. [자세한 사용법 →](https://seo-gali.github.io/what-the-port-win/guide.html)
 
