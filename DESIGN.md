@@ -3,8 +3,6 @@
 ## 원본과 방향
 Windows UI의 기준은 이 문서다. [원본 프로젝트](https://github.com/tomjohndesign/what-the-port)의 작은 트레이 패널, 정보 밀도, 포트 식별 색, 차트와 정리 흐름을 Windows에 적용한다. 마케팅 대시보드 대신 실제 트레이 유틸리티를 만든다.
 
-로컬에 `what-the-port-main.zip`이 있으면 내부 `what-the-port-main/WhatThePort/Sources/WhatThePort/UI/`의 `Theme.swift`, `ServersView.swift`, `ServerDetailView.swift`를 보조 자료로 참고한다. ZIP은 Git 추적 대상이 아니며 작업의 필수 조건이 아니다.
-
 오류·빈 상태·키보드 탐색도 구현한다. 버튼이나 단축키의 실제 실행 동작을 바꾸면 [코딩 기준](CODING_STANDARDS.md)의 프로세스 안전·개인정보와 실행 경계를 함께 확인한다.
 
 태그라인·상시 조작 설명·중복 보조 레이블을 두지 않는다. 제목, 필드명과 단위, 데이터의 그룹, 명확한 동작으로 화면을 이해할 수 있게 배치한다. 오류·빈 상태·보호 사유·종료 위험·알림 중지 시각은 판단에 필요한 정보로 유지한다. UX·DX·AX를 함께 고려해 기존 동작과 키보드 탐색을 보존하고, 조작 컨트롤은 언어·측정값에 흔들리지 않는 자동화 ID와 접근성 이름을 제공한다.
