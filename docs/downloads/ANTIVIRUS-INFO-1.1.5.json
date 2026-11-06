@@ -1,0 +1,45 @@
+{
+    "releaseVersion":  "1.1.5",
+    "checkedAtUtc":  "2026-10-25T14:29:26.2012098Z",
+    "product":  "IObit Malware Fighter",
+    "productVersion":  "13.5.0.1684",
+    "engineVersion":  "13.0.0.1634",
+    "database":  "2638",
+    "bdVersion":  "7.101719(10/22/2026 22:54:02 GMT)",
+    "scan":  {
+                 "status":  "Completed",
+                 "mode":  "Manual",
+                 "type":  "Right Scan",
+                 "saveTime":  "2026-10-25 오후 11:27:00",
+                 "elapsed":  "00:00:06",
+                 "objects":  41,
+                 "threats":  0
+             },
+    "files":  [
+                  {
+                      "name":  "standalone/WhatThePort.exe",
+                      "sha256":  "323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99"
+                  },
+                  {
+                      "name":  "WhatThePort-Windows-x64.zip",
+                      "sha256":  "a5c1adc9c5c5cc37ca9f6eb646694aaaf765f2007670c99f8efc26ecaec46579"
+                  },
+                  {
+                      "name":  "zip/WhatThePort.exe",
+                      "sha256":  "609debb9845e6e5e98a737de6f84d24a7fe00265323ce878e9d85bcca75dd236"
+                  },
+                  {
+                      "name":  "zip/WhatThePort.Core.dll",
+                      "sha256":  "7df692cf184e5e568de1cbf4da12f9da66d2f333583b82f412e70947f528583a"
+                  },
+                  {
+                      "name":  "zip/wtp.exe",
+                      "sha256":  "afd1d107ebe78356bb2570da2f7004b3c2b8af35b405741d61c89bfad87379fd"
+                  }
+              ],
+    "allSampleHashesUnchanged":  true,
+    "authenticode":  "NotSigned",
+    "startupSmartScanPerformed":  false,
+    "manufacturerVerdictObtained":  false,
+    "scope":  "On-demand file scan of the listed final release bytes. This does not establish startup-rule acceptance, a false-positive verdict, or absence of malware."
+}

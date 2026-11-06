@@ -199,6 +199,7 @@ public static class UiTests {
         try{
             var empty=new WhatThePort.Snapshot{TotalMemory=snapshot.TotalMemory,FreeMemory=snapshot.FreeMemory};typeof(WhatThePort.App.Panel).GetField("current",PrivateInstance).SetValue(panel,empty);settings.FontScale=125;ResizeWindow(344,460);Rerender();
             var state=All(Body()).OfType<StackPanel>().Single(p=>(string)p.Tag=="empty-state");
+            Check("filtered empty state does not claim no development servers exist",All(state).OfType<TextBlock>().Any(t=>t.Text=="No servers match this filter"));
             Check("empty state wraps without decorative glyph or active cleanup",All(state).OfType<TextBlock>().All(t=>t.Text!=":_"&&t.TextWrapping==TextWrapping.Wrap)&&!ByName("Select servers to stop (C)").IsEnabled&&Displayed(state).Right<=window.ActualWidth);
             Check("empty discovery action fits above the footer at minimum size and maximum font",Displayed(ByName("Include custom executables and other local apps")).Bottom<=Displayed((FrameworkElement)window.FindName("Footer")).Top);
             CaptureVisual((FrameworkElement)window.Content,"empty-small");Click(ByName("Include custom executables and other local apps"));

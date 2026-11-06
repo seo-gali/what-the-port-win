@@ -277,10 +277,9 @@ namespace WhatThePort.App {
             title.Text=T(cleanup?"Clean up":"What the Port");Summary(cleanup);if(current.Servers.Count>0)Rule();
             if(current.Servers.Count==0){
                 var empty=new StackPanel{Tag="empty-state",Margin=new Thickness(4,12,4,12)};
-                empty.Children.Add(new TextBlock{Text=T(current.Error!=null?"Scan unavailable":settings.AllListeners?"No listening ports":"No development servers"),FontSize=15,FontWeight=FontWeights.Medium,TextWrapping=TextWrapping.Wrap,TextAlignment=TextAlignment.Center});
-                if(current.Error==null){
-                    empty.Children.Add(new TextBlock{Text=T("Listening ports will appear here automatically."),FontSize=12,Foreground=B("#A4A6AF"),TextWrapping=TextWrapping.Wrap,TextAlignment=TextAlignment.Center,Margin=new Thickness(0,8,0,0)});
-                    if(!settings.AllListeners){var more=Button("Show all user listeners",delegate{settings.AllListeners=true;Task ignored=Refresh();Render();},"Include custom executables and other local apps");more.Margin=new Thickness(0,18,0,0);more.Content=new TextBlock{Text=T("Show all user listeners"),TextWrapping=TextWrapping.Wrap,TextAlignment=TextAlignment.Center};empty.Children.Add(more);}
+                empty.Children.Add(new TextBlock{Text=T(current.Error!=null?"Scan unavailable":settings.AllListeners?"No listening ports":"No servers match this filter"),FontSize=15,FontWeight=FontWeights.Medium,TextWrapping=TextWrapping.Wrap,TextAlignment=TextAlignment.Center});
+                if(current.Error==null&&!settings.AllListeners){
+                    var more=Button("Show all user listeners",delegate{settings.AllListeners=true;Task ignored=Refresh();Render();},"Include custom executables and other local apps");more.Margin=new Thickness(0,18,0,0);more.Content=new TextBlock{Text=T("Show all user listeners"),TextWrapping=TextWrapping.Wrap,TextAlignment=TextAlignment.Center};empty.Children.Add(more);
                 }
                 body.Children.Add(empty);
             }

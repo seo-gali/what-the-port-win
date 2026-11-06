@@ -2,9 +2,17 @@
 
 현재 기본 다운로드는 단일 GUI EXE이며 터미널용 ZIP도 선택할 수 있다. 두 다운로드 모두 HTTPS로 제공하지만 Authenticode 서명은 없다. 단일 EXE는 압축 해제 없는 실행 편의를 위한 것으로, 확장자 변경만으로 Chrome 경고가 사라진다는 뜻은 아니다. SHA-256·ZIP 구성 검사와 악성코드 검사, Chrome 평판은 서로 다른 결과다. 무결성 검사를 통과했다고 안전 판정 또는 경고 해제를 주장하지 않는다.
 
+## 2026-11-07 · v1.1.6 다운로드 교체
+
+빈 목록의 제목을 `현재 필터에 맞는 서버 없음`으로 바꾸고 중복 설명을 제거했다. 표시 필터·서버 종료·자동 실행·프로세스 보호 정책은 변경하지 않았다. 단일 EXE와 CLI 포함 ZIP을 같은 버전으로 다시 준비한다.
+
+1.1.6은 Authenticode 서명이 없는 시험 빌드이며 **VirusTotal·IObit 재검사 전**이다. 이전 1.1.5의 검사 결과와 소스 일치 비교는 새 파일의 판정으로 사용하지 않는다. 현재 파일 정보·체크섬·검사 상태는 [EXE 정보](downloads/EXE-INFO.json), [SHA-256](downloads/SHA256SUMS.txt), [검사 상태](downloads/ANTIVIRUS-INFO.json), [기능 검증](downloads/FUNCTIONAL-TESTS-1.1.6.json)에서 확인한다. GitHub Release 게시물은 사용자가 직접 게시한다.
+
+아래는 이전 버전과 당시 파일 해시에 대한 기록이다.
+
 ## 2026-11-05 · v1.1.5 공개 배포 점검
 
-현재 공개 EXE와 동일한 파일을 VirusTotal에 제출했다. SHA-256은 `323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99`이며, 분석 시각은 2026-11-05 11:23:31 UTC다. **71개 엔진 중 5개 탐지**, 66개 미탐지이며 추가 4개 엔진은 파일 형식을 처리하지 못했다.
+당시 1.1.5 공개 EXE와 동일한 파일을 VirusTotal에 제출했다. SHA-256은 `323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99`이며, 분석 시각은 2026-11-05 11:23:31 UTC다. **71개 엔진 중 5개 탐지**, 66개 미탐지이며 추가 4개 엔진은 파일 형식을 처리하지 못했다.
 
 | 엔진 | 탐지명 |
 |---|---|
@@ -22,7 +30,7 @@ GitHub에는 `v1.1.5` 태그가 있지만 Release 게시물은 없다. 버전이
 
 ## 2026-11-05 · 새 빌드와 ZIP판 비교
 
-현재 앱 소스와 빌드 입력은 `v1.1.5` 태그 이후 변경되지 않았다. 같은 PC의 Windows 내장 빌드 도구로 입력 파일 31개를 별도 폴더에 복사해 새 EXE를 만들었다. 기존 배포 EXE·ZIP과 메모리 읽기·서버 종료 기능은 변경하지 않았다.
+이 점검 당시 앱 소스와 빌드 입력은 `v1.1.5` 태그 이후 변경되지 않았다. 같은 PC의 Windows 내장 빌드 도구로 입력 파일 31개를 별도 폴더에 복사해 새 EXE를 만들었다. 기존 배포 EXE·ZIP과 메모리 읽기·서버 종료 기능은 변경하지 않았다.
 
 두 EXE의 크기는 717,824바이트로 같고 48바이트가 다르다. 차이는 PE 빌드 시각, .NET 모듈 ID(MVID), 같은 ID가 들어간 컴파일러 생성 타입 이름에만 있었다. 이 세 필드를 제외한 **파일 전체가 바이트 단위로 일치**했다. 코드 위치의 바이트와 타입 이름 접두사를 바꾸는 자체 검증에서는 비교가 실패하는 것도 확인했다. 독립된 PC에서 재현한 결과나 악성코드 부재 증명은 아니다. [입력 해시·제외 범위·비교 기록](downloads/BUILD-COMPARISON-1.1.5.json).
 
@@ -173,7 +181,7 @@ Windows 로그인 시 시작은 현재 사용자 `HKCU\Software\Microsoft\Window
 
 최종 단일 EXE의 SHA-256은 `323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99`다. IObit 13.5.0.1684 · DB 2638의 Manual / Right Scan에서 2개 개체 · 14초 · Completed · 탐지 0건을 확인했고 검사 전후 해시는 같았다. 일반·단일 EXE에서 Core 148개·UI 215개 검사가 통과했다.
 
-최종 다운로드와 ZIP 내부 파일의 검사 기록은 [1.1.5 백신 검사 정보](https://seo-gali.github.io/what-the-port-win/downloads/ANTIVIRUS-INFO.json)에 공개한다. 이 결과는 해당 파일의 수동 검사이며, 실제 로그인 후의 자동 실행·시작 항목 Smart Scan 통과·오탐 확정·코드 서명 완료를 의미하지 않는다. 원본 보고서와 해시는 로컬 `artifacts/security/antivirus-review-1.1.5-registry/`에 보존한다.
+최종 다운로드와 ZIP 내부 파일의 검사 기록은 [1.1.5 백신 검사 정보](https://seo-gali.github.io/what-the-port-win/downloads/ANTIVIRUS-INFO-1.1.5.json)에 공개한다. 이 결과는 해당 파일의 수동 검사이며, 실제 로그인 후의 자동 실행·시작 항목 Smart Scan 통과·오탐 확정·코드 서명 완료를 의미하지 않는다. 원본 보고서와 해시는 로컬 `artifacts/security/antivirus-review-1.1.5-registry/`에 보존한다.
 ## 단일 EXE
 
 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-single-file.ps1`은 Core와 UI 코드를 하나의 일반 .NET 어셈블리로 컴파일한다. WPF 마크업·Geist 폰트·MIT/OFL 전문을 내장한다. 외부 DLL이나 폰트를 임시 폴더에 풀어내는 로더·압축기는 사용하지 않는다. `--licenses`로 라이선스를 열람할 수 있다. Windows의 .NET Framework 4.8은 필요하며, `wtp.exe` CLI는 선택 ZIP에 포함된다.

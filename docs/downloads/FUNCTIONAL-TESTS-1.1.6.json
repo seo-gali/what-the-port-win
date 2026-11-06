@@ -1,0 +1,145 @@
+{
+    "releaseVersion":  "1.1.6",
+    "checkedAtUtc":  "2026-11-06T17:33:45.6485757Z",
+    "sourceBaseCommit":  "31a1dedffa8e704607b43305a6863231740befa0",
+    "changedSourceFiles":  [
+                               {
+                                   "sha256":  "b92a5245687153e33c1061a5e33f26ca2d2fe1ba4cce05c8db74167d7d21abbe",
+                                   "path":  "src/App/Panel.cs"
+                               },
+                               {
+                                   "sha256":  "48390680da87d4790552d0361470948ef6985fe7bb02ab7eb20ebdae09f329c0",
+                                   "path":  "src/App/Strings.cs"
+                               },
+                               {
+                                   "sha256":  "d0c8a8fdd4e36ba8bfa2a9b79b674d688dc00b3bc1dc0d4763158edd435fe2c2",
+                                   "path":  "src/Core/AppVersion.cs"
+                               },
+                               {
+                                   "sha256":  "aeef61008ed23d49e38525f6f2278f65ec2a7731d1a9bc19a49a4f4d2b448273",
+                                   "path":  "tests/UiTests.cs"
+                               }
+                           ],
+    "runs":  [
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1",
+                     "exitCode":  0,
+                     "startedAtUtc":  "2026-11-06T17:29:10.0896130Z",
+                     "completedAtUtc":  "2026-11-06T17:29:47.0740957Z",
+                     "logSha256":  "de67b5b6f2761fd1269b2114f20a70d1b04dd9b13058da41674436471534cd1a",
+                     "core":  {
+                                  "passed":  148,
+                                  "failed":  0
+                              },
+                     "ui":  {
+                                "passed":  216,
+                                "failed":  0
+                            }
+                 },
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-single-file.ps1",
+                     "exitCode":  0,
+                     "startedAtUtc":  "2026-11-06T17:29:47.2276999Z",
+                     "completedAtUtc":  "2026-11-06T17:30:36.3957125Z",
+                     "logSha256":  "024fcace466af66814751936937a4bb5f254ebce1cc8e894fb0db3ca15827c51",
+                     "core":  {
+                                  "passed":  148,
+                                  "failed":  0
+                              },
+                     "ui":  {
+                                "passed":  216,
+                                "failed":  0
+                            }
+                 },
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-package.ps1",
+                     "exitCode":  0,
+                     "startedAtUtc":  "2026-11-06T17:30:36.4033380Z",
+                     "completedAtUtc":  "2026-11-06T17:30:58.8983141Z",
+                     "logSha256":  "502c11502e938d5a1f6187e8dfa18c5181ebd74c58929280033b119fecb48d1f",
+                     "packageChecks":  29
+                 }
+             ],
+    "testedBuildsBeforePackaging":  {
+                                        "value":  [
+                                                      {
+                                                          "path":  "dist/WhatThePort.exe",
+                                                          "version":  "1.1.6",
+                                                          "bytes":  128512,
+                                                          "sha256":  "63863942a7962d9784d832dd8063ee0e7fd8e80a357ef203740b982de8e2e398"
+                                                      },
+                                                      {
+                                                          "path":  "dist/WhatThePort.Core.dll",
+                                                          "version":  "1.1.6",
+                                                          "bytes":  42496,
+                                                          "sha256":  "82015a87584043b666993981308b16b9534cd8795756ed9a7d74442c6ba8ebf5"
+                                                      },
+                                                      {
+                                                          "path":  "dist/wtp.exe",
+                                                          "version":  "1.1.6",
+                                                          "bytes":  8192,
+                                                          "sha256":  "9565966bc50a8d3ceba3a847c1ab872fe85d32e251ad59f9b246c4bcb6d69a48"
+                                                      },
+                                                      {
+                                                          "path":  "artifacts/single-file/WhatThePort.exe",
+                                                          "version":  "1.1.6",
+                                                          "bytes":  717824,
+                                                          "sha256":  "73dab64d15dea260feda68ef8d200e2d2245251f411f60f3ceeaea32cd1f3a7e"
+                                                      }
+                                                  ],
+                                        "Count":  4
+                                    },
+    "publishedBinaries":  [
+                              {
+                                  "path":  "dist/WhatThePort.exe",
+                                  "version":  "1.1.6",
+                                  "bytes":  128512,
+                                  "sha256":  "a1d82a4338a50973c7c10e8ecabebec76fe9646785242fd77e8768ffde50cf88"
+                              },
+                              {
+                                  "path":  "dist/WhatThePort.Core.dll",
+                                  "version":  "1.1.6",
+                                  "bytes":  42496,
+                                  "sha256":  "9bc7b8cc15ff429f429edbd237121217c376646bfe665e688e5458d9f2639a6f"
+                              },
+                              {
+                                  "path":  "dist/wtp.exe",
+                                  "version":  "1.1.6",
+                                  "bytes":  8192,
+                                  "sha256":  "15729ca94ed8110fda12125845270ffc29470bda186f8c1ca32ffe2977d3e74e"
+                              },
+                              {
+                                  "path":  "artifacts/single-file/WhatThePort.exe",
+                                  "version":  "1.1.6",
+                                  "bytes":  717824,
+                                  "sha256":  "73dab64d15dea260feda68ef8d200e2d2245251f411f60f3ceeaea32cd1f3a7e"
+                              }
+                          ],
+    "finalZipRuntimeVerification":  {
+                                        "completedAtUtc":  "2026-11-06T17:32:26.5835914Z",
+                                        "exitCode":  0,
+                                        "uiPassed":  216,
+                                        "startupPassed":  true,
+                                        "corePassed":  148,
+                                        "cliPassed":  true
+                                    },
+    "publicDownloads":  {
+                            "standaloneMatchesFullTestRun":  true,
+                            "exeSha256":  "73dab64d15dea260feda68ef8d200e2d2245251f411f60f3ceeaea32cd1f3a7e",
+                            "zipSha256":  "efe6d8690c651ff581fb364761713a4c0ab1b248f9cb4c58c2153e5bad9504c6",
+                            "replaced":  true,
+                            "zipBinariesMatchFinalRuntimeTests":  true
+                        },
+    "limitations":  [
+                        "No new VirusTotal or IObit scan; functional and integrity checks are not malware clearance.",
+                        "No actual Windows re-login or physical multi-device verification.",
+                        "Earlier UI keyboard test failed once before versioning; unchanged rerun and final v1.1.6 runs passed, cause unconfirmed."
+                    ],
+    "siteVerification":  {
+                             "command":  "node scripts/check-site.mjs",
+                             "exitCode":  0,
+                             "checksPassed":  270,
+                             "completedAtUtc":  "2026-11-06T17:34:22.6337760Z",
+                             "logSha256":  "f30a40d06120e231db241601a10f6a004e04bc3299f72b8652cc365de35e5cdf"
+                         }
+}
