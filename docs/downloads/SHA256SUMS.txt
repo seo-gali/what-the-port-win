@@ -1,2 +1,2 @@
-efe6d8690c651ff581fb364761713a4c0ab1b248f9cb4c58c2153e5bad9504c6  WhatThePort-v1.1.6-Windows-x64.zip
-73dab64d15dea260feda68ef8d200e2d2245251f411f60f3ceeaea32cd1f3a7e  WhatThePort-v1.1.6.exe
+d4a2b89b354aa539a178d1b78ff6744535024b1cf45d4c6443f2c96e02ebddbc  WhatThePort-v1.1.7-Windows-x64.zip
+22c2613c462a55c02d95bfc0a3a3710f19fbd4d735a7b88afd21171e8d90ba05  WhatThePort-v1.1.7.exe

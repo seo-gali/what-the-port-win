@@ -1,6 +1,6 @@
 {
-    "releaseVersion":  "1.1.6",
-    "recordedAtUtc":  "2026-11-06T17:32:47.9951379Z",
+    "releaseVersion":  "1.1.7",
+    "recordedAtUtc":  "2026-11-06T17:59:01.5806014Z",
     "status":  "NotScanned",
     "authenticode":  "NotSigned",
     "virusTotalReanalysisPerformed":  false,
@@ -9,27 +9,27 @@
     "files":  [
                   {
                       "name":  "WhatThePort.exe",
-                      "sha256":  "73dab64d15dea260feda68ef8d200e2d2245251f411f60f3ceeaea32cd1f3a7e",
-                      "bytes":  717824
+                      "sha256":  "22c2613c462a55c02d95bfc0a3a3710f19fbd4d735a7b88afd21171e8d90ba05",
+                      "bytes":  735744
                   },
                   {
                       "name":  "WhatThePort-Windows-x64.zip",
-                      "sha256":  "efe6d8690c651ff581fb364761713a4c0ab1b248f9cb4c58c2153e5bad9504c6",
-                      "bytes":  1331568
+                      "sha256":  "d4a2b89b354aa539a178d1b78ff6744535024b1cf45d4c6443f2c96e02ebddbc",
+                      "bytes":  1348985
                   },
                   {
                       "name":  "zip/WhatThePort.exe",
-                      "sha256":  "a1d82a4338a50973c7c10e8ecabebec76fe9646785242fd77e8768ffde50cf88"
+                      "sha256":  "5ca33dfe04374e0b922f075141eccf62e6ff788d7babe60c1caa1407e33dc4b6"
                   },
                   {
                       "name":  "zip/WhatThePort.Core.dll",
-                      "sha256":  "9bc7b8cc15ff429f429edbd237121217c376646bfe665e688e5458d9f2639a6f"
+                      "sha256":  "4f079312a7188279105cd61058c93a992bdb823f6ae5bc383b111ffb60f4f4c4"
                   },
                   {
                       "name":  "zip/wtp.exe",
-                      "sha256":  "15729ca94ed8110fda12125845270ffc29470bda186f8c1ca32ffe2977d3e74e"
+                      "sha256":  "adb7431082bdd21e72ccbc8058cd732e879252b80ed42a1e73de7660671849c2"
                   }
               ],
-    "previousReleaseRecord":  "ANTIVIRUS-INFO-1.1.5.json",
-    "scope":  "Integrity and functional verification only. VirusTotal and IObit have not been rerun for these v1.1.6 bytes. Historical v1.1.5 results do not apply to these hashes."
+    "previousReleaseRecord":  "ANTIVIRUS-INFO-1.1.6.json",
+    "scope":  "Integrity and functional verification only. VirusTotal and IObit have not been rerun for these v1.1.7 bytes. Historical results do not apply to these hashes."
 }

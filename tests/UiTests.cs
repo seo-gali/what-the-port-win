@@ -439,6 +439,11 @@ public static class UiTests {
         panel.Show();Layout();deactivate.Invoke(panel,new object[]{window,EventArgs.Empty});Check("ordinary tray or hotkey opening retains auto-hide",!window.IsVisible);
     }
     static void HeaderTests(){
+        using(var icon=System.Drawing.Icon.ExtractAssociatedIcon(typeof(WhatThePort.App.Panel).Assembly.Location))using(var bitmap=icon.ToBitmap()){
+            bool gold=false;
+            for(int y=0;y<bitmap.Height;y++)for(int x=0;x<bitmap.Width;x++){var pixel=bitmap.GetPixel(x,y);if(pixel.A==255&&pixel.R==255&&pixel.G==194&&pixel.B==91)gold=true;}
+            Check("executable has branded Windows file icon",gold);
+        }
         var heading=(TextBlock)window.FindName("Title");string original=heading.Text;
         Check("home heading identifies the app",original=="What the Port"&&window.Title==original);
         foreach(string text in new[]{"What the Port","설정","An exceptionally long project name for the server detail"}){

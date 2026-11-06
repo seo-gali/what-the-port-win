@@ -19,7 +19,7 @@ if ($uiFiles.Count -gt 0) {
     $writer = New-Object System.Resources.ResourceWriter($resources)
     $markup = [IO.File]::OpenRead((Join-Path $markupRoot 'Shell.baml'))
     try { $writer.AddResource('shell.baml', $markup); $writer.Generate() } finally { $writer.Dispose(); $markup.Dispose() }
-    & $compiler /nologo /target:winexe /platform:x64 /optimize+ /warnaserror+ "/out:$outputRoot\WhatThePort.exe" "/win32manifest:$projectRoot\src\app.manifest" "/r:$outputRoot\WhatThePort.Core.dll" "/r:$framework\WPF\PresentationFramework.dll" "/r:$framework\WPF\PresentationCore.dll" "/r:$framework\WPF\WindowsBase.dll" /r:System.Xaml.dll "/resource:$resources,WhatThePort.g.resources" $uiFiles
+    & $compiler /nologo /target:winexe /platform:x64 /optimize+ /warnaserror+ "/out:$outputRoot\WhatThePort.exe" "/win32icon:$projectRoot\src\App\WhatThePort.ico" "/win32manifest:$projectRoot\src\app.manifest" "/r:$outputRoot\WhatThePort.Core.dll" "/r:$framework\WPF\PresentationFramework.dll" "/r:$framework\WPF\PresentationCore.dll" "/r:$framework\WPF\WindowsBase.dll" /r:System.Xaml.dll "/resource:$resources,WhatThePort.g.resources" $uiFiles
     if ($LASTEXITCODE -ne 0) { throw 'App compilation failed.' }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'src\App.config') -Destination (Join-Path $outputRoot 'WhatThePort.exe.config') -Force
 }

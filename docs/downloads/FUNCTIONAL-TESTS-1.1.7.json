@@ -1,0 +1,165 @@
+{
+    "releaseVersion":  "1.1.7",
+    "checkedAtUtc":  "2026-11-06T17:59:48.2879677Z",
+    "sourceBaseCommit":  "1f5196b1ebc009743147b53d30f6d1512a6d0d2c",
+    "changedSourceFiles":  [
+                               {
+                                   "sha256":  "39c501453f1a39e561ce30af4f487462a58261253a2270be719794a3dbf58664",
+                                   "path":  "src/App/WhatThePort.ico"
+                               },
+                               {
+                                   "sha256":  "9ca0125f116da06fbfa081f57ba5d779120f815f657034057f52e310c620dfb3",
+                                   "path":  "src/Core/AppVersion.cs"
+                               },
+                               {
+                                   "sha256":  "52a81685b3000046fe5a40c01645e80ab159f73e0224e06a75e212889c4ede8a",
+                                   "path":  "scripts/build.ps1"
+                               },
+                               {
+                                   "sha256":  "5d48fe579bafac55bd79761a8b749b9ef13e620db6d715f40278da86efd51aea",
+                                   "path":  "scripts/build-single-file.ps1"
+                               },
+                               {
+                                   "sha256":  "f6f1ccaf5d3afa7868627e47cef13ae7142f63816fbfae3c5bb1b76a40066f33",
+                                   "path":  "tests/UiTests.cs"
+                               }
+                           ],
+    "runs":  [
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1",
+                     "exitCode":  0,
+                     "startedAtUtc":  "2026-11-06T17:55:02.0928365Z",
+                     "completedAtUtc":  "2026-11-06T17:55:36.0841100Z",
+                     "logSha256":  "a8c3061b36828370e701daef5a92fbc4a90250d80d5b8b1f030104694a723743",
+                     "core":  {
+                                  "passed":  148,
+                                  "failed":  0
+                              },
+                     "ui":  {
+                                "passed":  217,
+                                "failed":  0
+                            }
+                 },
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-single-file.ps1",
+                     "exitCode":  0,
+                     "startedAtUtc":  "2026-11-06T17:55:36.1662720Z",
+                     "completedAtUtc":  "2026-11-06T17:56:09.8161623Z",
+                     "logSha256":  "2bca4be31e5554bfed6830e96ffbebbeaf7523663748b9c30e47a735d0661506",
+                     "core":  {
+                                  "passed":  148,
+                                  "failed":  0
+                              },
+                     "ui":  {
+                                "passed":  217,
+                                "failed":  0
+                            }
+                 },
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-package.ps1",
+                     "exitCode":  0,
+                     "startedAtUtc":  "2026-11-06T17:56:09.8305327Z",
+                     "completedAtUtc":  "2026-11-06T17:56:36.8385093Z",
+                     "logSha256":  "68d8b420a6bc2f7d8f8f7e30b49088b862656c59f98659b82651b5892d085b49",
+                     "packageChecks":  29
+                 }
+             ],
+    "testedBuildsBeforePackaging":  {
+                                        "value":  [
+                                                      {
+                                                          "path":  "dist/WhatThePort.exe",
+                                                          "version":  "1.1.7",
+                                                          "bytes":  146432,
+                                                          "sha256":  "1383fc80da14b05e909a370be77594df89a57fed4f030c29a3f0469b5fa163d0"
+                                                      },
+                                                      {
+                                                          "path":  "dist/WhatThePort.Core.dll",
+                                                          "version":  "1.1.7",
+                                                          "bytes":  42496,
+                                                          "sha256":  "3e155c16b9c6773d4ba6b197e3b3e25f64c5334e3a1d042b93b666792f924426"
+                                                      },
+                                                      {
+                                                          "path":  "dist/wtp.exe",
+                                                          "version":  "1.1.7",
+                                                          "bytes":  8192,
+                                                          "sha256":  "460dad0e64177888b03eaaa2d4aed0526b6b3e389d6bf35394ea72bf0f4cfeec"
+                                                      },
+                                                      {
+                                                          "path":  "artifacts/single-file/WhatThePort.exe",
+                                                          "version":  "1.1.7",
+                                                          "bytes":  735744,
+                                                          "sha256":  "22c2613c462a55c02d95bfc0a3a3710f19fbd4d735a7b88afd21171e8d90ba05"
+                                                      }
+                                                  ],
+                                        "Count":  4
+                                    },
+    "publishedBinaries":  [
+                              {
+                                  "path":  "dist/WhatThePort.exe",
+                                  "version":  "1.1.7",
+                                  "bytes":  146432,
+                                  "sha256":  "5ca33dfe04374e0b922f075141eccf62e6ff788d7babe60c1caa1407e33dc4b6"
+                              },
+                              {
+                                  "path":  "dist/WhatThePort.Core.dll",
+                                  "version":  "1.1.7",
+                                  "bytes":  42496,
+                                  "sha256":  "4f079312a7188279105cd61058c93a992bdb823f6ae5bc383b111ffb60f4f4c4"
+                              },
+                              {
+                                  "path":  "dist/wtp.exe",
+                                  "version":  "1.1.7",
+                                  "bytes":  8192,
+                                  "sha256":  "adb7431082bdd21e72ccbc8058cd732e879252b80ed42a1e73de7660671849c2"
+                              },
+                              {
+                                  "path":  "artifacts/single-file/WhatThePort.exe",
+                                  "version":  "1.1.7",
+                                  "bytes":  735744,
+                                  "sha256":  "22c2613c462a55c02d95bfc0a3a3710f19fbd4d735a7b88afd21171e8d90ba05"
+                              }
+                          ],
+    "finalZipRuntimeVerification":  {
+                                        "completedAtUtc":  "2026-11-06T17:58:56.2017674Z",
+                                        "exitCode":  0,
+                                        "uiPassed":  217,
+                                        "startupPassed":  true,
+                                        "corePassed":  148,
+                                        "cliPassed":  true
+                                    },
+    "publicDownloads":  {
+                            "standaloneMatchesFullTestRun":  true,
+                            "exeSha256":  "22c2613c462a55c02d95bfc0a3a3710f19fbd4d735a7b88afd21171e8d90ba05",
+                            "zipSha256":  "d4a2b89b354aa539a178d1b78ff6744535024b1cf45d4c6443f2c96e02ebddbc",
+                            "replaced":  true,
+                            "zipBinariesMatchFinalRuntimeTests":  true
+                        },
+    "limitations":  [
+                        "No new VirusTotal or IObit scan; functional and integrity checks are not malware clearance.",
+                        "No actual Windows re-login or physical multi-device verification."
+                    ],
+    "iconVerification":  {
+                             "nativeExecutableIconCheckPassedInBothFormats":  true,
+                             "icon":  "src/App/WhatThePort.ico",
+                             "windowsWicDecodesAllSizes":  true,
+                             "source":  "docs/assets/favicon.svg",
+                             "sizes":  [
+                                           16,
+                                           20,
+                                           24,
+                                           32,
+                                           40,
+                                           48,
+                                           64,
+                                           128,
+                                           256
+                                       ]
+                         },
+    "siteVerification":  {
+                             "exitCode":  0,
+                             "command":  "node scripts/check-site.mjs",
+                             "completedAtUtc":  "2026-11-06T18:00:02.7597139Z",
+                             "logSha256":  "f30a40d06120e231db241601a10f6a004e04bc3299f72b8652cc365de35e5cdf",
+                             "checksPassed":  270
+                         }
+}
