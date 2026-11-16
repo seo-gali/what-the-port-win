@@ -1,8 +1,30 @@
 # 보안 검수 · 2026-10-05
 
-대상: Windows 앱·CLI·Win32 연동·JSON 저장소·빌드/설치 스크립트·정적 다운로드 사이트. **아래 5건은 현재 코드에 남아 있는 발견 사항. 보안 수정 완료를 뜻하지 않음.** 정적 분석과 제한된 재현 결과이며, 모든 취약점의 부재를 보장하지 않음.
+대상: Windows 앱·CLI·Win32 연동·JSON 저장소·빌드/설치 스크립트·정적 다운로드 사이트. **아래 5건은 당시 코드의 발견 기록이다. 현재 소스의 수정 상태는 다음 절에서 구분한다.** 정적 분석과 제한된 재현 결과이며, 모든 취약점의 부재를 보장하지 않음.
 
 eMudhra 사고·배포 HTTPS·개발 PC Secure Boot의 2026-10-22 점검 결과와 미확인 항목은 [다운로드·인증서 보안 점검](download-security.md#2026-10-22-인증서-보안-점검)에 기록한다.
+
+## 수정 상태 · 2026-11-16
+
+1.1.8에서 S1–S5를 수정하고 공개 EXE·CLI ZIP도 같은 버전으로 교체한다. 최종 파일과 검증 범위는 [기능 검증 기록](downloads/FUNCTIONAL-TESTS-1.1.8.json)으로 구분한다. 이번 수정은 IObit·VirusTotal 탐지 원인을 확정하거나 백신 무탐지를 보장하지 않는다.
+
+| 항목 | 현재 처리 |
+|---|---|
+| S1 | 로컬 드라이브와 각 경로 구성 요소를 확인해 UNC·장치·reparse 경로를 거부한다. 일반 `.git` 디렉터리, 상호 포인터가 맞는 worktree, 상위 저장소의 submodule만 읽는다. 메타데이터는 최대 4096자이며 확인 실패 시 브랜치만 생략한다. |
+| S2 | Windows Terminal은 현재 사용자 WindowsApps의 절대 앱 실행 별칭, PowerShell은 시스템 폴더의 절대 경로를 사용한다. 프로젝트의 동명 실행 파일을 검색하지 않는다. |
+| S3 | 실제 측정된 모든 부모·자식의 생성 시각을 비교한다. 자식이 부모보다 오래됐거나 부모를 확인하지 못하면 해당 하위 트리를 제외한다. |
+| S4 | 측정 누락 시 자동 정리 후보에서 제외하고 idle 관측을 재시작한다. 루트·하위 프로세스의 활성 TCP 연결도 자동 정리를 막는다. 기존 화면의 연결 수와 CLI JSON 필드는 유지한다. |
+| S5 | 로드 시 폴더 존재 확인 없이 레코드 구조를 검증한다. 잘못된 항목은 조회에서 제외하고 오류를 남긴다. 손상된 원본은 새 링크 저장으로 덮어쓰지 않는다. |
+
+설치도 기존 `StartupRegistration`을 사용하도록 통일했다. 저장은 같은 Windows 세션·저장소의 앱·CLI가 하나의 프로세스 간 잠금을 사용하며 최대 5초 대기한다. 잠금은 읽기·병합·원자 교체 전체를 감싸고, 실패하면 오류를 반환한다. 이름에 저장소 경로의 해시를 사용하며 경로 자체를 공개하지 않는다. 실제 사용자 설정·레지스트리는 테스트에서 변경하지 않는다.
+
+**의도한 제한:** 임의의 `--separate-git-dir`이나 reparse 아래 프로젝트는 브랜치 표시를 생략한다. worktree는 Git의 `gitdir`·`commondir` 상호 관계를 확인한다. [Git worktree 구조](https://git-scm.com/docs/git-worktree#_details), [Windows Terminal 실행 별칭](https://learn.microsoft.com/en-us/windows/terminal/command-line-arguments)을 기준으로 했다. 공격자가 검사와 읽기 사이에 파일시스템 경로를 바꾸는 실시간 경주는 이번 범위에 추가하지 않았다.
+
+### 회귀 검사
+
+`test.ps1`은 설치 호출 검사와 `security-audit.ps1`을 포함한다. `test-single-file.ps1`은 방금 빌드한 EXE를 `-RuntimePath`로 지정해 검사한다. `security-audit.ps1 -SingleFile`만 실행하면 공개 EXE가 대상이다. 1.1.8 이전 파일에는 새 검증 API가 없어 이 버전의 검사 코드와 호환되지 않는다. 검사 시작 시 대상과 SHA-256을 출력한다.
+
+검사 결과와 한계는 [구조 검토의 후속 수정](../ARCHITECTURE.md#후속-수정--2026-11-16)에 기록한다. 이 아래의 위험·공격 순서·줄 번호·과거 종료 코드 해석은 원래 검수 시점의 증거다. 현재 회귀 검사의 0은 해당 검사 통과이며 전체 보안 인증·백신 결과가 아니다.
 
 ## 1. Vulnerability Summary
 
@@ -119,7 +141,7 @@ High 등급은 공격 전제가 충족될 때의 영향 기준. S1 실제 SMB �
 - Windows UIA·메시지는 OS 세션·무결성 경계를 따르며 동일 사용자 악성 프로세스에 대한 sandbox가 아님.
 - 세션 ID·프로젝트 경로 평문 저장은 인증 비밀 저장과 다르지만 업무 정보의 민감도에 따른 접근 정책 필요.
 
-### 재현
+### 당시 재현
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
@@ -128,6 +150,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/security-audit.ps1
 
 결과: evidence 6개(S1 2개, S2–S5 각 1개). `FINDING`은 취약점 발견 표시이며 보안 인증 통과가 아님. 기록: `artifacts/security-audit.txt`. 네트워크 인증·사용자 프로세스 종료·시크릿 접근 없음.
 
-## Google 다운로드 가이드라인 재점검 · 2026-10-13
+## 과거 Google 다운로드 가이드라인 재점검 · 2026-10-13
 
-현재 단일 EXE의 SHA-256 일치 후 `scripts/security-audit.ps1 -SingleFile`로 기존 프로브를 실행했다. S1~S5가 다시 확인됐으며, S1의 경로 조합 관측을 포함해 6개 증거 관측이다. 프로브의 종료 코드 0은 문제 재현 성공을 뜻하며 보안 통과 판정이 아니다. 정책 항목·서명·백신·제거 안내 점검은 [다운로드 점검 보고서](google-download-audit.md)에 기록했다. 앱 소스나 공개 EXE는 이 점검에서 변경하지 않았다.
+당시 단일 EXE의 SHA-256 일치 후 `scripts/security-audit.ps1 -SingleFile`로 기존 프로브를 실행했다. S1~S5가 다시 확인됐으며, S1의 경로 조합 관측을 포함해 6개 증거 관측이다. 프로브의 종료 코드 0은 문제 재현 성공을 뜻하며 보안 통과 판정이 아니다. 정책 항목·서명·백신·제거 안내 점검은 [다운로드 점검 보고서](google-download-audit.md)에 기록했다. 앱 소스나 공개 EXE는 이 점검에서 변경하지 않았다.

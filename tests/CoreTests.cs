@@ -15,9 +15,11 @@ public static class CoreTests {
     static int passed,failed;
     static string temp;
     public static int Main(string[] args) {
-        if(args.Length>0&&args[0]=="--fixture")return Fixture();
+        if(args.Length>0&&args[0]=="--fixture")return Fixture(args.Length>1?Int32.Parse(args[1]):0);
+        if(args.Length>0&&args[0]=="--client-fixture")return ClientFixture(Int32.Parse(args[1]));
+        if(args.Length>0&&args[0]=="--store-writer")return StoreWriter(args);
         temp=Path.Combine(Path.GetTempPath(),"wtp-tests-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(temp);
-        try{Units();ConnectionTests();StartupTests();Integration();ForceIntegration();}catch(Exception e){failed++;Console.WriteLine("FAIL unexpected: "+e);}
+        try{Units();ConnectionTests();StartupTests();StorageRegressions();ConcurrentLinks();Integration();ChildConnectionIntegration();ForceIntegration();}catch(Exception e){failed++;Console.WriteLine("FAIL unexpected: "+e);}
         finally{if(Directory.Exists(temp))Directory.Delete(temp,true);}
         Console.WriteLine("\n"+passed+" passed, "+failed+" failed");return failed==0?0:1;
     }
@@ -85,7 +87,7 @@ public static class CoreTests {
     }
     static void ThrowsIo(string name,Action action){try{action();Check(name,false);}catch(IOException){Check(name,true);}}
     static void Throws(string name,Action action){try{action();Check(name,false);}catch(ArgumentException){Check(name,true);}}
-    static Server Idle(DateTime now){return new Server{Observed=now.AddHours(-5),LastActive=now.AddHours(-5),SampledAt=now,Memory=100*Format.MB};}
+    static Server Idle(DateTime now){return new Server{ObservationComplete=true,Observed=now.AddHours(-5),LastActive=now.AddHours(-5),SampledAt=now,Memory=100*Format.MB};}
     static void Units(){
         var settings=new Settings();DateTime now=DateTime.UtcNow;
         StopOutcomes(now);
@@ -155,6 +157,37 @@ public static class CoreTests {
         server.Processes[0].Name="redis-server";server.SampledAt=now.AddMinutes(-1);result=ProcessControl.ForceStopDetailed(server,partial);Check("force stop rejects stale identities",!result.ListenerStopped&&called.Count==0);
         server.SampledAt=now;result=ProcessControl.ForceStopDetailed(server,delegate(ProcessNode node,out string error){called.Add(node.Pid);error="Denied";return false;});Check("force stop failure never attempts children",!result.ListenerStopped&&result.Errors.Count==1&&called.SequenceEqual(new[]{10}));
     }
+    static int StoreWriter(string[] args){
+        try{
+            using(var gate=EventWaitHandle.OpenExisting(args[6])){
+                Console.WriteLine("ready");Console.Out.Flush();if(!gate.WaitOne(10000))return 2;
+                var store=new Store(args[1]);for(int i=0;i<Int32.Parse(args[5]);i++)store.SaveLink(new ProjectLink{Folder=args[2],Port=Int32.Parse(args[3])+i,Session="",Agent=""});
+            }
+            return 0;
+        }catch(Exception e){Console.Error.WriteLine(e.Message);return 1;}
+    }
+    static Process LinkWriter(string root,string gate,int port){
+        string args="--store-writer \""+root+"\" \""+temp+"\" "+port+" unused 20 \""+gate+"\"";
+        return Process.Start(new ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location,args){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true});
+    }
+    static void ConcurrentLinks(){
+        string root=Path.Combine(temp,"parallel-store"),name="Local\\WhatThePort.StoreTest."+Guid.NewGuid().ToString("N");var store=new Store(root);store.SaveLink(new ProjectLink{Folder=temp,Port=3000});
+        using(var gate=new EventWaitHandle(false,EventResetMode.ManualReset,name))using(var first=LinkWriter(root,name,4000))using(var second=LinkWriter(root.ToUpperInvariant()+"\\.",name,5000)){
+            try{
+                Ready(first);Ready(second);gate.Set();bool ended=first.WaitForExit(15000)&&second.WaitForExit(15000);
+                Check("two processes complete link saves without I/O failures",ended&&first.ExitCode==0&&second.ExitCode==0);
+                var links=store.LoadLinks();Check("two processes preserve every independent link update",links.Count==41&&Enumerable.Range(4000,20).Concat(Enumerable.Range(5000,20)).All(port=>links.Any(l=>l.Port==port)));
+            }finally{foreach(var process in new[]{first,second})if(!process.HasExited){process.Kill();process.WaitForExit(3000);}}
+        }
+    }
+    static void StorageRegressions(){
+        string root=Path.Combine(temp,"invalid-links");Directory.CreateDirectory(root);string file=Path.Combine(root,"links.json");
+        File.WriteAllText(file,"[{\"Port\":3000,\"Folder\":null}]");var store=new Store(root);
+        Check("invalid stored links are ignored without discarding validation errors",store.LoadLinks().Count==0&&store.LastError!=null);
+        bool safe=false;try{safe=store.LinkFor(new Server{Port=3000,Folder=temp})==null;}catch(NullReferenceException){}Check("null stored folder cannot crash link lookup",safe);
+        string before=File.ReadAllText(file);ThrowsIo("saving refuses to overwrite invalid stored records",()=>store.SaveLink(new ProjectLink{Folder=temp,Port=3001}));Check("invalid link file survives a refused save",File.ReadAllText(file)==before);
+        File.WriteAllText(file,"{broken");ThrowsIo("saving refuses to replace unreadable link JSON",()=>store.SaveLink(new ProjectLink{Folder=temp,Port=3001}));Check("unreadable link JSON is preserved",File.ReadAllText(file)=="{broken");
+    }
     static Process StartFixture(){
         var p=Process.Start(new ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location,"--fixture"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=temp});
         return p;
@@ -176,9 +209,12 @@ public static class CoreTests {
                 Check("native IPv6 listener detected",sockets.Any(s=>s.Pid==first.Id&&s.Port==ports[1]&&s.State==2&&s.Address=="::1"));
                 var scanner=new Scanner();var config=new Settings();var snap=scanner.Scan(config);var server=snap.Servers.Single(s=>s.Processes[0].Pid==first.Id);
                 Check("multiple ports group into one service",server.Ports.Count==2&&snap.Servers.Count(s=>s.Processes[0].Pid==first.Id)==1);
+                Check("scanner marks a fully sampled fixture complete",server.ObservationComplete);
+                server.ObservationComplete=false;server.Observed=server.LastActive=DateTime.UtcNow.AddHours(-5);
+                server=scanner.Scan(config).Servers.Single(s=>s.Processes[0].Pid==first.Id);Check("incomplete prior observation resets idle continuity",server.ObservationComplete&&DateTime.UtcNow-server.Observed<TimeSpan.FromSeconds(5)&&DateTime.UtcNow-server.LastActive<TimeSpan.FromSeconds(5));
                 Check("working set and total RAM measured",server.Memory>0&&snap.TotalMemory>snap.FreeMemory&&snap.FreeMemory>0);
                 Check("live uptime from process creation",server.Started<=DateTime.UtcNow&&DateTime.UtcNow-server.Started<TimeSpan.FromMinutes(1));
-                Thread.Sleep(300);snap=scanner.Scan(config);server=snap.Servers.Single(s=>s.Processes[0].Pid==first.Id);Check("CPU/history samples collected",server.History.Count==2&&server.Cpu>=0&&server.Cpu<=100);
+                int historyCount=server.History.Count;Thread.Sleep(300);snap=scanner.Scan(config);server=snap.Servers.Single(s=>s.Processes[0].Pid==first.Id);Check("CPU/history samples collected",server.History.Count==historyCount+1&&server.Cpu>=0&&server.Cpu<=100);
                 using(var client=new TcpClient()) {
                     client.Connect(IPAddress.Loopback,ports[0]);Thread.Sleep(100);snap=scanner.Scan(config);server=snap.Servers.Single(s=>s.Processes[0].Pid==first.Id);Check("established inbound connection measured",server.Connections>=1);
                     int selfPid=Process.GetCurrentProcess().Id;
@@ -202,6 +238,35 @@ public static class CoreTests {
             }finally{foreach(var p in new[]{first,second})if(!p.HasExited){p.Kill();p.WaitForExit(3000);}}
         }
     }
+    static void ChildConnectionIntegration(){
+        var listener=new TcpListener(IPAddress.Loopback,0);listener.Start();int port=((IPEndPoint)listener.LocalEndpoint).Port;
+        var start=new ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location,"--fixture "+port){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=temp};
+        using(var fixture=Process.Start(start)){
+            List<ProcessNode> children=new List<ProcessNode>();
+            try{
+                Ready(fixture);var accept=listener.AcceptTcpClientAsync();if(!accept.Wait(5000))throw new Exception("Child connection fixture timed out.");
+                using(var connection=accept.Result){
+                    var server=new Scanner().Scan(new Settings()).Servers.Single(s=>s.Processes[0].Pid==fixture.Id);
+                    children=server.Processes.Skip(1).ToList();
+                    Check("scanner includes the outbound-only child in its measured tree",server.ObservationComplete&&children.Count==1);
+                    Check("child connection is activity without an inbound listener connection",server.Connections==0&&server.HasEstablishedConnections);
+                    var now=DateTime.UtcNow;server.Observed=server.LastActive=now.AddHours(-5);server.Cpu=0;
+                    Check("outbound child activity prevents automatic cleanup",!Policy.CleanupCandidate(server,new Settings(),now));
+                }
+            }finally{
+                if(!fixture.HasExited){fixture.Kill();fixture.WaitForExit(3000);}
+                foreach(var child in children){string error;Native.Stop(child,out error);}
+                listener.Stop();
+            }
+        }
+    }
+    static int ClientFixture(int port){
+        using(var client=new TcpClient()){
+            client.Connect(IPAddress.Loopback,port);Console.WriteLine("ready");Console.Out.Flush();
+            DateTime end=DateTime.UtcNow.AddSeconds(40);while(DateTime.UtcNow<end)Thread.Sleep(100);
+        }
+        return 0;
+    }
     static void ForceIntegration(){
         string folder=Path.Combine(temp,"manual-force-fixture");Directory.CreateDirectory(folder);
         string executable=Path.Combine(folder,"redis-server.exe");File.Copy(System.Reflection.Assembly.GetExecutingAssembly().Location,executable);
@@ -222,11 +287,15 @@ public static class CoreTests {
             }finally{foreach(var process in new[]{fixture,other})if(!process.HasExited){process.Kill();process.WaitForExit(3000);}}
         }
     }
-    static int Fixture(){
+    static int Fixture(int outboundPort){
         var ipv4=new TcpListener(IPAddress.Loopback,0);var ipv6=new TcpListener(IPAddress.IPv6Loopback,0);ipv6.Server.DualMode=false;
         ipv4.Start();ipv6.Start();byte[] memory=new byte[16*1024*1024];for(int i=0;i<memory.Length;i+=4096)memory[i]=1;
+        Process child=null;
+        if(outboundPort>0){
+            child=Process.Start(new ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location,"--client-fixture "+outboundPort){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true});Ready(child);
+        }
         Console.WriteLine(((IPEndPoint)ipv4.LocalEndpoint).Port+","+((IPEndPoint)ipv6.LocalEndpoint).Port);Console.Out.Flush();
         // Bounded lifetime also protects test hosts if their parent test runner is interrupted.
-        DateTime end=DateTime.UtcNow.AddSeconds(40);while(DateTime.UtcNow<end)Thread.Sleep(100);GC.KeepAlive(memory);ipv4.Stop();ipv6.Stop();return 0;
+        DateTime end=DateTime.UtcNow.AddSeconds(40);while(DateTime.UtcNow<end)Thread.Sleep(100);GC.KeepAlive(memory);ipv4.Stop();ipv6.Stop();if(child!=null){if(!child.HasExited){child.Kill();child.WaitForExit(3000);}child.Dispose();}return 0;
     }
 }

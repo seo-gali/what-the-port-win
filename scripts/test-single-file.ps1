@@ -57,3 +57,5 @@ try {
     if (Test-Path -LiteralPath $fixture) { Remove-Item -LiteralPath $fixture -Recurse -Force }
 }
 Write-Output 'Standalone distribution checks passed.'
+
+& (Join-Path $PSScriptRoot 'security-audit.ps1') -SingleFile -RuntimePath $executable

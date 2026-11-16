@@ -1,0 +1,203 @@
+{
+    "releaseVersion":  "1.1.8",
+    "checkedAtUtc":  "2026-11-16T12:40:36.5167318Z",
+    "sourceBaseCommit":  "7afbe865b43826ef37e5cccdc8220d0b0b0e2534",
+    "changedSourceFiles":  [
+                               {
+                                   "path":  "scripts/install.ps1",
+                                   "sha256":  "76e5443ca3abc4714da96cf281bcc990385ceb8e628d45fd104b4d93663eb3e4",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "scripts/security-audit.ps1",
+                                   "sha256":  "04927757a67639966b7fd479d1af97ac06cee9cf9929704bfa931f796ab520d8",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "scripts/test.ps1",
+                                   "sha256":  "6036ebb0705fd58c7214efa97839998c28bccc970d97b678a218c2aa3ef6ace3",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "scripts/test-single-file.ps1",
+                                   "sha256":  "2a7be09f4ef47dc18f3e31cad4709648dfa5f9469e84aedacfe0306e3b564afe",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/App/Demo.cs",
+                                   "sha256":  "e2108be72fa7ca048c8833e191f55606ef3e5445e4bbd814570e281fffa9906d",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/App/Strings.cs",
+                                   "sha256":  "58fa5c5aa3124cf5f10d00d6617801b11108718f6931b7af34dea1aa49458961",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/AppVersion.cs",
+                                   "sha256":  "1497af9668fcbc2387555f323b7c97ad2701f8f77fa1844db6a73ba08374fb8a",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/Launchers.cs",
+                                   "sha256":  "6c751786747f75c302e1a5fa67b80cf49898426dfc2c05fad457b16c292e8a8b",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/Models.cs",
+                                   "sha256":  "b37fb6de4f7f315121e97c96e01b787e55471da746beba5e2c7a9e0d40104605",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/Policy.cs",
+                                   "sha256":  "45fb9591d0ed78aeed17b3fe3093845a19426a398f9e837856b9c88ab2756dac",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/ProjectMetadata.cs",
+                                   "sha256":  "59dbd103c445b0da26e013c3f64951383d76d1dcd0084e38088886215ea0c979",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/Scanner.cs",
+                                   "sha256":  "ec06568215fab0bea0f8a2d410859665703c5766a89bc875182b58f61e93cce2",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/Storage.cs",
+                                   "sha256":  "dc5f72318e1991fe64122fef19f44cdfdba67a3a7423e0e9022a3917d8abff53",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "tests/CoreTests.cs",
+                                   "sha256":  "7832640a489f28c88703ce1e456c3a96df7ed2fa290bccffc461a180fb10a6a2",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "tests/InstallTests.ps1",
+                                   "sha256":  "82feeb80e6a225cb8fbc98e2ac270679bb3587592ddd54df0bc64ffb630dd8d1",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "tests/SecurityAudit.cs",
+                                   "sha256":  "9fd61894e1c1965e1523c9c96df53f85c7a8a19e8464530382af6a78c17885e7",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "tests/TerminalAuditFixture.cs",
+                                   "status":  "Deleted"
+                               }
+                           ],
+    "runs":  [
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1",
+                     "exitCode":  0,
+                     "logSha256":  "7dffb1408a0b0fcf015a7db6439dc47248a3104934d22271dfa139946c61dc6c",
+                     "core":  161,
+                     "ui":  217,
+                     "security":  24
+                 },
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-single-file.ps1",
+                     "exitCode":  0,
+                     "logSha256":  "ba08b72dfd489021d0e07cf1a87970a2fe6565c0481538e6bd27ba872608d484",
+                     "core":  161,
+                     "ui":  217,
+                     "security":  24
+                 },
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-package.ps1",
+                     "exitCode":  0,
+                     "logSha256":  "f22bb82eb637f56baa36d88ad350f369e8e7319c8d83e601e2bf4149f190fba8",
+                     "packageChecks":  29
+                 }
+             ],
+    "finalZipRuntimeVerification":  {
+                                        "scope":  "Exact bytes extracted from the final public ZIP, without recompilation. Test executables were supplied separately.",
+                                        "corePassed":  161,
+                                        "uiPassed":  217,
+                                        "securityPassed":  24,
+                                        "cliPassed":  true,
+                                        "startupPassed":  true,
+                                        "binaries":  [
+                                                         {
+                                                             "name":  "WhatThePort.exe",
+                                                             "version":  "1.1.8",
+                                                             "sha256":  "76ce9a4b2baa8c112d94b2f41e8a467442eb19f5898d459082ad5f8fff8aed77",
+                                                             "signature":  "NotSigned",
+                                                             "publisher":  null,
+                                                             "timestamped":  false
+                                                         },
+                                                         {
+                                                             "name":  "WhatThePort.Core.dll",
+                                                             "version":  "1.1.8",
+                                                             "sha256":  "17635ad954d28a9ad411cf159e8909cea7e434d70bb97bfb3b8e3ad91c36288b",
+                                                             "signature":  "NotSigned",
+                                                             "publisher":  null,
+                                                             "timestamped":  false
+                                                         },
+                                                         {
+                                                             "name":  "wtp.exe",
+                                                             "version":  "1.1.8",
+                                                             "sha256":  "5e8bc830da86ee293be1d0e04423d9dbba0da37b57d2f53a47847493052b3dfd",
+                                                             "signature":  "NotSigned",
+                                                             "publisher":  null,
+                                                             "timestamped":  false
+                                                         }
+                                                     ],
+                                        "logs":  [
+                                                     {
+                                                         "name":  "final-core.log",
+                                                         "sha256":  "33655a50392b6ef09b878c258886228b337f96c7646738b8b773a0d51d8c9f31"
+                                                     },
+                                                     {
+                                                         "name":  "final-ui.log",
+                                                         "sha256":  "c011961a243e06038c1df5fbd81e61aac86ead79a9058055cf991829f842307e"
+                                                     },
+                                                     {
+                                                         "name":  "final-security.log",
+                                                         "sha256":  "1c34a6acaccfe6bd989e2ebaf4fc2845d43bce27a10d555deba13a2855c31eec"
+                                                     },
+                                                     {
+                                                         "name":  "final-startup.log",
+                                                         "sha256":  "c75d8e26e8df1b03937aa85261a4b58a555f41b5ba28ff102cc2ef59502e29bb"
+                                                     }
+                                                 ]
+                                    },
+    "concurrency":  {
+                        "rounds":  40,
+                        "missingUpdateRounds":  0,
+                        "exceptionRounds":  0,
+                        "separateProcessUpdatesPreserved":  40,
+                        "productionFrequencyEstimate":  false
+                    },
+    "publicDownloads":  [
+                            {
+                                "name":  "WhatThePort.exe",
+                                "version":  "1.1.8",
+                                "bytes":  740864,
+                                "sha256":  "7e22e97ed290071939f66da22b3ecd6492f0af985860ceb6d516790c25f336d7",
+                                "matchesPreviouslyTestedStandalone":  true
+                            },
+                            {
+                                "name":  "WhatThePort-Windows-x64.zip",
+                                "version":  "1.1.8",
+                                "bytes":  1354320,
+                                "sha256":  "f3b42f9074bd8372fcd195170aca707edfa9ae13c366505dc236b58cd6bc319d"
+                            }
+                        ],
+    "siteVerification":  {
+                             "command":  "node scripts/check-site.mjs",
+                             "exitCode":  0,
+                             "passed":  270,
+                             "scope":  "Local project Pages paths, responsive layouts, browser downloads, integrity and metadata"
+                         },
+    "limitations":  [
+                        "Unsigned test distribution; VirusTotal and IObit not rerun for these hashes.",
+                        "Functional regression success is not an antivirus verdict or full security certification.",
+                        "Real Windows login and real user startup registration were not performed.",
+                        "No live SMB authentication, OS PID reuse race or adversarial filesystem path-swap test.",
+                        "Terminal launch information checked without opening a real user terminal or agent.",
+                        "GitHub Release publication remains a manual user action."
+                    ]
+}

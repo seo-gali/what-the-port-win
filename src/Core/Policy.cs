@@ -23,7 +23,9 @@ namespace WhatThePort {
             ProcessNode node;
             if (!seen.Add(pid) || !all.TryGetValue(pid, out node) || depth > 64) return;
             if (depth > 0 && (listeners.Contains(pid) || IsProtectedName(node.Name))) return;
-            result.Add(new ProcessNode { Pid=node.Pid, Parent=node.Parent, Name=node.Name, Started=node.Started, Depth=depth });
+            ProcessNode parent;
+            if(depth>0&&(!all.TryGetValue(node.Parent,out parent)||node.Started<parent.Started))return;
+            result.Add(new ProcessNode { Pid=node.Pid, Parent=node.Parent, Name=node.Name, Started=node.Started, Memory=node.Memory, Cpu=node.Cpu, Depth=depth });
             foreach (var child in all.Values.Where(p => p.Parent == pid)) Visit(child.Pid, depth+1, all, listeners, seen, result);
         }
         public static string Warning(Server s, Settings settings) {
@@ -36,7 +38,7 @@ namespace WhatThePort {
             return null;
         }
         public static bool CleanupCandidate(Server s, Settings settings, DateTime now) {
-            return !s.Protected && String.IsNullOrEmpty(s.Warning) && s.Connections == 0 && s.Cpu < 2 &&
+            return s.ObservationComplete && !s.HasEstablishedConnections && !s.Protected && String.IsNullOrEmpty(s.Warning) && s.Connections == 0 && s.Cpu < 2 &&
                 (now-s.SampledAt).TotalSeconds <= Math.Max(15, settings.ScanSeconds*3) &&
                 now-s.LastActive >= TimeSpan.FromHours(settings.IdleHours) && now-s.Observed >= TimeSpan.FromHours(settings.IdleHours);
         }

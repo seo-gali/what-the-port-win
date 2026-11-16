@@ -47,6 +47,7 @@ namespace WhatThePort {
         [DataMember] public double Cpu;
         [DataMember] public int Connections;
         [DataMember] public List<ConnectedApp> Clients = new List<ConnectedApp>();
+        public bool ObservationComplete,HasEstablishedConnections;
         [DataMember] public bool Protected;
         [DataMember] public bool CanForceStop;
         [DataMember] public string ProtectionReason;

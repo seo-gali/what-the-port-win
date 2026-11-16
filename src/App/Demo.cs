@@ -10,7 +10,7 @@ namespace WhatThePort.App {
             string[] projects={"what-the-port","tomjohn.design","paper-plugins","token-studio","old-worktree"};
             int[] ports={3000,3001,5173,6006,8000}; long[] memory={(long)(1.21*Format.GB),612*Format.MB,184*Format.MB,(long)(2.74*Format.GB),96*Format.MB};
             for(int i=0;i<5;i++) {
-                var server=new Server { Key="demo-"+i,Port=ports[i],Ports=new List<int>{ports[i]},Address="127.0.0.1",Name=names[i],Folder=@"C:\dev\"+projects[i],Branch=i==1?"main":names[i].Replace(" ","-"),Agent=i==0?"Codex":i==2?"Claude Code":null,Started=now.AddHours(i==4?-48:i==1?-24:-3),Observed=now.AddHours(-6),LastActive=now.AddHours(i==2?-5:i==4?-12:0),SampledAt=now,Memory=memory[i],Cpu=i==3?5.4:0.1,Warning=i==3?"+1.1 GB in 10 min":null,Connections=i==0?2:0 };
+                var server=new Server { ObservationComplete=true,Key="demo-"+i,Port=ports[i],Ports=new List<int>{ports[i]},Address="127.0.0.1",Name=names[i],Folder=@"C:\dev\"+projects[i],Branch=i==1?"main":names[i].Replace(" ","-"),Agent=i==0?"Codex":i==2?"Claude Code":null,Started=now.AddHours(i==4?-48:i==1?-24:-3),Observed=now.AddHours(-6),LastActive=now.AddHours(i==2?-5:i==4?-12:0),SampledAt=now,Memory=memory[i],Cpu=i==3?5.4:0.1,Warning=i==3?"+1.1 GB in 10 min":null,Connections=i==0?2:0 };
                 for(int n=0;n<=60;n++) {
                     double factor=i==3?.6+.4*n/60.0:i==0?.94+.06*n/60.0:i==1?.997+Math.Sin(n*2)*.003:1;
                     server.History.Add(new Sample{At=now.AddSeconds(-600+n*10),Memory=(long)(memory[i]*factor),Cpu=i==3?2+Math.Pow(Math.Sin(n*.37),8)*22:n==46?24:server.Cpu});

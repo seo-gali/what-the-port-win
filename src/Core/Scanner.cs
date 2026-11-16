@@ -35,24 +35,26 @@ namespace WhatThePort {
                             sampled[node.Pid]=value;
                         } catch { continue; }
                     }
-                    if(measured.Count>0&&value.Started<measured[0].Started)continue;
                     measured.Add(value);
                 }
                 var rootValue=measured.FirstOrDefault(p => p.Pid == root.Pid); if (rootValue == null) continue;
+                measured=Policy.Tree(root.Pid,measured.ToDictionary(p=>p.Pid),listeners);
+                bool complete=measured.Count==nodes.Count;
                 var ports=group.Select(s => s.Port).Distinct().OrderBy(p => p).ToList();
                 string key=rootValue.Identity;
                 Server oldServer; tracked.TryGetValue(key,out oldServer);
-                bool continuous=oldServer != null && (now-oldServer.SampledAt).TotalSeconds <= Math.Max(15,settings.ScanSeconds*3);
+                bool continuous=complete && oldServer != null && oldServer.ObservationComplete && (now-oldServer.SampledAt).TotalSeconds <= Math.Max(15,settings.ScanSeconds*3);
                 var server=new Server { Key=key, Port=ports[0], Ports=ports, Address=group.OrderBy(s => s.Address.Contains(":") ? 1 : 0).First().Address, Name=root.Name,
                     Started=rootValue.Started, Observed=continuous ? oldServer.Observed : now, LastActive=continuous ? oldServer.LastActive : now, SampledAt=now,
                     Memory=measured.Sum(p => p.Memory), Cpu=measured.Sum(p => p.Cpu), Processes=measured,
+                    ObservationComplete=complete,HasEstablishedConnections=sockets.Any(socket=>socket.State==5&&measured.Any(p=>p.Pid==socket.Pid)),
                     Protected=Policy.IsProtectedName(root.Name) || protectedIds.Contains(root.Pid),
                     CanForceStop=Policy.IsProtectedName(root.Name) && !Policy.IsCriticalName(root.Name) && !protectedIds.Contains(root.Pid),
                     ProtectionReason=protectedIds.Contains(root.Pid) ? "This app or a parent process. Stopping it could close your working session." : Policy.IsProtectedName(root.Name) ? "Terminal, agent, system, database or container process. Stop it in its own app." : null,
                     Connections=sockets.Count(s => s.State == 5 && s.Pid == root.Pid && ports.Contains(s.Port)),
                     History=oldServer == null ? new List<Sample>() : new List<Sample>(oldServer.History) };
                 if(server.CanForceStop)server.ProtectionReason="Excluded from bulk and automatic cleanup. Manual force stop is available.";
-                if (server.Connections > 0 || server.Cpu >= 2) server.LastActive=now;
+                if (!server.ObservationComplete || server.HasEstablishedConnections || server.Cpu >= 2) server.LastActive=now;
                 ResolveProject(server,root.Pid,now);
                 server.History.Add(new Sample { At=now, Memory=server.Memory, Cpu=server.Cpu }); Policy.PruneHistory(server.History,now);
                 server.Warning=Policy.Warning(server,settings);
@@ -101,25 +103,12 @@ namespace WhatThePort {
             Tuple<DateTime,string,string> cached;
             if (!projects.TryGetValue(s.Key,out cached) || (now-cached.Item1).TotalSeconds > 30) {
                 string folder=Native.CurrentDirectory(pid), branch=null;
-                if (!String.IsNullOrEmpty(folder)) {
-                    try {
-                        var dir=new DirectoryInfo(folder);
-                        for (int i=0;dir != null && i<12;i++,dir=dir.Parent) {
-                            string git=Path.Combine(dir.FullName,".git");
-                            if (File.Exists(git)) {
-                                string marker=SmallText(git).Trim(); if (marker.StartsWith("gitdir: ",StringComparison.Ordinal)) git=Path.GetFullPath(Path.Combine(dir.FullName,marker.Substring(8)));
-                            }
-                            string head=Path.Combine(git,"HEAD");
-                            if (File.Exists(head)) { string value=SmallText(head).Trim(); branch=value.StartsWith("ref: refs/heads/",StringComparison.Ordinal) ? value.Substring(16) : value.Substring(0,Math.Min(8,value.Length)); break; }
-                        }
-                    } catch { }
-                }
+                branch=ProjectMetadata.Branch(folder);
                 cached=Tuple.Create(now,folder,branch); projects[s.Key]=cached;
             }
             s.Folder=cached.Item2; s.Branch=cached.Item3;
             if (!String.IsNullOrEmpty(s.Folder)) { string name=Path.GetFileName(s.Folder.TrimEnd('\\','/')); if (!String.IsNullOrWhiteSpace(name)) s.Name=name; }
         }
-        static string SmallText(string path) { using(var r=new StreamReader(path)) { char[] buffer=new char[4096]; int count=r.Read(buffer,0,buffer.Length); return new string(buffer,0,count); } }
     }
     public static class ProcessControl {
         public delegate bool StopNode(ProcessNode node,out string error);

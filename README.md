@@ -47,9 +47,9 @@ Windows 트레이에서 개발 서버의 포트·메모리·CPU를 확인하고,
 
 현재는 **코드 서명이 없는 시험 빌드**입니다. 다운로드 경고와 검사 결과는 [보안 안내](docs/download-security.md)에 기록되어 있습니다. 서버 종료는 즉시 적용되며 저장되지 않은 작업은 유실될 수 있습니다.
 
-**현재 다운로드는 v1.1.7이며 백신 재검사는 아직 진행하지 않았습니다.** [SHA-256 목록](docs/downloads/SHA256SUMS.txt) · [기능 테스트 기록](docs/downloads/FUNCTIONAL-TESTS-1.1.7.json). GitHub Release 첨부 파일은 준비했고 게시는 사용자가 직접 진행합니다.
+**현재 다운로드는 v1.1.8이며 백신 재검사는 아직 진행하지 않았습니다.** [SHA-256 목록](docs/downloads/SHA256SUMS.txt) · [기능 테스트 기록](docs/downloads/FUNCTIONAL-TESTS-1.1.8.json). GitHub Release 첨부 파일은 준비했고 게시는 사용자가 직접 진행합니다.
 
-이전 [v1.1.5 EXE의 VirusTotal 보고서](https://www.virustotal.com/gui/file/323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99/detection): **2026-11-05 검사에서 5/71 탐지**. 오탐 여부는 미확정이며 안전 판정을 의미하지 않습니다. 이 결과는 새 1.1.7 파일에는 적용되지 않습니다.
+이전 [v1.1.5 EXE의 VirusTotal 보고서](https://www.virustotal.com/gui/file/323400c20142bf8dbf49aa5f99be4c604b79ee557abed35ea26a0b714961ce99/detection): **2026-11-05 검사에서 5/71 탐지**. 오탐 여부는 미확정이며 안전 판정을 의미하지 않습니다. 이 결과는 새 1.1.8 파일에는 적용되지 않습니다.
 
 1.1.5 ZIP과 내부 실행 파일에서도 탐지를 확인했습니다. 당시 동일 소스로 새로 빌드한 EXE는 빌드 시각·자동 생성 ID를 제외하면 배포본과 일치했습니다. [배포판 비교 결과와 한계](docs/download-security.md#2026-11-05--새-빌드와-zip판-비교) · [기능 테스트 기록](docs/downloads/FUNCTIONAL-TESTS-1.1.5.json).
 
@@ -78,7 +78,7 @@ ZIP 생성 위치: `artifacts/WhatThePort-Windows-x64.zip`. CLI·문서·폰트�
 
 </details>
 
-[코딩 기준](CODING_STANDARDS.md) · [디자인](DESIGN.md) · [게시 절차](docs/publishing.md) · [보안 검수](docs/security-audit.md)
+[구조 검토·문서 맵](ARCHITECTURE.md) · [코딩 기준](CODING_STANDARDS.md) · [디자인](DESIGN.md) · [게시 절차](docs/publishing.md) · [보안 검수](docs/security-audit.md)
 
 ## 지원 범위
 

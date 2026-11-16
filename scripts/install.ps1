@@ -14,11 +14,8 @@ $shortcut.TargetPath = Join-Path $installRoot 'WhatThePort.exe'
 $shortcut.WorkingDirectory = $installRoot
 $shortcut.Save()
 if ($StartWithWindows) {
-    $startup = $shell.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Startup')) 'What the Port.lnk'))
-    $startup.TargetPath = Join-Path $installRoot 'WhatThePort.exe'
-    $startup.Arguments = '--background'
-    $startup.WorkingDirectory = $installRoot
-    $startup.Save()
+    Add-Type -Path (Join-Path $installRoot 'WhatThePort.Core.dll')
+    [WhatThePort.StartupRegistration]::Set($true,(Join-Path $installRoot 'WhatThePort.exe'),[Environment]::GetFolderPath('Startup'))
 }
 Write-Output "Installed: $installRoot"
 Write-Output 'Open What the Port from the Start menu. The installer does not modify PATH.'

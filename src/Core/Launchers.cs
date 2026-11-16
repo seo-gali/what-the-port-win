@@ -11,15 +11,19 @@ namespace WhatThePort {
             if (String.IsNullOrEmpty(link.Session)) throw new ArgumentException("Register the exact session ID first.");
             return "Set-Location -LiteralPath " + QuotePowerShell(link.Folder) + "; & " + (link.Agent == "Codex" ? "codex resume " : "claude --resume ") + QuotePowerShell(link.Session);
         }
-        public static void Terminal(string folder, string terminal, ProjectLink session) {
-            if (String.IsNullOrEmpty(folder) || !Directory.Exists(folder)) throw new IOException("The project folder is unavailable.");
-            string script=session == null ? "Set-Location -LiteralPath " + QuotePowerShell(folder) : SessionScript(session);
-            string args="-NoLogo -NoExit -EncodedCommand " + Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
-            if (terminal == "Windows Terminal") {
-                try { Process.Start(new ProcessStartInfo("wt.exe", "new-tab powershell.exe " + args) { UseShellExecute=false, CreateNoWindow=true, WorkingDirectory=folder }); return; }
-                catch (System.ComponentModel.Win32Exception) { throw new IOException("Windows Terminal was not found. Choose PowerShell in Settings."); }
-            }
-            Process.Start(new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),@"WindowsPowerShell\v1.0\powershell.exe"), args) { UseShellExecute=true, WorkingDirectory=folder });
+        public static ProcessStartInfo TerminalStartInfo(string folder,string terminal,ProjectLink session) {
+            if(String.IsNullOrEmpty(folder)||!Directory.Exists(folder))throw new IOException("The project folder is unavailable.");
+            string script=session==null?"Set-Location -LiteralPath "+QuotePowerShell(folder):SessionScript(session);
+            string args="-NoLogo -NoExit -EncodedCommand "+Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
+            string powershell=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),@"WindowsPowerShell\v1.0\powershell.exe");
+            if(terminal=="Windows Terminal")return new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),@"Microsoft\WindowsApps\wt.exe"),"new-tab \""+powershell+"\" "+args){UseShellExecute=false,CreateNoWindow=true,WorkingDirectory=folder};
+            if(terminal!="PowerShell")throw new ArgumentException("Invalid terminal.");
+            return new ProcessStartInfo(powershell,args){UseShellExecute=true,WorkingDirectory=folder};
+        }
+        public static void Terminal(string folder,string terminal,ProjectLink session) {
+            var start=TerminalStartInfo(folder,terminal,session);
+            try {Process.Start(start);}
+            catch(System.ComponentModel.Win32Exception){if(terminal=="Windows Terminal")throw new IOException("Windows Terminal was not found. Choose PowerShell in Settings.");throw;}
         }
         public static void OpenLocal(Server server) { Process.Start(new ProcessStartInfo(server.Url) { UseShellExecute=true }); }
         public static void OpenPreview(ProjectLink link) {

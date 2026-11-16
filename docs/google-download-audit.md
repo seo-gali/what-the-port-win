@@ -1,5 +1,7 @@
 # Google 다운로드 가이드라인 점검 · 2026-10-13
 
+> 과거 특정 EXE 해시의 점검 기록이다. 아래 파일 버전·크기·판정은 현재 다운로드를 설명하지 않는다. 현재 파일은 [EXE 정보](https://seo-gali.github.io/what-the-port-win/downloads/EXE-INFO.json)와 [검사 상태](https://seo-gali.github.io/what-the-port-win/downloads/ANTIVIRUS-INFO.json)를 확인한다.
+
 ## 결론
 
 **전체 준수 확인·악성코드 없음·Google 경고 해제로 판정할 수 없다.** 다운로드 설명과 주요 동작은 확인했으나, 실제 배포 EXE에서 기존 보안 문제 5건을 재확인했다. 코드 서명은 없고 백신 검사는 수행하지 못했다. 아래 판정은 자체 점검이며 Google의 공식 심사 결과가 아니다. 발견한 취약점이 Chrome 경고를 발생시킨 원인이라는 증거는 없다.

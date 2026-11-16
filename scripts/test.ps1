@@ -24,3 +24,7 @@ if ($smoke.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $report)) { throw 'Li
 if ((Get-Content -LiteralPath $report -Raw) -notmatch 'result=PASS') { throw 'Live app report failed.' }
 Write-Output 'PASS live app: tray, window handle and native scanning'
 & (Join-Path $PSScriptRoot 'test-startup.ps1')
+
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $projectRoot 'tests\InstallTests.ps1')
+if ($LASTEXITCODE -ne 0) { throw 'Installer startup regression failed.' }
+& (Join-Path $PSScriptRoot 'security-audit.ps1')
