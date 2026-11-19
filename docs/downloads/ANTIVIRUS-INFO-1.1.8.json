@@ -1,0 +1,35 @@
+{
+    "releaseVersion":  "1.1.8",
+    "recordedAtUtc":  "2026-11-16T12:38:45.9291010Z",
+    "status":  "NotScanned",
+    "authenticode":  "NotSigned",
+    "virusTotalReanalysisPerformed":  false,
+    "iobitRescanPerformed":  false,
+    "manufacturerVerdictObtained":  false,
+    "files":  [
+                  {
+                      "name":  "WhatThePort.exe",
+                      "sha256":  "7e22e97ed290071939f66da22b3ecd6492f0af985860ceb6d516790c25f336d7",
+                      "bytes":  740864
+                  },
+                  {
+                      "name":  "WhatThePort-Windows-x64.zip",
+                      "sha256":  "f3b42f9074bd8372fcd195170aca707edfa9ae13c366505dc236b58cd6bc319d",
+                      "bytes":  1354320
+                  },
+                  {
+                      "name":  "zip/WhatThePort.exe",
+                      "sha256":  "76ce9a4b2baa8c112d94b2f41e8a467442eb19f5898d459082ad5f8fff8aed77"
+                  },
+                  {
+                      "name":  "zip/WhatThePort.Core.dll",
+                      "sha256":  "17635ad954d28a9ad411cf159e8909cea7e434d70bb97bfb3b8e3ad91c36288b"
+                  },
+                  {
+                      "name":  "zip/wtp.exe",
+                      "sha256":  "5e8bc830da86ee293be1d0e04423d9dbba0da37b57d2f53a47847493052b3dfd"
+                  }
+              ],
+    "previousReleaseRecord":  "ANTIVIRUS-INFO-1.1.7.json",
+    "scope":  "Integrity and functional verification only. VirusTotal and IObit have not been rerun for these v1.1.8 bytes. Historical results do not apply to these hashes."
+}

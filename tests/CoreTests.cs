@@ -19,7 +19,7 @@ public static class CoreTests {
         if(args.Length>0&&args[0]=="--client-fixture")return ClientFixture(Int32.Parse(args[1]));
         if(args.Length>0&&args[0]=="--store-writer")return StoreWriter(args);
         temp=Path.Combine(Path.GetTempPath(),"wtp-tests-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(temp);
-        try{Units();ConnectionTests();StartupTests();StorageRegressions();ConcurrentLinks();Integration();ChildConnectionIntegration();ForceIntegration();}catch(Exception e){failed++;Console.WriteLine("FAIL unexpected: "+e);}
+        try{Units();ConnectionTests();StartupTests();StorageRegressions();SecurityLogTests();ConcurrentLinks();Integration();ChildConnectionIntegration();ForceIntegration();}catch(Exception e){failed++;Console.WriteLine("FAIL unexpected: "+e);}
         finally{if(Directory.Exists(temp))Directory.Delete(temp,true);}
         Console.WriteLine("\n"+passed+" passed, "+failed+" failed");return failed==0?0:1;
     }
@@ -187,6 +187,18 @@ public static class CoreTests {
         bool safe=false;try{safe=store.LinkFor(new Server{Port=3000,Folder=temp})==null;}catch(NullReferenceException){}Check("null stored folder cannot crash link lookup",safe);
         string before=File.ReadAllText(file);ThrowsIo("saving refuses to overwrite invalid stored records",()=>store.SaveLink(new ProjectLink{Folder=temp,Port=3001}));Check("invalid link file survives a refused save",File.ReadAllText(file)==before);
         File.WriteAllText(file,"{broken");ThrowsIo("saving refuses to replace unreadable link JSON",()=>store.SaveLink(new ProjectLink{Folder=temp,Port=3001}));Check("unreadable link JSON is preserved",File.ReadAllText(file)=="{broken");
+    }
+    static void SecurityLogTests(){
+        string root=Path.Combine(temp,"security-log"),file=Path.Combine(root,"security.log");
+        SecurityLog.Write(root,SecurityEvent.ActionFailed);
+        string first=File.ReadAllText(file);
+        Check("security log records UTC and event codes without user data",System.Text.RegularExpressions.Regex.IsMatch(first,@"\A\d{4}-\d\d-\d\dT[^\r\n]+Z\tActionFailed\r?\n\z")&&!first.Contains(temp));
+        File.WriteAllText(file,new String('x',128*1024));SecurityLog.Write(root,SecurityEvent.ServerStopFailed);
+        Check("security log keeps only one bounded previous file",new FileInfo(file+".1").Length==128*1024&&new FileInfo(file).Length<256&&File.ReadAllText(file).Contains("ServerStopFailed"));
+        using(var locked=new FileStream(file,FileMode.Open,FileAccess.ReadWrite,FileShare.None))SecurityLog.Write(root,SecurityEvent.ActionFailed);
+        Check("locked security log does not interrupt an app action",File.ReadAllText(file).Contains("ServerStopFailed")&&!File.ReadAllText(file).Contains("ActionFailed"));
+        string blocked=Path.Combine(temp,"blocked-log-root");File.WriteAllText(blocked,"preserve");SecurityLog.Write(blocked,SecurityEvent.ActionFailed);
+        Check("security logging failure preserves existing data",File.ReadAllText(blocked)=="preserve");
     }
     static Process StartFixture(){
         var p=Process.Start(new ProcessStartInfo(System.Reflection.Assembly.GetExecutingAssembly().Location,"--fixture"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=temp});

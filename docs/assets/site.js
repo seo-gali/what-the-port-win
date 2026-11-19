@@ -102,7 +102,7 @@ if (imageLinks.length) {
   const dialog = document.createElement('dialog');
   dialog.className = 'lightbox';
   dialog.setAttribute('aria-label', '앱 화면 크게 보기');
-  dialog.innerHTML = '<div class="lightbox-bar"><p>실제 앱 화면 · 데모 데이터</p><button class="lightbox-close" type="button" autofocus>닫기 ×</button></div><div class="lightbox-scroll" tabindex="0" role="region" aria-label="앱 화면 이미지"><img alt=""></div><p class="lightbox-hint">이미지를 스크롤해 살펴보세요. Esc로 닫을 수 있습니다.</p>';
+  dialog.innerHTML = '<div class="lightbox-bar"><p>데모 화면</p><button class="lightbox-close" type="button" autofocus>닫기 ×</button></div><div class="lightbox-scroll" tabindex="0" role="region" aria-label="앱 화면 이미지"><img alt=""></div>';
   document.body.append(dialog);
   let opener;
   const closeButton = dialog.querySelector('button');

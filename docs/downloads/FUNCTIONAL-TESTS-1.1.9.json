@@ -1,0 +1,151 @@
+{
+    "releaseVersion":  "1.1.9",
+    "checkedAtUtc":  "2026-11-19T10:38:47.7555304Z",
+    "sourceBaseCommit":  "a14388892921e21f3d488af5965a7936805f29ca",
+    "changedSourceFiles":  [
+                               {
+                                   "path":  "scripts/check-secrets.mjs",
+                                   "sha256":  "dd6e979247eaf11f8bf6f78307a159811069799db11c1793373f9d5a27e1c707",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "scripts/check-site.mjs",
+                                   "sha256":  "cc331d3fe249428d754b4660b18fa1336e11c1315b1b4babec0a5c3da2e0c063",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/App/Panel.cs",
+                                   "sha256":  "6d42641364f4d6555b023cd9d602ed679dc2e91ee8e3ab2792fb104f12f50379",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/AppVersion.cs",
+                                   "sha256":  "6d971a296d76161c4a4cc9682c4a28cee7f8d0c657b4a29502ebf0d204c5d93f",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "src/Core/SecurityLog.cs",
+                                   "sha256":  "2a893006a0f219ce68341ae708d1d5eadbf22859900ead36255e136d43b6614d",
+                                   "status":  "ChangedOrAdded"
+                               },
+                               {
+                                   "path":  "tests/CoreTests.cs",
+                                   "sha256":  "35f8df83c3bfd0bded47cfe6701618e0d2276b88962c8191ee099741628d1a74",
+                                   "status":  "ChangedOrAdded"
+                               }
+                           ],
+    "runs":  [
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1",
+                     "exitCode":  0,
+                     "logSha256":  "2872274de7e604fe50af9a157e1aff88841413e9b869a197a85469f670e88fac",
+                     "core":  165,
+                     "ui":  217,
+                     "security":  24
+                 },
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-single-file.ps1",
+                     "exitCode":  0,
+                     "logSha256":  "0a0d6afa2240df47e2622fa5e142a20ff1f357e4904611c5cdf9bd39a63ac778",
+                     "core":  165,
+                     "ui":  217,
+                     "security":  24
+                 },
+                 {
+                     "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-package.ps1",
+                     "exitCode":  0,
+                     "logSha256":  "5ef75b45513e4549552cd9d15a2273af653b33c56a0f0dbe28fa1f7fc2ff5e41",
+                     "packageChecks":  29
+                 }
+             ],
+    "finalZipRuntimeVerification":  {
+                                        "scope":  "Exact bytes extracted from the final public ZIP without recompilation; test runners supplied separately.",
+                                        "corePassed":  165,
+                                        "uiPassed":  217,
+                                        "securityPassed":  24,
+                                        "cliPassed":  true,
+                                        "startupPassed":  true,
+                                        "binaries":  [
+                                                         {
+                                                             "name":  "WhatThePort.exe",
+                                                             "version":  "1.1.9",
+                                                             "sha256":  "cd4621b1badb245566e6e6b07f811f859e175519427ccf1925b2b773049d2420",
+                                                             "signature":  "NotSigned",
+                                                             "publisher":  null,
+                                                             "timestamped":  false
+                                                         },
+                                                         {
+                                                             "name":  "WhatThePort.Core.dll",
+                                                             "version":  "1.1.9",
+                                                             "sha256":  "3111005b2c031862d0aa0860ae86f0ac30163f2c229e9671c3aea1d8bed2697a",
+                                                             "signature":  "NotSigned",
+                                                             "publisher":  null,
+                                                             "timestamped":  false
+                                                         },
+                                                         {
+                                                             "name":  "wtp.exe",
+                                                             "version":  "1.1.9",
+                                                             "sha256":  "27084f3bd421958496ea6de90ac1661ec775d5293b91cddbb44f1af8e85252a8",
+                                                             "signature":  "NotSigned",
+                                                             "publisher":  null,
+                                                             "timestamped":  false
+                                                         }
+                                                     ],
+                                        "logs":  [
+                                                     {
+                                                         "name":  "final-core.log",
+                                                         "sha256":  "934f2678f7b0f2d680cd6bfb20862e058b3e436f6a4d2ce4aff1103f6b373778"
+                                                     },
+                                                     {
+                                                         "name":  "final-ui.log",
+                                                         "sha256":  "a00329f36d37d66c5ae588b728489ad95a366336556f143b4ebeff8cb8ccc235"
+                                                     },
+                                                     {
+                                                         "name":  "final-security.log",
+                                                         "sha256":  "7531c720284a3ab1b49d224a07ca64c3df274ed999fae24a047270f7db23e70c"
+                                                     },
+                                                     {
+                                                         "name":  "final-startup.log",
+                                                         "sha256":  "c75d8e26e8df1b03937aa85261a4b58a555f41b5ba28ff102cc2ef59502e29bb"
+                                                     }
+                                                 ]
+                                    },
+    "publicDownloads":  [
+                            {
+                                "name":  "WhatThePort.exe",
+                                "version":  "1.1.9",
+                                "bytes":  741888,
+                                "sha256":  "1c817b9e9bc115faa76e9284201e19236237061435525d6170b27fd27a04847a",
+                                "matchesPreviouslyTestedStandalone":  true
+                            },
+                            {
+                                "name":  "WhatThePort-Windows-x64.zip",
+                                "version":  "1.1.9",
+                                "bytes":  1355691,
+                                "sha256":  "a6ebf725e10c3204b3477b214a0aa883e0577dcf0d8ecaae4e4c4d4bbf56ffaa"
+                            }
+                        ],
+    "siteVerification":  {
+                             "command":  "node scripts/check-site.mjs",
+                             "exitCode":  0,
+                             "passed":  291,
+                             "scope":  "Responsive, keyboard, forced-colors, downloads, metadata, CSP without response headers and unavailable private routes"
+                         },
+    "secretScan":  {
+                       "phase":  "Before release commit",
+                       "commits":  45,
+                       "historyTextBlobs":  466,
+                       "workingTreeTextFiles":  105,
+                       "findings":  0,
+                       "valuesPrinted":  false,
+                       "scope":  "Pattern-based scan of reachable Git text blobs and nonignored working files; binaries and text over 2 MiB excluded. Live environment values, ignored secret files, remote provider validity and key rotation not accessed."
+                   },
+    "limitations":  [
+                        "Unsigned test distribution; VirusTotal and IObit not rerun for these hashes.",
+                        "Passing functional checks is not a security certification or antivirus verdict.",
+                        "No real Windows login or startup registration A-B test.",
+                        "Frame-blocking/nosniff response headers, GitHub account controls and full OS/.NET CVE audit are outside verified scope.",
+                        "Local event log is best effort and is not a tamper-proof or remote intrusion-monitoring service.",
+                        "GitHub Release publication remains a manual user action."
+                    ]
+}

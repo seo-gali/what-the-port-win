@@ -11,24 +11,19 @@
   padding-block: 72px 62px;
 }
 .hero-copy { position: relative; z-index: 1; padding: 0; }
-.hero .eyebrow { color: #aab9cc; font-size: 11px; letter-spacing: .14em; margin-bottom: 27px; }
-.status-dot { background: #6edafa; box-shadow: 0 0 12px #58d4ff70; }
+
 .hero h1 { font-size: clamp(62px, 6.8vw, 96px); font-weight: 700; line-height: 1.18; letter-spacing: -.065em; margin-bottom: 28px; }
 .hero h1 span { color: #bbcce1; }
-.hero-description { color: #b2bccb; font-size: 16px; line-height: 1.95; margin-bottom: 30px; }
+
 .hero-actions { gap: 24px; }
 .hero .button { min-height: 54px; padding-inline: 23px; font-size: 14px; }
 .hero .text-link { color: #dbe5f0; }
 .hero .system-note { margin-top: 17px; }
-.hero-meta { margin-top: 27px; font-size: 11px; }
+
 .hero .build-note { margin-bottom: 0; }
 .server-visual { width: 100%; min-width: 0; position: relative; align-self: center; }
 .server-art { width: 100%; height: auto; filter: drop-shadow(0 24px 25px #0005); }
-.server-visual figcaption { color: #c0cbd9; font-size: 13px; margin-top: -20px; letter-spacing: .03em; }
-.server-visual figcaption span { display: block; color: var(--muted); font-size: 10px; margin-top: 7px; letter-spacing: 0; }
-.principles { padding-block: 26px; align-items: center; }
-.principles .shortcut { margin: 0; display: block; text-align: center; font-size: 10px; }
-.principles .shortcut > div { display: flex; gap: 7px; align-items: center; margin-bottom: 5px; }
+
 .preview-section { padding-top: 100px; }
 .preview-stage { background: radial-gradient(ellipse at top, #273448, #171d28 70%); border: 1px solid var(--line); }
 .download-section { background: radial-gradient(ellipse at 50% 0, #24364e, #141b27 70%); }
@@ -38,31 +33,33 @@
 @media (max-width: 1000px) {
   .hero { width: calc(100% - 48px); gap: 0; min-height: 590px; padding-block: 58px; }
   .hero h1 { font-size: 66px; }
-  .hero-description { font-size: 14px; }
+
   .hero-actions { gap: 17px; }
   .hero .button { padding-inline: 17px; font-size: 13px; }
-  .server-visual figcaption { margin-top: -5px; }
+
 }
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; width: calc(100% - 40px); gap: 0; padding-block: 42px 30px; }
   .hero h1 { font-size: clamp(50px, 11.5vw, 76px); line-height: 1.18; margin-bottom: 22px; }
-  .hero .eyebrow { font-size: 10px; margin-bottom: 22px; }
-  .hero-description { font-size: 15px; margin-bottom: 25px; }
-  .hero-description br { display: none; }
+
   .hero .system-note { font-size: 10px; }
-  .hero .mobile-note { margin-bottom: 0; }
-  .hero-meta { margin-top: 22px; }
+
   .hero .build-note { font-size: 10px; }
   .server-visual { width: min(100%, 510px); justify-self: center; margin-top: 8px; }
-  .server-visual figcaption { margin-top: -16px; font-size: 12px; }
-  .server-visual figcaption span { font-size: 10px; }
-  .principles { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 18px; }
-  .principles .shortcut { text-align: left; }
-  .principles .shortcut > div { gap: 5px; }
-  .principles .shortcut kbd { padding: 2px 6px; font-size: 10px; }
+
   .preview-section { padding-top: 60px; }
 }
+
+
+.view-tabs button { min-height: 58px; padding: 16px 20px; border-left: 3px solid transparent; }
+.view-tabs button[aria-selected="true"] { border-left-color: #82d9e9; }
+.view-tabs strong { margin: 0; }
+.feature-row > div:last-child { padding-top: 0; }
+.feature-row > div:last-child > p:first-child { margin-top: 4px; }
+
 @media (forced-colors: active) {
   .hero-shell, .preview-stage, .download-section { background: Canvas; }
-  .hero h1 span, .hero .eyebrow, .hero-description, .server-visual figcaption { color: CanvasText; }
+  .hero h1 span { color: CanvasText; }
+  .view-tabs button[aria-selected="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; }
+  .view-tabs button[aria-selected="true"]:focus-visible { outline-color: Highlight; }
 }

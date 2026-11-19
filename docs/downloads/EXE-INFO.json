@@ -1,10 +1,10 @@
 {
-    "checkedAtUtc":  "2026-11-16T12:37:13.7542178Z",
+    "checkedAtUtc":  "2026-11-19T10:35:40.7429014Z",
     "executable":  {
                        "name":  "WhatThePort.exe",
-                       "version":  "1.1.8",
-                       "bytes":  740864,
-                       "sha256":  "7e22e97ed290071939f66da22b3ecd6492f0af985860ceb6d516790c25f336d7",
+                       "version":  "1.1.9",
+                       "bytes":  741888,
+                       "sha256":  "1c817b9e9bc115faa76e9284201e19236237061435525d6170b27fd27a04847a",
                        "signature":  "NotSigned",
                        "publisher":  null,
                        "timestamped":  false

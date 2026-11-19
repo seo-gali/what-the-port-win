@@ -128,7 +128,7 @@ namespace WhatThePort.App {
         TextBlock Text(string value,double size,string color,bool translate=true){return new TextBlock{Text=translate?T(value):value,FontSize=size,Foreground=B(color),VerticalAlignment=VerticalAlignment.Center,TextTrimming=TextTrimming.CharacterEllipsis};}
         TextBlock Mono(string value,double size,string color){var t=Text(value,size,color,false);t.FontFamily=mono;return t;}
         Button Button(string label,Action action,string tip){var b=new Button{Content=T(label),ToolTip=T(tip),Tag="action-"+(tip??label)};AutomationProperties.SetName(b,T(tip??label));b.Click+=delegate{Try(action);};return b;}
-        void Try(Action action){try{action();}catch(FormatException){Notice("Enter valid numbers for the sampling and alert thresholds.");}catch(OverflowException){Notice("Enter valid numbers for the sampling and alert thresholds.");}catch(Exception e){Notice(e.Message);}}
+        void Try(Action action){try{action();}catch(FormatException){if(!demo)SecurityLog.Write(store.Root,SecurityEvent.ActionFailed);Notice("Enter valid numbers for the sampling and alert thresholds.");}catch(OverflowException){if(!demo)SecurityLog.Write(store.Root,SecurityEvent.ActionFailed);Notice("Enter valid numbers for the sampling and alert thresholds.");}catch(Exception e){if(!demo)SecurityLog.Write(store.Root,SecurityEvent.ActionFailed);Notice(e.Message);}}
         void Notice(string value){
             pendingNotice=value;if(Window==null)return;
             message.Text=strings.Error(value);messageBox.Visibility=String.IsNullOrEmpty(value)?Visibility.Collapsed:Visibility.Visible;
@@ -395,7 +395,7 @@ namespace WhatThePort.App {
         }
         async Task StopServers(List<Server> targets,bool automatic,bool force=false){
             if(acting)return;
-            if(force&&automatic){Notice("Force stop is manual only.");return;}
+            if(force&&automatic){if(!demo)SecurityLog.Write(store.Root,SecurityEvent.ServerStopRejected);Notice("Force stop is manual only.");return;}
             if(demo){foreach(var s in targets)current.Servers.Remove(s);Navigate("list");Notice("Demo: selected servers removed. No processes were stopped.");return;}
             acting=true;
             try {
@@ -406,6 +406,8 @@ namespace WhatThePort.App {
                     foreach(var target in targets){var live=fresh.Servers.FirstOrDefault(s=>s.Key==target.Key);if(live==null||force&&!live.Ports.Contains(target.Port)){notes.Add(F(":{0} · no longer listening (already stopped or changed).",target.Port));continue;}if(automatic&&!Policy.CleanupCandidate(live,config,DateTime.UtcNow)){notes.Add(F(":{0} · automatic cleanup skipped after recheck.",target.Port));continue;}outcomes.Add(force?ProcessControl.ForceStopDetailed(live,Native.ForceStop):ProcessControl.StopDetailed(live,Native.Stop));}
                     return Tuple.Create(scanner.Scan(config),outcomes,notes);
                 }});
+                foreach(var outcome in result.Item2)SecurityLog.Write(store.Root,outcome.ListenerStopped&&outcome.Errors.Count==0?SecurityEvent.ServerStopCompleted:SecurityEvent.ServerStopFailed);
+                if(result.Item3.Count>0)SecurityLog.Write(store.Root,SecurityEvent.ServerStopSkipped);
                 var summaries=result.Item2.Select(r=>strings.StopSummary(r)).Concat(result.Item3).ToList();
                 if(force&&result.Item2.Any(r=>r.ListenerStopped))summaries.Add(T("Only the listening process was stopped. Child processes remain running."));
                 var details=new List<string>();foreach(var outcome in result.Item2){details.Add(strings.StopSummary(outcome));foreach(var error in outcome.Errors){int split=error.IndexOf(": ",StringComparison.Ordinal);details.Add(split<0?strings.Error(error):error.Substring(0,split+2)+strings.Error(error.Substring(split+2)));}if(outcome.Skipped>0)details.Add(F("Protected processes skipped: {0}.",outcome.Skipped));}
@@ -416,7 +418,7 @@ namespace WhatThePort.App {
                 string text=String.Join("\n",summaries.Take(2));if(summaries.Count>2||result.Item2.Any(r=>r.Errors.Count>0))text+="\n"+T("Stop result details");
                 if(automatic)Notify("Automatic clean up",text);else Notice(text);
                 UpdateTray();
-            }catch(Exception e){Notice("Could not stop servers. "+e.Message);}finally{acting=false;}
+            }catch(Exception e){SecurityLog.Write(store.Root,SecurityEvent.ServerStopFailed);Notice("Could not stop servers. "+e.Message);}finally{acting=false;}
         }
         Window StopDetailsWindow(){
             var dialog=new Window{Owner=Window,Title=T("Stop result details"),Width=Math.Min(Window.ActualWidth,440),Height=300,WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,AllowsTransparency=true,Background=Brushes.Transparent,Foreground=B("#F5F5F7"),FontFamily=Window.FontFamily,WindowStartupLocation=WindowStartupLocation.CenterOwner,ShowInTaskbar=false};
@@ -485,7 +487,7 @@ namespace WhatThePort.App {
                     try{StartupRegistration.Set(draft.Startup,System.Reflection.Assembly.GetEntryAssembly().Location,startupFolder,startupRegistryPath);}
                     catch{store.SaveSettings(settings);throw;}
                 }
-                settings=next;strings.Language=settings.Language;UpdateTrayMenu();timer.Interval=TimeSpan.FromSeconds(settings.ScanSeconds);Navigate("list");Notice(demo?"Demo preferences applied for this session.":"Preferences saved.");
+                if(!demo)SecurityLog.Write(store.Root,SecurityEvent.PreferencesSaved);settings=next;strings.Language=settings.Language;UpdateTrayMenu();timer.Interval=TimeSpan.FromSeconds(settings.ScanSeconds);Navigate("list");Notice(demo?"Demo preferences applied for this session.":"Preferences saved.");
             },"Save preferences");save.Background=B("#F5F5F7");save.Foreground=B("#111318");Cell(buttons,save,1);footer.Children.Add(buttons);
             language.SelectionChanged+=delegate{
                 string chosen=(string)language.SelectedItem=="English"?"en":"ko";if(chosen==draft.Language)return;

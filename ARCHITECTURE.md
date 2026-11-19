@@ -32,6 +32,10 @@
 
 로그와 재현 자료: `artifacts/verification/security-fixes-20261116/`. 로컬 실행 파일: `artifacts/single-file/WhatThePort.exe`. 실제 로그인, 외부 SMB 인증, OS PID 재사용 경주, 실시간 reparse 교체 공격, 백신 재검사는 포함하지 않는다. 임의의 외부 `--separate-git-dir`과 reparse 아래 프로젝트는 브랜치 표시가 생략될 수 있다. 이론적인 추가 방어를 위해 종료 기능이나 메모리 읽기를 제거하지 않았다.
 
+## 2026-11-18 후속 작업
+
+1.1.9에서 로컬 작업 로그와 공개 HTML용 CSP·Referrer 정책, 시크릿 검사와 보안 회귀 검사를 추가하고 2026-11-19에 공개 배포한다. 적용 여부·비해당 항목·남은 범위는 [출시 전 보안 점검](SECURITY_REVIEW.md)을 따른다.
+
 ## 현재 구조와 책임
 
 | 경계 | 실제 파일 | 현재 책임과 판단 |
@@ -41,7 +45,7 @@
 | 표현 부품 | [Shell.xaml](src/App/Shell.xaml), [Chart](src/App/Chart.cs), [PanelPlacement](src/App/PanelPlacement.cs), [TrayIcon](src/App/TrayIcon.cs), [Strings](src/App/Strings.cs) | 스타일·차트·좌표·트레이·번역은 이미 별도 구성 요소다. 이를 다시 감싸는 계층은 필요 없다. |
 | 조회 | [Scanner](src/Core/Scanner.cs), [Connections](src/Core/Connections.cs), [ProjectMetadata](src/Core/ProjectMetadata.cs) | TCP·프로세스 조회, 이력, 프로젝트/Git 해석, 연결 앱 연관을 한 번의 스캔으로 처리한다. Git 경로 검증은 ProjectMetadata로 분리했다. |
 | 안전 정책·종료 | [Policy](src/Core/Policy.cs), [ProcessControl](src/Core/Scanner.cs), [Native](src/Core/Native.cs) | 정책과 실제 종료는 분리되어 있다. 다만 `ProcessControl`·`StopResult`는 `Scanner.cs` 안에 있어 조회와 종료의 파일 책임이 섞여 있다. |
-| 저장·외부 실행 | [Storage](src/Core/Storage.cs), [StartupRegistration](src/Core/StartupRegistration.cs), [Launchers](src/Core/Launchers.cs) | JSON·레지스트리·터미널 실행을 담당한다. 동시 저장 잠금과 설치·앱 자동 실행의 공통 등록을 적용했다. |
+| 저장·외부 실행 | [Storage](src/Core/Storage.cs), [StartupRegistration](src/Core/StartupRegistration.cs), [Launchers](src/Core/Launchers.cs), [SecurityLog](src/Core/SecurityLog.cs) | JSON·레지스트리·터미널 실행을 담당한다. 동시 저장 잠금과 설치·앱 자동 실행의 공통 등록을 적용했다. |
 | 데이터·표시 형식 | [Models](src/Core/Models.cs) | 스캔 모델, CLI 직렬화 계약과 `Format`이 같은 파일에 있다. 현재 모델 변경은 CLI 출력에도 영향을 준다. |
 | CLI | [Program](src/Cli/Program.cs) | 조회와 링크 등록을 직접 Core에 전달한다. 새 호스트도 이 경계를 재사용할 수 있어야 한다. |
 | 배포 | [빌드](scripts/build.ps1), [단일 EXE](scripts/build-single-file.ps1), [패키징](scripts/package.ps1), [사이트 준비](scripts/prepare-site.ps1) | 일반형·단일형·ZIP·정적 사이트가 같은 소스를 다른 형태로 배포한다. 변경 시 네 경로의 입력과 증명 정보를 맞춰야 한다. |

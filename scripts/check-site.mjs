@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {spawn} from 'node:child_process';
+import {spawn,execFileSync} from 'node:child_process';
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // Reproduce GitHub project Pages, including nested 404 URLs.
 const base='http://127.0.0.1:4173/what-the-port-win';
+const secretReport=JSON.parse(execFileSync(process.execPath,[path.join(project,'scripts/check-secrets.mjs')],{cwd:project,windowsHide:true,encoding:'utf8',maxBuffer:1024*1024}));
 await fs.mkdir(path.join(project,'artifacts'),{recursive:true});
 const profile=await fs.mkdtemp(path.join(project,'artifacts/site-browser-qa-'));
 const browser=spawn('C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--no-sandbox','--disable-gpu','--disable-software-rasterizer','--no-first-run','--no-default-browser-check','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -34,6 +35,7 @@ async function downloadedFile(selector,filename){
 let passed=0;const results=[];
 function check(name,ok){results.push({name,passed:!!ok});if(!ok)throw new Error('FAIL '+name);passed++;console.log('PASS '+name);}
 try{
+check('repository secret scan has no detected credentials',secretReport.findings.length===0);
 await call('Page.enable');await call('Runtime.enable');await call('Accessibility.enable');
 const publicBase='https://seo-gali.github.io/what-the-port-win/';
 await call('Emulation.setScriptExecutionDisabled',{value:true});
@@ -116,6 +118,12 @@ await key('Escape','Escape',27);check('Escape closes menu and restores focus',aw
 await evaluate('document.getElementById("tab-list").focus()');await key('ArrowDown','ArrowDown',40);
 check('arrow key selects next preview tab and panel',await evaluate('document.activeElement.id==="tab-detail" && document.getElementById("tab-detail").getAttribute("aria-selected")==="true" && !document.getElementById("panel-detail").hidden && document.getElementById("panel-list").hidden'));
 await key('End','End',35);check('End selects last preview tab',await evaluate('document.activeElement.id==="tab-settings"'));
+await call('Emulation.setEmulatedMedia',{features:[{name:'forced-colors',value:'active'}]});
+try{
+ check('high contrast keeps the homepage heading readable',await evaluate('getComputedStyle(document.querySelector(".hero h1 span")).color===getComputedStyle(document.body).color'));
+ check('high contrast distinguishes the selected tab using system colors',await evaluate('(()=>{const a=getComputedStyle(document.querySelector(".view-tabs [aria-selected=true]")),b=getComputedStyle(document.querySelector(".view-tabs [aria-selected=false]"));return parseFloat(a.borderLeftWidth)>0&&a.borderLeftStyle==="solid"&&a.backgroundColor!==b.backgroundColor&&a.color!==a.backgroundColor;})()'));
+ await captureViewport('home-forced-colors');
+}finally{await call('Emulation.setEmulatedMedia',{features:[]});}
 const tree=await call('Accessibility.getFullAXTree');
 check('screen reader tree exposes menu and screenshot text',tree.nodes.some(n=>n.role?.value==='button'&&n.name?.value.includes('메뉴'))&&tree.nodes.some(n=>n.role?.value==='image'&&n.name?.value.includes('설정 화면')));
 await navigate('/guide.html',390,844);
@@ -138,6 +146,9 @@ const legal=await fs.readFile(path.join(project,'LICENSE'),'utf8');
 check('styled license preserves the complete original text',(await evaluate('document.querySelector(".license-copy").textContent')).replace(/\r\n/g,'\n').trim()===legal.replace(/\r\n/g,'\n').trim());
 for(const route of ['/','/guide.html','/license.html','/404.html']){
  const response=await fetch(base+route);const html=await response.text();
+ const policy=html.match(/<meta\b[^>]*http-equiv="Content-Security-Policy"[^>]*content="([^"]+)"/i)?.[1];
+ check(route+" includes a portable CSP without unsafe script execution",!!policy&&policy.includes("script-src 'self'")&&policy.includes("connect-src 'none'")&&policy.includes("form-action 'none'")&&!/unsafe-inline|unsafe-eval|frame-ancestors/.test(policy));
+ check(route+" includes no-referrer metadata",/<meta\b[^>]*name="referrer"[^>]*content="no-referrer"/i.test(html));
  check(route+' restrictive preview headers',response.headers.get('content-security-policy')?.includes("object-src 'none'")&&response.headers.get('x-content-type-options')==='nosniff');
  const references=[...html.matchAll(/(?:href|src)="([^"]+)"/g)].map(m=>m[1]);
  for(const reference of [...new Set(references)]){
@@ -146,7 +157,28 @@ for(const route of ['/','/guide.html','/license.html','/404.html']){
   if(url.hash){const body=await(await fetch(url)).text();check('anchor '+reference,body.includes('id="'+decodeURIComponent(url.hash.slice(1))+'"'));}
  }
 }
+// Use a separate server without CSP headers to prove that the shipped meta policy is effective.
+const {createServer}=await import('node:http');
+const sourcePolicy=(await fs.readFile(path.join(project,'docs/index.html'),'utf8')).match(/<meta\b[^>]*http-equiv="Content-Security-Policy"[^>]*content="([^"]+)"/i)[1];
+let forbiddenRequests=0;
+const policyFixture=createServer((req,res)=>{
+ if(req.url.startsWith('/blocked'))forbiddenRequests++;
+ res.setHeader('Content-Type','text/html; charset=utf-8');
+ res.end('<!doctype html><html><head>'+(req.url==='/protected'?'<meta http-equiv="Content-Security-Policy" content="'+sourcePolicy+'">':'')+'</head><body><script>window.inlineProbe=true</script><form action="/blocked-form"><button>Submit</button></form></body></html>');
+});
+await new Promise(resolve=>policyFixture.listen(0,'127.0.0.1',resolve));
+const probeOrigin='http://127.0.0.1:'+policyFixture.address().port;
+async function visitPolicyProbe(route){await call('Page.navigate',{url:probeOrigin+route});for(let attempt=0;attempt<30;attempt++){await new Promise(r=>setTimeout(r,50));if(await evaluate('location.pathname==='+JSON.stringify(route)+' && document.readyState === "complete"'))return;}throw Error('Policy probe navigation timed out');}
+try{
+ await visitPolicyProbe('/control');check('CSP control permits the harmless inline probe',await evaluate('window.inlineProbe===true'));
+ await visitPolicyProbe('/protected');check('shipped meta CSP blocks inline script without preview headers',await evaluate('window.inlineProbe!==true'));
+ const rejected=await evaluate("fetch('/blocked-fetch').then(()=>false,()=>true)");check('shipped meta CSP prevents network requests',rejected&&forbiddenRequests===0);
+ await evaluate('document.forms[0].requestSubmit()');await new Promise(r=>setTimeout(r,100));check('shipped meta CSP blocks form submission',forbiddenRequests===0&&await evaluate('location.pathname==="/protected"'));
+}finally{await call('Page.navigate',{url:'about:blank'});await new Promise(resolve=>{policyFixture.close(resolve);policyFixture.closeAllConnections();});}
 check('custom error page returns HTTP 404',(await fetch(base+'/missing/page')).status===404);
+for(const route of ['/.env','/.git/HEAD','/settings.json','/links.json','/admin','/debug']){
+ check('private or nonexistent endpoint stays unavailable '+route,(await fetch(base+route,{redirect:'manual'})).status===404);
+}
 check('preview rejects mutation methods',(await fetch(base+'/',{method:'POST'})).status===405);
 check('encoded path traversal is blocked',(await fetch(base+'/%2e%2e%2fREADME.md')).status===403);
 check('backslash traversal is blocked',(await fetch(base+'/%2e%2e%5cREADME.md')).status===403);

@@ -5,7 +5,7 @@
 - 준비: 정식 배포는 `scripts/prepare-site.ps1`에서 신뢰된 서명·타임스탬프 확인. 미서명 시험 배포만 `-AllowUnsigned` 명시
 - 로컬 미리보기: `node scripts/serve-site.mjs` → `http://127.0.0.1:4173`
 - 다운로드: 기본 `docs/downloads/WhatThePort.exe`, 선택 CLI `docs/downloads/WhatThePort-Windows-x64.zip` — 실제 다운로드를 위해 Git 추적 대상 포함
-- 다운로드 URL은 고정하고 사이트의 저장 이름은 `WhatThePort-v1.1.8.exe`, `WhatThePort-v1.1.8-Windows-x64.zip`처럼 실제 버전을 포함한다. `prepare-site.ps1`이 EXE·ZIP 버전 일치를 확인한 뒤 홈·가이드의 저장 이름과 체크섬 파일명을 함께 갱신한다.
+- 다운로드 URL은 고정하고 사이트의 저장 이름은 `WhatThePort-v1.1.9.exe`, `WhatThePort-v1.1.9-Windows-x64.zip`처럼 실제 버전을 포함한다. `prepare-site.ps1`이 EXE·ZIP 버전 일치를 확인한 뒤 홈·가이드의 저장 이름과 체크섬 파일명을 함께 갱신한다.
 - 내용: 홈, 기능·화면 소개, 이미지 사용 가이드, 라이선스, 404, 고정 헤더·모바일 메뉴, 단일 EXE·선택 ZIP·체크섬
 - 배포: GitHub Pages의 main / docs. 외부 쓰기·퍼블리싱은 [작업 순서와 승인](../CODING_STANDARDS.md#작업-순서와-승인)을 따르며, 이미 승인된 범위는 다시 묻지 않음
 
@@ -72,6 +72,6 @@ node scripts/check-site.mjs
 가이드 본문은 문장 끝 마침표 뒤에서 줄을 바꾼다. 파일명·버전·명령의 마침표는 유지한다. 가이드 이미지의 표시 크기는 기존의 70%로 줄이고, 확대 보기에서는 원본 크기를 유지한다.
 
 앱 패키지에는 Markdown 사용 문서·이미지만 포함. 사이트 다운로드 ZIP의 자기 포함·반복 빌드 시 용량 증가 방지.
-로컬 서버의 보안 응답 헤더는 GitHub Pages에 자동 이전되지 않음.
+로컬 서버의 보안 응답 헤더는 GitHub Pages에 자동 이전되지 않음. HTML의 CSP·no-referrer 메타 정책은 브라우저에 적용되지만 frame-ancestors·X-Frame-Options·nosniff HTTP 헤더를 대신하지 않는다. 보안 수정과 미적용 항목은 저장소 루트의 SECURITY_REVIEW.md에 구분한다.
 
 Chrome 다운로드 경고, 공인 코드 서명, ZIP 내용 유지와 Google 검토 절차: [다운로드 보안 절차](download-security.md). 웹사이트 수정만으로 공개 ZIP을 재생성하지 않는다.
